@@ -56,6 +56,7 @@ clean :
 	$(RM) -r $(DOCDIR)/*
 
 archive : 
-	make clean 
+	#make clean // Supprimé car le livrable est situé dans le répertoire doc qui serait supprimé par le clean 
+	@echo "Assurez-vous d'avoir fait un clean avant de recopier le doc livrable et de faire l'archivage"
 	cd .. && tar -czvf as-mips-`whoami`-`date +%d-%m-%H-%M`.tgz $(DIRNAME) && cd $(DIRNAME) 
 

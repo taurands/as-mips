@@ -1,11 +1,14 @@
 Squelette de code de l'assembleur MIPS du projet info PHELMA.
 Le code fourni permet d'acquérir des chaînes de caractères d'un fichier et de les afficher à l'écran. 
-Votre tâche sera de le compléter.  
 
 Le répertoire est organisé ainsi : 
 .
 ├── tests
-│   └── miam.s
+│   ├── vide.s
+│   ├── espaces.s
+│   ├── miam2.s
+│   ├── miam1.s
+│   └── miam.s 
 ├── src
 │   ├── main.c
 │   └── lex.c

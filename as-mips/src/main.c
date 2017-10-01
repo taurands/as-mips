@@ -1,7 +1,7 @@
 
 /**
  * @file main.c
- * @author François Portet <francois.portet@imag.fr> from François Cayre
+ * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr> from François Cayre
  * @brief Main entry point for MIPS assembler.
  */
 #include <stdlib.h>
@@ -38,23 +38,10 @@ int main ( int argc, char *argv[] ) {
 
     unsigned int 	nlines 	= 0;
     char         	 *file 	= NULL;
+    
+    Liste_liste_lexeme_t * liste_ligne_lexeme_p=NULL;
 
-    /* exemples d'utilisation des macros du fichier notify.h */
-    /* WARNING_MSG : sera toujours affiche */
-    WARNING_MSG("Un message WARNING_MSG !");
-
-    /* macro INFO_MSG : uniquement si compilé avec -DVERBOSE. Cf. Makefile*/
-    INFO_MSG("Un message INFO_MSG : Debut du programme %s", argv[0]);
-
-    /* macro DEBUG_MSG : uniquement si compilé avec -DDEBUG (ie : compilation avec make debug). Cf. Makefile */
-    DEBUG_MSG("Un message DEBUG_MSG !");
-
-    /* La macro suivante provoquerait l'affichage du message
-       puis la sortie du programme avec un code erreur non nul (EXIT_FAILURE) */
-    /* ERROR_MSG("Erreur. Arret du programme"); */
-
-
-    if ( argc <2 ) {
+    if ( argc != 2 ) {
         print_usage(argv[0]);
         exit( EXIT_FAILURE );
     }
@@ -64,19 +51,20 @@ int main ( int argc, char *argv[] ) {
 
 
     if ( NULL == file ) {
-        fprintf( stderr, "Missing ASM source file, aborting.\n" );
+        fprintf( stderr, "Pas de mon pour le fichier assembleur. Abandon du traitement.\n" );
         exit( EXIT_FAILURE );
     }
 
 
-
     /* ---------------- do the lexical analysis -------------------*/
-    lex_load_file( file, &nlines );
-    DEBUG_MSG("source code got %d lines",nlines);
+    liste_ligne_lexeme_p=lex_load_file( file, &nlines);
+
+    /* ---------------- print the lexical analysis -------------------*/
+    DEBUG_MSG("Le fichier source comporte %d lignes",nlines);
+	lex_lines_visualisation(liste_ligne_lexeme_p);
 
     /* ---------------- Free memory and terminate -------------------*/
-
-    /* TODO free everything properly*/
+    free_lex_lines(liste_ligne_lexeme_p);
 
     exit( EXIT_SUCCESS );
 }
