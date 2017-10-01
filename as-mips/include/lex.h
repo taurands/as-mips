@@ -102,7 +102,7 @@ typedef struct Liste_lexeme_t {
 typedef struct Liste_liste_lexeme_t {
 	Liste_lexeme_t * liste_lexeme;			/**< Champ lexeme */
 	int ligne;								/**< Numéro de la ligne source */
-	struct Liste_liste_lexeme_t * suiv;		/**< Pointeur sur la prochaine liste de lexeme */ 
+	struct Liste_liste_lexeme_t * suiv;		/**< Pointeur sur la prochaine liste de lexeme */
 } Liste_liste_lexeme_t;
 
 Liste_lexeme_t * lex_read_line( char *, int);

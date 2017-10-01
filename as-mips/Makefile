@@ -53,10 +53,10 @@ docu :
 
 clean : 
 	$(RM) $(TARGET) $(SRCDIR)/*.orig $(SRCDIR)/*.dbg $(SRCDIR)/*.rls $(GARBAGE)
-	$(RM) -r $(DOCDIR)/*
+	# modifié pour ne pas effacer le répertoire /doc/livrable
+	$(RM) -r $(DOCDIR)/html $(DOCDIR)/latex $(DOCDIR)/rtf $(DOCDIR)/doxygen_warning.txt
 
 archive : 
-	#make clean // Supprimé car le livrable est situé dans le répertoire doc qui serait supprimé par le clean 
-	@echo "Assurez-vous d'avoir fait un clean avant de recopier le doc livrable et de faire l'archivage"
+	make clean  
 	cd .. && tar -czvf as-mips-`whoami`-`date +%d-%m-%H-%M`.tgz $(DIRNAME) && cd $(DIRNAME) 
 
