@@ -257,9 +257,11 @@ Liste_lexeme_t *  lex_read_line( char * line, int nline) {
     				
 				case POINT:
 					etat=ERREUR;
+					break;
 					
 				case INIT:
-					etat=ERREUR;	
+					etat=ERREUR;
+					break;
 					
 				default :
 					;		
