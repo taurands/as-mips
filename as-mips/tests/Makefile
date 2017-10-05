@@ -1,14 +1,14 @@
-TARGET=as-mips
+TARGET=test_gen_list
 DIRNAME=`basename $(PWD)`
 CC=`which gcc`
 LD=`which gcc`
 RM=`which rm` -f
 DOXYGEN=`which doxygen`
 
-SRCDIR=src
-INCDIR=include
-TESTDIR=tests
-DOCDIR=doc
+SRCDIR=../src
+INCDIR=../include
+TESTDIR=../testing
+DOCDIR=../doc
 
 GARBAGE=*~ $(SRCDIR)/*~ $(INCDIR)/*~ $(TESTDIR)/*~
 
@@ -22,7 +22,6 @@ CFLAGS_DBG=$(CFLAGS) -g -DDEBUG -Wall
 CFLAGS_RLS=$(CFLAGS)
 
 SRC=$(wildcard $(SRCDIR)/*.c)
-SRCT=$(wildcard $(TESTDIR)/*.c)
 
 OBJ_DBG=$(SRC:.c=.dbg)
 OBJ_RLS=$(SRC:.c=.rls)
@@ -48,19 +47,12 @@ release : $(OBJ_RLS)
 
 %.rls : %.c
 	$(CC) $< $(CFLAGS_RLS) -c -o $(basename $<).rls
-	
-test_gen_list:	tests/test_gen_list.dbg src/gen_list.dbg
-	$(LD) $^ $(LFLAGS) -o tests/test_gen_list
 
-test_gen_list.dbg:	tests/test_gen_list.c
-	$(CC) $< $(CFLAGS_DBG) -c -o $(basename $<).rls
-	
 docu : 
 	$(DOXYGEN)
 
 clean : 
 	$(RM) $(TARGET) $(SRCDIR)/*.orig $(SRCDIR)/*.dbg $(SRCDIR)/*.rls $(GARBAGE)
-	$(RM) $(TESTDIR)/*.orig $(TESTDIR)/*.dbg $(TESTDIR)/*.rls
 	# modifié pour ne pas effacer le répertoire /doc/livrable
 	$(RM) -r $(DOCDIR)/html $(DOCDIR)/latex $(DOCDIR)/rtf $(DOCDIR)/doxygen_warning.txt
 

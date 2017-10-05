@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
  
-#include "list.h"
- 
+#include "gen_list.h"
+
+#define _POSIX_C_SOURCE 200112L
+
 void list_with_ints();
 void list_with_strings();
  
@@ -15,6 +18,8 @@ int main(int argc, char *argv[])
   printf("Loading int demo...\n");
   list_with_ints();
   list_with_strings();
+
+  return 0;
 }
  
 void list_with_ints()
@@ -23,7 +28,7 @@ void list_with_ints()
   printf("Generating list with the first %d positive numbers...\n", numbers);
  
   int i;
-  list list;
+  Liste_t list;
   list_new(&list, sizeof(int), NULL);
  
   for(i = 1; i <= numbers; i++) {
@@ -42,7 +47,7 @@ void list_with_strings()
   const char *names[] = { "David", "Kevin", "Michael", "Craig", "Jimi" };
  
   int i;
-  list list;
+  Liste_t list;
   list_new(&list, sizeof(char *), free_string);
  
   char *name;
