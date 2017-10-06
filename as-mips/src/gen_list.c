@@ -13,102 +13,67 @@
 
 /* inspiré du code de http://pseudomuto.com/development/2013/05/02/implementing-a-generic-linked-list-in-c/ */
 
-void list_new(Liste_t *list, int elementSize, fonctionDestructeur *freeFn)
+void initialiseListe(Liste_t *liste_p, int tailleElement, fonctionDestructeur *freeFn)
 {
-  assert(elementSize > 0);
-  list->nbElements = 0;
-  list->tailleElements = elementSize;
-  list->debut_liste_p = list->fin_liste_p = NULL;
-  list->fnDestructeur_p = freeFn;
+  assert(tailleElement > 0);
+  liste_p->nbElements = 0;
+  liste_p->tailleElements = tailleElement;
+  liste_p->debut_liste_p = liste_p->fin_liste_p = NULL;
+  liste_p->fnDestructeur_p = freeFn;
 }
 
-void list_destroy(Liste_t *list)
+void detruitListe(Liste_t *liste_p)
 {
-  ElementListe_t *current;
-  while(list->debut_liste_p != NULL) {
-    current = list->debut_liste_p;
-    list->debut_liste_p = current->suivant_p;
+  ElementListe_t *elementCourant_p;
+  while(liste_p->debut_liste_p != NULL) {
+    elementCourant_p = liste_p->debut_liste_p;
+    liste_p->debut_liste_p = elementCourant_p->suivant_p;
 
-    if(list->fnDestructeur_p) {
-      list->fnDestructeur_p(current->donnees_p);
+    if(liste_p->fnDestructeur_p) {
+      liste_p->fnDestructeur_p(elementCourant_p->donnees_p);
     }
 
-    free(current->donnees_p);
-    free(current);
+    free(elementCourant_p->donnees_p);
+    free(elementCourant_p);
   }
 }
 
-void list_prepend(Liste_t *list, void *element)
+void ajouteElementDebutListe(Liste_t *liste_p, void *nouvelElement_p)
 {
-  ElementListe_t *node = malloc(sizeof(ElementListe_t));
-  node->donnees_p = malloc(list->tailleElements);
-  memcpy(node->donnees_p, element, list->tailleElements);
+  ElementListe_t *element_p = malloc(sizeof(ElementListe_t));
+  element_p->donnees_p = malloc(liste_p->tailleElements);
+  memcpy(element_p->donnees_p, nouvelElement_p, liste_p->tailleElements);
 
-  node->suivant_p = list->debut_liste_p;
-  list->debut_liste_p = node;
+  element_p->suivant_p = liste_p->debut_liste_p;
+  liste_p->debut_liste_p = element_p;
 
-  /* first node? */
-  if(!list->fin_liste_p) {
-    list->fin_liste_p = list->debut_liste_p;
+  /* Cas où la liste était vide et que ce sera le premier élément */
+  if(!liste_p->fin_liste_p) {
+    liste_p->fin_liste_p = liste_p->debut_liste_p;
   }
 
-  list->nbElements++;
+  liste_p->nbElements++;
 }
 
-void list_append(Liste_t *list, void *element)
+void ajouteElementFinListe(Liste_t *liste_p, void *nouvelElement_p)
 {
-  ElementListe_t *node = malloc(sizeof(ElementListe_t));
-  node->donnees_p = malloc(list->tailleElements);
-  node->suivant_p = NULL;
+  ElementListe_t *element_p = malloc(sizeof(ElementListe_t));
+  element_p->donnees_p = malloc(liste_p->tailleElements);
+  element_p->suivant_p = NULL;
 
-  memcpy(node->donnees_p, element, list->tailleElements);
+  memcpy(element_p->donnees_p, nouvelElement_p, liste_p->tailleElements);
 
-  if(list->nbElements == 0) {
-    list->debut_liste_p = list->fin_liste_p = node;
+  if(liste_p->nbElements == 0) {
+    liste_p->debut_liste_p = liste_p->fin_liste_p = element_p;
   } else {
-    list->fin_liste_p->suivant_p = node;
-    list->fin_liste_p = node;
+    liste_p->fin_liste_p->suivant_p = element_p;
+    liste_p->fin_liste_p = element_p;
   }
 
-  list->nbElements++;
+  liste_p->nbElements++;
 }
 
-void list_for_each(Liste_t *list, listIterator iterator)
+int tailleListe(Liste_t *liste_p)
 {
-  assert(iterator != NULL);
-
-  ElementListe_t *node = list->debut_liste_p;
-  bool result = TRUE;
-  while(node != NULL && result) {
-    result = iterator(node->donnees_p);
-    node = node->suivant_p;
-  }
-}
-
-void list_head(Liste_t *list, void *element, bool removeFromList)
-{
-  assert(list->debut_liste_p != NULL);
-
-  ElementListe_t *node = list->debut_liste_p;
-  memcpy(element, node->donnees_p, list->tailleElements);
-
-  if(removeFromList) {
-    list->debut_liste_p = node->suivant_p;
-    list->nbElements--;
-
-    free(node->donnees_p);
-    free(node);
-  }
-}
-
-void list_tail(Liste_t *list, void *element)
-{
-  assert(list->fin_liste_p != NULL);
-  ElementListe_t *node = list->fin_liste_p;
-  memcpy(element, node->donnees_p, list->tailleElements);
-}
-
-int list_size(Liste_t *list)
-{
-  return list->nbElements;
+  return liste_p->nbElements;
 }

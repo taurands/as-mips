@@ -29,15 +29,20 @@ void list_with_ints()
  
   int i;
   Liste_t list;
-  list_new(&list, sizeof(int), NULL);
+  initialiseListe(&list, sizeof(int), NULL);
  
   for(i = 1; i <= numbers; i++) {
-    list_append(&list, &i);
+    ajouteElementFinListe(&list, &i);
   }
+
+  ElementListe_t *elementCourant_p = list.debut_liste_p;
+  while (elementCourant_p) {
+	  printf("%d\n",*(int *)elementCourant_p->donnees_p);
+	  elementCourant_p = elementCourant_p->suivant_p;
+  }
+  /* list_for_each(&list, iterate_int); */
  
-  list_for_each(&list, iterate_int);
- 
-  list_destroy(&list);
+  detruitListe(&list);
   printf("Successfully freed %d numbers...\n", numbers);
 }
  
@@ -48,30 +53,25 @@ void list_with_strings()
  
   int i;
   Liste_t list;
-  list_new(&list, sizeof(char *), free_string);
+  initialiseListe(&list, sizeof(char *), free_string);
  
   char *name;
   for(i = 0; i < numNames; i++) {
-    name = strdup(names[i]);
-    list_append(&list, &name);
+    /* name = strdup(names[i]); */
+	name = (char *)malloc(sizeof(*name)*(1+strlen(names[i])));
+    strcpy(name, names[i]);
+    ajouteElementFinListe(&list, &name);
   }
  
-  list_for_each(&list, iterate_string);
+  /* list_for_each(&list, iterate_string); */
+  ElementListe_t *elementCourant_p = list.debut_liste_p;
+  while (elementCourant_p) {
+	  printf("%s\n",*(char **)elementCourant_p->donnees_p);
+	  elementCourant_p = elementCourant_p->suivant_p;
+  }
  
-  list_destroy(&list);
+  detruitListe(&list);
   printf("Successfully freed %d strings...\n", numNames);
-}
- 
-bool iterate_int(void *data) 
-{
-  printf("Found value: %d\n", *(int *)data);
-  return TRUE;
-}
- 
-bool iterate_string(void *data)
-{
-  printf("Found string value: %s\n", *(char **)data);
-  return TRUE;
 }
  
 void free_string(void *data)

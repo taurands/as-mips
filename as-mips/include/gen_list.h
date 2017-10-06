@@ -15,7 +15,7 @@ typedef void (fonctionDestructeur)(void *);
 typedef enum { FALSE, TRUE } bool;
 
 
-typedef bool (*listIterator)(void *);
+typedef bool (listIterator)(void *);
 
 /**
  * @struct ElementListe_s
@@ -38,30 +38,11 @@ typedef struct Liste_s {
   fonctionDestructeur *fnDestructeur_p;	/**< Pointeur sur la fonction de destruction d'un élément de liste. NULL s'il n'y a pas de destructeur associé */
 } Liste_t;
 
-/*
-typedef struct ElementListeHeterogene_s {
-  struct ElementListeHeterogene_s *next;
-  int tailleElement;
-  fonctionDestructeur fnDestructeur;
-  void *data;
-} ElementListeHeterogene_t;
+void initialiseListe(Liste_t *liste_p, int elementSize, fonctionDestructeur *freeFn);
+void detruitListe(Liste_t *list);
 
-typedef struct ListeHeterogene_s {
-  int nbElements;
-  ElementListeHeterogene_t *debut_liste_p;
-  ElementListeHeterogene_t *fin_liste_p;
-} ListeHeterogene_t;
-*/
-
-void list_new(Liste_t *list, int elementSize, fonctionDestructeur *freeFn);
-void list_destroy(Liste_t *list);
-
-void list_prepend(Liste_t *list, void *element);
-void list_append(Liste_t *list, void *element);
-int list_size(Liste_t *list);
-
-void list_for_each(Liste_t *list, listIterator iterator);
-void list_head(Liste_t *list, void *element, bool removeFromList);
-void list_tail(Liste_t *list, void *element);
+void ajouteElementDebutListe(Liste_t *liste_p, void *nouvelElement_p);
+void ajouteElementFinListe(Liste_t *liste_p, void *nouvelElement_p);
+int tailleListe(Liste_t *liste_p);
 
 #endif
