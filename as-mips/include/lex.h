@@ -13,8 +13,8 @@
 #include <gen_list.h>
 
 /**
- * \enum Nature_lexeme_t
- * \brief Constantes de nature de lexèmes
+ * @enum Nature_lexeme_t
+ * @brief Constantes de nature de lexèmes
  * 
  * La nature des lexème einsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
  */
@@ -40,8 +40,8 @@ typedef enum Nature_lexeme_t {
 } Nature_lexeme_t;
 
 /**
- * \enum Etat_lex_t
- * \brief Constantes de définition des états de la machine à états finis d'analyse lexicale
+ * @enum Etat_lex_t
+ * @brief Constantes de définition des états de la machine à états finis d'analyse lexicale
  * 
  */
 typedef	enum Etat_lex_t {
@@ -73,8 +73,8 @@ typedef	enum Etat_lex_t {
 
 
 /**
- * \struct Lexeme_t
- * \brief Type de l'objet Lexeme
+ * @struct Lexeme_t
+ * @brief Type de l'objet Lexeme
  * 
  * La nature des lexème ainsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
  */

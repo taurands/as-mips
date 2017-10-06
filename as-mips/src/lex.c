@@ -423,12 +423,12 @@ void lex_list_visualisation(Liste_t * liste_p) {
  *
  */
 void lex_lines_visualisation(Liste_t * liste_p) {
-	int i=0;
+	int numeroLigne=0;
 	ElementListe_t * ligneCourante_p=liste_p->debut_liste_p;
     
     while(ligneCourante_p) {
     	if (ligneCourante_p == liste_p->debut_liste_p) printf("Ligne (Nature lexème|Contenu lexème), ...\n");
-    	printf("%5d ", ++i); lex_list_visualisation((Liste_t *)ligneCourante_p->donnees_p); printf("\n");
+    	printf("%5d ", ++numeroLigne); lex_list_visualisation((Liste_t *)ligneCourante_p->donnees_p); printf("\n");
     	ligneCourante_p=ligneCourante_p->suivant_p;
     }
 }
