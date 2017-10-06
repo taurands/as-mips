@@ -244,7 +244,6 @@ Liste_t * lex_read_line( char * line, int nline) {
         
         if (etat==COMMENTAIRE) {
          	char * diese_p=strchr(line,'#');
-         	lexemeCourant.data=diese_p;
          	if (!(lexemeCourant.data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
     		strcpy(lexemeCourant.data, diese_p);
          	lexemeCourant.nature=COMMENTAIRE;
@@ -299,7 +298,7 @@ Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
     Liste_t *lignesLexeme_p=NULL;
 
     if (!(lignesLexeme_p=malloc(sizeof(*lignesLexeme_p)))) ERROR_MSG("Impossible de créer une liste de ligne de lexèmes");
-    initialiseListe(lignesLexeme_p, sizeof(*ligneLexemeCourante_p), detruitListe);
+    initialiseListe(lignesLexeme_p, sizeof(*ligneLexemeCourante_p), (fonctionDestructeur *)detruitListe);
     
     fp = fopen( file, "r" );
     if ( NULL == fp ) {
@@ -319,10 +318,6 @@ Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
                 ligneLexemeCourante_p=lex_read_line( res, *nlines );
                 ajouteElementFinListe(lignesLexeme_p, ligneLexemeCourante_p);
                 free(ligneLexemeCourante_p);
-                /*
-                fin_liste_ligne_lexeme_p=add_lex_line(fin_liste_ligne_lexeme_p, ligne_lexeme_p, *nlines);
-                if (!debut_liste_ligne_lexeme_p) debut_liste_ligne_lexeme_p=fin_liste_ligne_lexeme_p;
-                */
             }
         }       
     }
@@ -396,7 +391,7 @@ void detruitContenuLexeme(void *Lexeme_p) {
  * @brief Cette fonction permet de visualiser le contenu d'un lexeme
  *
  */
-void lex_visualisation(Lexeme_t * lexeme_p) {
+void visualisationLexeme(Lexeme_t * lexeme_p) {
 	printf("(%s|%s)",etat_lex_to_str(lexeme_p->nature),lexeme_p->data);
 }
 
@@ -406,11 +401,11 @@ void lex_visualisation(Lexeme_t * lexeme_p) {
  * @brief Cette fonction permet de visualiser le contenu d'une liste de lexeme
  *
  */
-void lex_list_visualisation(Liste_t * liste_p) {
+void visualisationLigneLexemes(Liste_t * liste_p) {
 
 	ElementListe_t * lexemeCourant_p=liste_p->debut_liste_p;
 	while (lexemeCourant_p) {
-		lex_visualisation((Lexeme_t *)lexemeCourant_p->donnees_p);
+		visualisationLexeme((Lexeme_t *)lexemeCourant_p->donnees_p);
 		lexemeCourant_p=lexemeCourant_p->suivant_p;
 		if (lexemeCourant_p) printf(", ");
 	}
@@ -422,13 +417,13 @@ void lex_list_visualisation(Liste_t * liste_p) {
  * @brief Cette fonction permet de visualiser le contenu de la liste de lignes de lexeme
  *
  */
-void lex_lines_visualisation(Liste_t * liste_p) {
+void visualisationLignesLexemes(Liste_t * liste_p) {
 	int numeroLigne=0;
 	ElementListe_t * ligneCourante_p=liste_p->debut_liste_p;
     
     while(ligneCourante_p) {
     	if (ligneCourante_p == liste_p->debut_liste_p) printf("Ligne (Nature lexème|Contenu lexème), ...\n");
-    	printf("%5d ", ++numeroLigne); lex_list_visualisation((Liste_t *)ligneCourante_p->donnees_p); printf("\n");
+    	printf("%5d ", ++numeroLigne); visualisationLigneLexemes((Liste_t *)ligneCourante_p->donnees_p); printf("\n");
     	ligneCourante_p=ligneCourante_p->suivant_p;
     }
 }

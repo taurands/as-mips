@@ -61,7 +61,7 @@ int main ( int argc, char *argv[] ) {
 
     /* ---------------- print the lexical analysis -------------------*/
     DEBUG_MSG("Le fichier source comporte %d lignes",nlines);
-	lex_lines_visualisation(lignesLexeme_p);
+	visualisationLignesLexemes(lignesLexeme_p);
 
     /* ---------------- Free memory and terminate -------------------*/
     /*free_lex_lines(liste_ligne_lexeme_p);*/

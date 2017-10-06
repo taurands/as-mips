@@ -87,9 +87,9 @@ Liste_t * lex_read_line( char *, int);
 Liste_t * lex_load_file( char *, unsigned int * );
 void lex_standardise( char*, char*  );
 
-void lex_lines_visualisation(Liste_t * liste_p);
-void lex_visualisation(Lexeme_t * lexeme_p);
-void lex_list_visualisation(Liste_t * liste_p);
+void visualisationLignesLexemes(Liste_t * liste_p);
+void visualisationLexeme(Lexeme_t * lexeme_p);
+void visualisationLigneLexemes(Liste_t * liste_p);
 
 void detruitContenuLexeme(void *Lexeme_p);
 char * etat_lex_to_str(Etat_lex_t etat);
