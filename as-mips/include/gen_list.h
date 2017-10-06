@@ -12,11 +12,6 @@
 /* a common function used to free malloc'd objects */
 typedef void (fonctionDestructeur)(void *);
 
-typedef enum { FALSE, TRUE } bool;
-
-
-typedef bool (listIterator)(void *);
-
 /**
  * @struct ElementListe_s
  * @brief Elément d'une liste simple générique
@@ -39,7 +34,7 @@ typedef struct Liste_s {
 } Liste_t;
 
 void initialiseListe(Liste_t *liste_p, int elementSize, fonctionDestructeur *freeFn);
-void detruitListe(Liste_t *list);
+void detruitListe(void *liste_p);
 
 void ajouteElementDebutListe(Liste_t *liste_p, void *nouvelElement_p);
 void ajouteElementFinListe(Liste_t *liste_p, void *nouvelElement_p);

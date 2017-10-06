@@ -10,6 +10,8 @@
 #ifndef _LEX_H_
 #define _LEX_H_
 
+#include <gen_list.h>
+
 /**
  * \enum Nature_lexeme_t
  * \brief Constantes de nature de lexèmes
@@ -32,7 +34,6 @@ typedef enum Nature_lexeme_t {
 	L_NOMBRE_DECIMAL,		/**< Nombre décimal. */
  	L_NOMBRE_OCTAL,			/**< Nombre octal. */
  	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
- 	
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
  	L_ERREUR				/**< Mauvaise configuration de caractères. */
@@ -82,42 +83,15 @@ typedef struct Lexeme_t {
 	char * data;					/**< Donnée éventuelle stockée sous forme de chaine de caractères. */
 } Lexeme_t;
 
-/**
- * \struct Liste_lexeme_t
- * \brief Type de l'objet Liste_lexeme : c'est une liste chainée de lexeme
- * 
- * Cette liste permet de stocker les lexemes dans l'ordre du fichier source
- */
-typedef struct Liste_lexeme_t {
-	Lexeme_t lexeme;				/**< Champ lexeme */
-	struct Liste_lexeme_t * suiv;	/**< Pointeur sur le prochain lexeme de la liste */ 
-} Liste_lexeme_t;
-
-/**
- * \struct Liste_liste_lexeme_t
- * \brief Type de l'objet Liste__lite_lexeme : c'est une liste chainée de liste de lexeme
- * 
- * Cette liste permet de stocker les liste de lexemes correspondant aux lignes du fichier source
- */
-typedef struct Liste_liste_lexeme_t {
-	Liste_lexeme_t * liste_lexeme;			/**< Champ lexeme */
-	int ligne;								/**< Numéro de la ligne source */
-	struct Liste_liste_lexeme_t * suiv;		/**< Pointeur sur la prochaine liste de lexeme */
-} Liste_liste_lexeme_t;
-
-Liste_lexeme_t * lex_read_line( char *, int);
-Liste_liste_lexeme_t * lex_load_file( char *, unsigned int * );
+Liste_t * lex_read_line( char *, int);
+Liste_t * lex_load_file( char *, unsigned int * );
 void lex_standardise( char*, char*  );
 
-Liste_liste_lexeme_t * add_lex_line(Liste_liste_lexeme_t * fin_liste_p, Liste_lexeme_t * debut_liste_p, int ligne);
-void free_lex_lines(Liste_liste_lexeme_t * debut_liste_p);
-void lex_lines_visualisation(Liste_liste_lexeme_t * debut_liste_p);
-
-Liste_lexeme_t * add_lex_list_item(Liste_lexeme_t * fin_liste_p, enum Nature_lexeme_t nature, char* data);
-void free_lex_list(Liste_lexeme_t * debut_liste_p);
+void lex_lines_visualisation(Liste_t * liste_p);
 void lex_visualisation(Lexeme_t * lexeme_p);
-void lex_list_visualisation(Liste_lexeme_t * debut_liste_p);
+void lex_list_visualisation(Liste_t * liste_p);
 
+void detruitContenuLexeme(void *Lexeme_p);
 char * etat_lex_to_str(Etat_lex_t etat);
 
 #endif /* _LEX_H_ */

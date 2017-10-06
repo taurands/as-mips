@@ -2,15 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
  
-#include "gen_list.h"
+#include <gen_list.h>
 
-#define _POSIX_C_SOURCE 200112L
 
 void list_with_ints();
 void list_with_strings();
  
-bool iterate_int(void *data);
-bool iterate_string(void *data);
 void free_string(void *data);
  
 int main(int argc, char *argv[])
@@ -40,7 +37,6 @@ void list_with_ints()
 	  printf("%d\n",*(int *)elementCourant_p->donnees_p);
 	  elementCourant_p = elementCourant_p->suivant_p;
   }
-  /* list_for_each(&list, iterate_int); */
  
   detruitListe(&list);
   printf("Successfully freed %d numbers...\n", numbers);
@@ -57,13 +53,11 @@ void list_with_strings()
  
   char *name;
   for(i = 0; i < numNames; i++) {
-    /* name = strdup(names[i]); */
 	name = (char *)malloc(sizeof(*name)*(1+strlen(names[i])));
     strcpy(name, names[i]);
     ajouteElementFinListe(&list, &name);
   }
  
-  /* list_for_each(&list, iterate_string); */
   ElementListe_t *elementCourant_p = list.debut_liste_p;
   while (elementCourant_p) {
 	  printf("%s\n",*(char **)elementCourant_p->donnees_p);

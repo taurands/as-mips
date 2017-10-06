@@ -39,7 +39,7 @@ int main ( int argc, char *argv[] ) {
     unsigned int 	nlines 	= 0;
     char         	 *file 	= NULL;
     
-    Liste_liste_lexeme_t * liste_ligne_lexeme_p=NULL;
+    Liste_t *lignesLexeme_p=NULL;
 
     if ( argc != 2 ) {
         print_usage(argv[0]);
@@ -57,14 +57,16 @@ int main ( int argc, char *argv[] ) {
 
 
     /* ---------------- do the lexical analysis -------------------*/
-    liste_ligne_lexeme_p=lex_load_file( file, &nlines);
+    lignesLexeme_p=lex_load_file( file, &nlines);
 
     /* ---------------- print the lexical analysis -------------------*/
     DEBUG_MSG("Le fichier source comporte %d lignes",nlines);
-	lex_lines_visualisation(liste_ligne_lexeme_p);
+	lex_lines_visualisation(lignesLexeme_p);
 
     /* ---------------- Free memory and terminate -------------------*/
-    free_lex_lines(liste_ligne_lexeme_p);
+    /*free_lex_lines(liste_ligne_lexeme_p);*/
+    detruitListe(lignesLexeme_p);
+    free(lignesLexeme_p);
 
     exit( EXIT_SUCCESS );
 }

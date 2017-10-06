@@ -9,7 +9,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "gen_list.h"
+#include <gen_list.h>
+#include <notify.h>
 
 /* inspiré du code de http://pseudomuto.com/development/2013/05/02/implementing-a-generic-linked-list-in-c/ */
 
@@ -22,15 +23,16 @@ void initialiseListe(Liste_t *liste_p, int tailleElement, fonctionDestructeur *f
   liste_p->fnDestructeur_p = freeFn;
 }
 
-void detruitListe(Liste_t *liste_p)
+void detruitListe(void *liste_p)
 {
+	DEBUG_MSG("Liste: %p ... %d",liste_p,((Liste_t *)liste_p)->nbElements);
   ElementListe_t *elementCourant_p;
-  while(liste_p->debut_liste_p != NULL) {
-    elementCourant_p = liste_p->debut_liste_p;
-    liste_p->debut_liste_p = elementCourant_p->suivant_p;
+  while(((Liste_t *)liste_p)->debut_liste_p != NULL) {
+    elementCourant_p = ((Liste_t *)liste_p)->debut_liste_p;
+    ((Liste_t *)liste_p)->debut_liste_p = elementCourant_p->suivant_p;
 
-    if(liste_p->fnDestructeur_p) {
-      liste_p->fnDestructeur_p(elementCourant_p->donnees_p);
+    if(((Liste_t *)liste_p)->fnDestructeur_p) {
+    	((Liste_t *)liste_p)->fnDestructeur_p(elementCourant_p->donnees_p);
     }
 
     free(elementCourant_p->donnees_p);

@@ -17,6 +17,7 @@
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
+/* #include <gen_list.h> */
 
 /**
  * @param etat etat de la machine à états finis lexicale
@@ -213,11 +214,11 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  * @brief This function performs lexical analysis of one standardized line.
  *
  */
-Liste_lexeme_t *  lex_read_line( char * line, int nline) {
+Liste_t * lex_read_line( char * line, int nline) {
 
-	
-	Liste_lexeme_t * debut_liste_p = NULL;
-	Liste_lexeme_t * fin_liste_p = NULL;
+    Liste_t *ligneLexemeCourante_p=NULL;
+    Lexeme_t lexemeCourant;
+
 	enum Etat_lex_t etat;
 	char c;
 	int i;
@@ -225,6 +226,9 @@ Liste_lexeme_t *  lex_read_line( char * line, int nline) {
     char *seps = " ";
     char *token = NULL;
     char save[2*STRLEN];
+
+    if (!(ligneLexemeCourante_p=malloc(sizeof(*ligneLexemeCourante_p)))) ERROR_MSG("Impossible de créer une nouvelle ligne de lexèmes");
+    initialiseListe(ligneLexemeCourante_p, sizeof(lexemeCourant), detruitContenuLexeme);
 
     /* copy the input line so that we can do anything with it without impacting outside world*/
     memcpy( save, line, 2*STRLEN );
@@ -240,9 +244,12 @@ Liste_lexeme_t *  lex_read_line( char * line, int nline) {
         
         if (etat==COMMENTAIRE) {
          	char * diese_p=strchr(line,'#');
-  			fin_liste_p=add_lex_list_item(fin_liste_p, COMMENTAIRE, diese_p);
-  			if (!debut_liste_p) debut_liste_p=fin_liste_p;
-        	break;
+         	lexemeCourant.data=diese_p;
+         	if (!(lexemeCourant.data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
+    		strcpy(lexemeCourant.data, diese_p);
+         	lexemeCourant.nature=COMMENTAIRE;
+         	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
+         	break;
         }
         else {
         	/* en cas d'états intermédiaires que l'on n'attend pas en sortie, on passe en erreur */
@@ -266,12 +273,13 @@ Liste_lexeme_t *  lex_read_line( char * line, int nline) {
 				default :
 					;		
         	}
-        	
-  			fin_liste_p=add_lex_list_item(fin_liste_p, etat, token);
-  			if (!debut_liste_p) debut_liste_p=fin_liste_p;
+         	if (!(lexemeCourant.data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
+    		strcpy(lexemeCourant.data, token);
+         	lexemeCourant.nature=etat;
+         	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
     	}
     }
-    return debut_liste_p;
+    return ligneLexemeCourante_p;
 }
 
 /**
@@ -281,18 +289,18 @@ Liste_lexeme_t *  lex_read_line( char * line, int nline) {
  * @brief This function loads an assembly code from a file into memory.
  *
  */
-Liste_liste_lexeme_t * lex_load_file( char *file, unsigned int *nlines ) {
+Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
 
     FILE        *fp   = NULL;
     char         line[STRLEN]; /* original source line */
     char         res[2*STRLEN]; /* standardised source line, can be longeur due to some possible added spaces*/
     
-    
-    Liste_liste_lexeme_t * debut_liste_ligne_lexeme_p=NULL;
-    Liste_liste_lexeme_t * fin_liste_ligne_lexeme_p=NULL;
-    
-    Liste_lexeme_t * ligne_lexeme_p=NULL;
+    Liste_t *ligneLexemeCourante_p=NULL;
+    Liste_t *lignesLexeme_p=NULL;
 
+    if (!(lignesLexeme_p=malloc(sizeof(*lignesLexeme_p)))) ERROR_MSG("Impossible de créer une liste de ligne de lexèmes");
+    initialiseListe(lignesLexeme_p, sizeof(*ligneLexemeCourante_p), detruitListe);
+    
     fp = fopen( file, "r" );
     if ( NULL == fp ) {
         /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
@@ -308,19 +316,21 @@ Liste_liste_lexeme_t * lex_load_file( char *file, unsigned int *nlines ) {
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
-                ligne_lexeme_p=lex_read_line( res, *nlines );
+                ligneLexemeCourante_p=lex_read_line( res, *nlines );
+                ajouteElementFinListe(lignesLexeme_p, ligneLexemeCourante_p);
+                free(ligneLexemeCourante_p);
+                /*
                 fin_liste_ligne_lexeme_p=add_lex_line(fin_liste_ligne_lexeme_p, ligne_lexeme_p, *nlines);
                 if (!debut_liste_ligne_lexeme_p) debut_liste_ligne_lexeme_p=fin_liste_ligne_lexeme_p;
+                */
             }
         }       
     }
 
     fclose(fp);
     if (!*nlines) WARNING_MSG("Attention, le fichier \"%s\" est vide",file);
-    return debut_liste_ligne_lexeme_p;
+    return lignesLexeme_p;
 }
-
-
 
 /**
  * @param in Input line of source code (possibly very badly written).
@@ -368,45 +378,16 @@ void lex_standardise( char* in, char* out ) {
 				j++;
 			}
         }
-        
         /* Ajoute un espace après les caractères contenus dans ESPACE_APRES sauf s'il y en a déjà en */
         if (strchr(ESPACE_APRES, in[i])) if ( i+1 < strlen(in) ) if (!isblank((int) in[i+1])) out[j++]=' ';
     }
     out[j]='\0';
-
     DEBUG_MSG("out = \"%s\"", out);
 }
 
-
-/**
- * @param fin_liste_p element derriere lequel on ajoutera le nouvel element de la liste de lexeme
- * @param nature la nature du nouveau lexeme
- * @param data contenu du nouveau lexeme
- * @return nothing
- * @brief Cette fonction permet d'ajouter un nouvel element à la fin d'une liste de lexeme
- *
- */
-Liste_lexeme_t * add_lex_list_item(Liste_lexeme_t * fin_liste_p, enum Nature_lexeme_t nature, char* data) {
-
-	Liste_lexeme_t* lex_list_item_p = (Liste_lexeme_t*)calloc(1,sizeof(Liste_lexeme_t));
-    
-    if(!lex_list_item_p) {
-        ERROR_MSG("Impossible de creer un nouvel élément de liste de lexeme");
-    }
-    
-    lex_list_item_p->lexeme.nature = nature;
-    if (data) {
-		lex_list_item_p->lexeme.data = (char*)calloc(1,strlen(data)+1*sizeof(char));
-		if(!lex_list_item_p->lexeme.data) {
-		    ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
-		}
-		strcpy(lex_list_item_p->lexeme.data, data);
-	} 
- 
- 	if (fin_liste_p) {
- 		fin_liste_p->suiv=lex_list_item_p;
- 	}
- 	return lex_list_item_p;
+void detruitContenuLexeme(void *Lexeme_p) {
+	DEBUG_MSG("Lexeme: %p ... %s",Lexeme_p,((Lexeme_t *)Lexeme_p)->data);
+	free(((Lexeme_t *)Lexeme_p)->data);
 }
 
 /**
@@ -425,70 +406,13 @@ void lex_visualisation(Lexeme_t * lexeme_p) {
  * @brief Cette fonction permet de visualiser le contenu d'une liste de lexeme
  *
  */
-void lex_list_visualisation(Liste_lexeme_t * debut_liste_p) {
+void lex_list_visualisation(Liste_t * liste_p) {
 
-	Liste_lexeme_t* list_item_p=debut_liste_p;
-	while (list_item_p) {
-		lex_visualisation(&(list_item_p->lexeme));
-		list_item_p=list_item_p->suiv;
-		if (list_item_p) printf(", ");
-	}
-}
-
-/**
- * @param debut_liste_p pointeur sur le début d'une liste de lexeme
- * @return nothing
- * @brief Cette fonction permet de liberer toute la mémoire dynamique utilisée par une liste de lexeme
- *
- */
-void free_lex_list(Liste_lexeme_t * debut_liste_p) {
-	Liste_lexeme_t* next_item_p;
-	while (debut_liste_p) {
-		next_item_p=debut_liste_p->suiv;
-		
-		if (debut_liste_p->lexeme.data) {
-			free(debut_liste_p->lexeme.data);
-		}
-		free(debut_liste_p);
-		debut_liste_p=next_item_p;
-	}
-}
-
-/**
- * @param fin_liste_p element derriere lequel on ajoutera le nouvel element de la ligne de lexeme
- * @param debut_liste_p nouvel element de la ligne de lexeme
- * @param ligne numéro de ligne dans le fichier source
- * @return nothing
- * @brief Cette fonction permet d'ajouter un nouvel element à la fin d'une ligne de lexeme
- *
- */
-Liste_liste_lexeme_t * add_lex_line(Liste_liste_lexeme_t * fin_liste_p, Liste_lexeme_t * debut_liste_p, int ligne) {
-	Liste_liste_lexeme_t* lex_ligne_p = (Liste_liste_lexeme_t*)calloc(1,sizeof(Liste_liste_lexeme_t));
-    if(!lex_ligne_p) ERROR_MSG("Impossible de créer une nouvelle ligne de lexeme");
-   
-    lex_ligne_p->liste_lexeme = debut_liste_p;
-    lex_ligne_p->ligne = ligne; 
-
- 	if (fin_liste_p) fin_liste_p->suiv=lex_ligne_p;
- 	return lex_ligne_p;
-}
-
-/**
- * @param debut_liste_p pointeur sur le début d'une liste de ligne de lexeme
- * @return rien
- * @brief Cette fonction permet de liberer toute la mémoire dynamique utilisée par une liste de lignes de lexeme
- *
- */
-void free_lex_lines(Liste_liste_lexeme_t * debut_liste_p) {
-	Liste_liste_lexeme_t* next_ligne_p;
-	while (debut_liste_p) {
-		next_ligne_p=debut_liste_p->suiv;
-		
-		if (debut_liste_p->liste_lexeme) {
-			free_lex_list(debut_liste_p->liste_lexeme);
-		}
-		free(debut_liste_p);
-		debut_liste_p=next_ligne_p;
+	ElementListe_t * lexemeCourant_p=liste_p->debut_liste_p;
+	while (lexemeCourant_p) {
+		lex_visualisation((Lexeme_t *)lexemeCourant_p->donnees_p);
+		lexemeCourant_p=lexemeCourant_p->suivant_p;
+		if (lexemeCourant_p) printf(", ");
 	}
 }
 
@@ -498,14 +422,13 @@ void free_lex_lines(Liste_liste_lexeme_t * debut_liste_p) {
  * @brief Cette fonction permet de visualiser le contenu de la liste de lignes de lexeme
  *
  */
-void lex_lines_visualisation(Liste_liste_lexeme_t * debut_liste_p) {
-    Liste_liste_lexeme_t * ligne_lexeme_p=debut_liste_p;
+void lex_lines_visualisation(Liste_t * liste_p) {
+	int i=0;
+	ElementListe_t * ligneCourante_p=liste_p->debut_liste_p;
     
-    while(ligne_lexeme_p) {
-    	if (ligne_lexeme_p == debut_liste_p) printf("Ligne (Nature lexème|Contenu lexème), ...\n");
-    	printf("%5d ", ligne_lexeme_p->ligne); lex_list_visualisation(ligne_lexeme_p->liste_lexeme); printf("\n");
-    	ligne_lexeme_p=ligne_lexeme_p->suiv;
+    while(ligneCourante_p) {
+    	if (ligneCourante_p == liste_p->debut_liste_p) printf("Ligne (Nature lexème|Contenu lexème), ...\n");
+    	printf("%5d ", ++i); lex_list_visualisation((Liste_t *)ligneCourante_p->donnees_p); printf("\n");
+    	ligneCourante_p=ligneCourante_p->suivant_p;
     }
 }
-
-
