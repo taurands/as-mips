@@ -2,10 +2,39 @@
 #include <string.h>
 #include <assert.h>
 
-#include "list.h"
+#include "gen_list.h"
 
-# inspiré du code de http://pseudomuto.com/development/2013/05/02/implementing-a-generic-linked-list-in-c/
+/* inspiré du code de http://pseudomuto.com/development/2013/05/02/implementing-a-generic-linked-list-in-c/ */
 
+
+liste_t* add(liste_t* l_p, void* add1){
+
+	liste_t* nouvel_element_p= (liste_t*)calloc(1,sizeof(*nouvel_element_p));
+	nouvel_element_p->suiv=nouvel_element_p;
+	nouvel_element_p->val=add1;
+	if (!l_p) {
+		return nouvel_element_p;
+	}
+	nouvel_element_p->suiv=l_p->suiv;
+	l_p->suiv=nouvel_element_p;
+	return nouvel_element_p;
+}
+
+void list_destroy(liste_t *list)
+{
+  liste_t* current_p;
+  while(list) {
+    current_p = list;
+    list = current_p->suiv;
+
+    if(list) {
+    free(current_p->val);
+    free(current_p);
+    }
+  }
+}
+
+/*
 void list_new(list *list, int elementSize, freeFunction freeFn)
 {
   assert(elementSize > 0);
@@ -15,21 +44,6 @@ void list_new(list *list, int elementSize, freeFunction freeFn)
   list->freeFn = freeFn;
 }
 
-void list_destroy(list *list)
-{
-  listNode *current;
-  while(list->head != NULL) {
-    current = list->head;
-    list->head = current->next;
-
-    if(list->freeFn) {
-      list->freeFn(current->data);
-    }
-
-    free(current->data);
-    free(current);
-  }
-}
 
 void list_prepend(list *list, void *element)
 {
@@ -39,8 +53,9 @@ void list_prepend(list *list, void *element)
 
   node->next = list->head;
   list->head = node;
-
-  // first node?
+*/
+  /* first node? */
+/*
   if(!list->tail) {
     list->tail = list->head;
   }
@@ -105,3 +120,4 @@ int list_size(list *list)
 {
   return list->logicalLength;
 }
+*/

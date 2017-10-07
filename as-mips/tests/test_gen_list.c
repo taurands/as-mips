@@ -1,7 +1,7 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <string.h>
  
-#include "list.h"
+#include "gen_list.h"
  
 void list_with_ints();
 void list_with_strings();
@@ -47,7 +47,7 @@ void list_with_strings()
  
   char *name;
   for(i = 0; i < numNames; i++) {
-    name = strdup(names[i]);
+    name = (char*)strdup(names[i]);
     list_append(&list, &name);
   }
  
@@ -73,3 +73,4 @@ void free_string(void *data)
 {
   free(*(char **)data);
 }
+*/

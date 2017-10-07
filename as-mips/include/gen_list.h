@@ -1,18 +1,19 @@
 #ifndef _GEN_LIST_
 #define _GEN_LIST_
 
-// a common function used to free malloc'd objects
-typedef void (*freeFunction)(void *);
+/* a common function used to free malloc'd objects */
+typedef void (*callback)(void *);
 
-typedef enum { FALSE, TRUE } bool;
 
-typedef bool (*listIterator)(void *);
+typedef struct liste_t {
+	void* val;
+	struct liste_t *suiv;
+}liste_t;
 
-typedef struct _listNode {
-  void *data;
-  struct _listNode *next;
-} listNode;
+liste_t* add(liste_t* l_p, void* add1);
+void list_destroy(liste_t *list);
 
+/*
 typedef struct {
   int logicalLength;
   int elementSize;
@@ -31,5 +32,5 @@ int list_size(list *list);
 void list_for_each(list *list, listIterator iterator);
 void list_head(list *list, void *element, bool removeFromList);
 void list_tail(list *list, void *element);
-
+*/
 #endif
