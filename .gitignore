@@ -1,5 +1,0 @@
-*.rls
-*.dbg
-as-mips
-tests/test_gen_list
-.settings/language.settings.xml
