@@ -8,7 +8,7 @@
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
-#include <list_gen.h>
+#include <gen_list.h>
 
 void bonneInstruction(Liste_t* liste_lexemes_p) {
 

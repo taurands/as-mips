@@ -7,3 +7,4 @@ tests/test_gen_list
 doc/html
 doc/latex
 doc/rtf
+doc/doxygen_warning.txt
