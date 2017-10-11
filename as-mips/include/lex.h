@@ -21,6 +21,7 @@
 typedef enum Nature_lexeme_t {
  	L_SYMBOLE,				/**< Chaine de caractères alphanumériques ne commençant pas par un nombre.
  							     Peut désigner une étiquette ou une instruction suivant sa place dans la ligne */
+	L_INSTRUCTION,			/**< Le premier symbole d'une ligne sera une instruction */
  	L_DIRECTIVE,			/**< commence par un '.'. */
  	L_ETIQUETTE,			/**< termine par un ':' */
  	
