@@ -13,6 +13,7 @@
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
+#include <syntaxe.h>
 
 /**
  * @param exec Name of executable.
@@ -63,8 +64,16 @@ int main ( int argc, char *argv[] ) {
     DEBUG_MSG("Le fichier source comporte %d lignes",nlines);
 	visualisationLignesLexemes(lignesLexeme_p);
 
+	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
+	DEBUG_MSG("index de ADD: %d",indexDictionnaire(mon_dictionnaire_p, "ADD"));
+	DEBUG_MSG("index de XOR: %d",indexDictionnaire(mon_dictionnaire_p, "XOR"));
+	DEBUG_MSG("index de TOTO: %d",indexDictionnaire(mon_dictionnaire_p, "TOTO"));
+	DEBUG_MSG("index de 0: %d",indexDictionnaire(mon_dictionnaire_p, "0"));
+	DEBUG_MSG("index de Z: %d",indexDictionnaire(mon_dictionnaire_p, "Z"));
+	effaceContenuDictionnaire(mon_dictionnaire_p);
+	free(mon_dictionnaire_p);
+
     /* ---------------- Free memory and terminate -------------------*/
-    /*free_lex_lines(liste_ligne_lexeme_p);*/
     detruitListe(lignesLexeme_p);
     free(lignesLexeme_p);
 
