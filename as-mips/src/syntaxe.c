@@ -62,31 +62,23 @@ int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot) {
 	/* fonction de recherche dichotomique qui renvoie l'indice où se trouve unMot dans unDictionnaire_p */
 	/* si elle est absente, renvoie -1 */
 
-
-	/* déclaration des variables locales à la fonction */
-	int trouve;  /* vaut faux tant que la valeur "val" n'aura pas été trouvée */
-	int id;  /* indice de début */
-	int ifin;  /* indice de fin */
-	int im;  /* indice de "milieu" */
-	int comp; /* résultat de la comparaison */
-
 	/* initialisation de ces variables avant la boucle de recherche */
-	trouve = -1;  /* la valeur n'a pas encore été trouvée */
-	id = 0;  /* intervalle de recherche compris entre 0... */
-	ifin = unDictionnaire_p->nbMots-1;
+	int trouve=-1;							/* vaut -1 tant que la valeur n'aura pas été trouvée */
+	int debut=0;  							/* indice de début */
+	int fin=unDictionnaire_p->nbMots-1;  	/* indice de fin */
 
-	/* boucle de recherche */
-	while((trouve==-1) && (ifin>=id)){
+	int milieu;  							/* indice de "milieu" */
+	int comp; 								/* résultat de la comparaison */
 
-		im = (id + ifin)/2;  /* on détermine l'indice de milieu */
-
-		comp=strcmp((*unDictionnaire_p->mots)[im].instruction,unMot);
+	while((trouve==-1) && (fin>=debut)) {
+		milieu = (debut + fin)/2;  /* on détermine l'indice de milieu */
+		comp=strcmp((*unDictionnaire_p->mots)[milieu].instruction,unMot);
 		if (comp>0)
-			ifin=im-1;
+			fin=milieu-1;
 		else if (comp<0)
-			id=im+1;
+			debut=milieu+1;
 		else
-			trouve=im;
+			trouve=milieu;
 	}
 	return trouve;
 }
@@ -127,7 +119,7 @@ void bonneInstruction(Liste_t* ligne_lexemes_p) {
 			if (strcmp(nom_instruction,((Lexeme_t*)(p_1->donnees_p))->data)==0) { /* Si le lexeme correspond à une instruction du dictionnaire */
 				INFO_MSG("Le lexeme correspond à une instruction du dictionnaire");
 				while (p_1) {
-					if (((Lexeme_t*)(p_1->donnees_p))->nature != (L_VIRGULE || L_PARANTHESE_OUVRANTE || L_PARANTHESE_FERMANTE || L_COMMENTAIRE)) {   /* Si le lexeme est un lexeme utile */
+					if (((Lexeme_t*)(p_1->donnees_p))->nature != (L_VIRGULE || L_PARENTHESE_OUVRANTE || L_PARENTHESE_FERMANTE || L_COMMENTAIRE)) {   /* Si le lexeme est un lexeme utile */
 						compteur_lexeme_utile++;
 					}
 					p_1=p_1->suivant_p;
@@ -138,7 +130,7 @@ void bonneInstruction(Liste_t* ligne_lexemes_p) {
 					/*
 					ajouteElementFinListe(liste_instruction_p, p_2->donnees_p);
 					for (i=0;i<nombre_argument;i++){
-						while (((Lexeme_t*)(p_1->donnees_p))->nature != (L_VIRGULE || L_PARANTHESE_OUVRANTE || L_PARANTHESE_FERMANTE || L_COMMENTAIRE)) {
+						while (((Lexeme_t*)(p_1->donnees_p))->nature != (L_VIRGULE || L_PARENTHESE_OUVRANTE || L_PARENTHESE_FERMANTE || L_COMMENTAIRE)) {
 							p_2=p_2->suivant_p;
 						}
 						ajouteElementFinListe(liste_instruction_p, p_2->donnees_p);

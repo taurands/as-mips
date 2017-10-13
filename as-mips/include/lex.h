@@ -27,8 +27,8 @@ typedef enum Nature_lexeme_t {
  	
  	L_REGISTRE,				/**< Nom d'un registre, commence toujours par '$'. */
  	L_VIRGULE,				/**< ',' permettant de séparer les opérandes. */
- 	L_PARANTHESE_OUVRANTE,	/**< '(' utilisé pour adressage indirect. */
- 	L_PARANTHESE_FERMANTE,	/**< ')' utilisé pour finir adressage indirect. */
+ 	L_PARENTHESE_OUVRANTE,	/**< '(' utilisé pour adressage indirect. */
+ 	L_PARENTHESE_FERMANTE,	/**< ')' utilisé pour finir adressage indirect. */
 
   	L_MOINS,
 	L_PLUS,
@@ -52,8 +52,8 @@ typedef	enum Etat_lex_t {
 
 	REGISTRE=L_REGISTRE,
 	VIRGULE=L_VIRGULE,
-	PARANTHESE_OUVRANTE=L_PARANTHESE_OUVRANTE,
-	PARANTHESE_FERMANTE=L_PARANTHESE_FERMANTE,
+	PARENTHESE_OUVRANTE=L_PARENTHESE_OUVRANTE,
+	PARENTHESE_FERMANTE=L_PARENTHESE_FERMANTE,
 
 	MOINS=L_MOINS,
 	PLUS=L_PLUS,

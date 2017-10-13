@@ -41,6 +41,8 @@ int main ( int argc, char *argv[] ) {
     char         	 *file 	= NULL;
     
     Liste_t *lignesLexeme_p=NULL;
+    Liste_t *lignesCode_p=NULL;
+    Liste_t *listeEtiquettes=NULL;
 
     if ( argc != 2 ) {
         print_usage(argv[0]);
@@ -52,7 +54,7 @@ int main ( int argc, char *argv[] ) {
 
 
     if ( NULL == file ) {
-        fprintf( stderr, "Pas de mon pour le fichier assembleur. Abandon du traitement.\n" );
+        fprintf( stderr, "Pas de nom pour le fichier assembleur. Abandon du traitement.\n" );
         exit( EXIT_FAILURE );
     }
 

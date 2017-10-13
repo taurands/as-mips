@@ -42,8 +42,8 @@ char * etat_lex_to_str(Etat_lex_t etat) {
 		case COMMENTAIRE:			return "COMMENTAIRE";
 		case DEBUT_HEXADECIMAL:		return "DEBUT_HEXADECIMAL";
 		case DECIMAL_ZERO:			return "DECIMAL_ZERO";
-		case PARANTHESE_OUVRANTE:	return "PARANTHESE_OUVRANTE";
-		case PARANTHESE_FERMANTE:	return "PARANTHESE_FERMANTE";
+		case PARENTHESE_OUVRANTE:	return "PARENTHESE_OUVRANTE";
+		case PARENTHESE_FERMANTE:	return "PARENTHESE_FERMANTE";
 		case ERREUR:				return "ERREUR";
 		default : 	ERROR_MSG("Erreur de résolution du nom de l'état %d de la machine à états finis lexicale... Il manque donc au moins un nom d'état à rajouter", etat);
 	}
@@ -76,8 +76,8 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  *		INIT -> VIRGULE [label=","];
  *		INIT -> COMMENTAIRE [label="#"];
  *		INIT -> REGISTRE [label="$"];
- *		INIT -> PARANTHESE_OUVRANTE [label="("];
- *		INIT -> PARANTHESE_FERMANTE [label=")"];
+ *		INIT -> PARENTHESE_OUVRANTE [label="("];
+ *		INIT -> PARENTHESE_FERMANTE [label=")"];
  *		INIT -> SYMBOLE [label="_alpha"];
  *		INIT -> ERREUR [label="sinon"];
  *
@@ -87,8 +87,8 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  *		MOINS -> ERREUR;
  *		PLUS -> ERREUR;
  *		VIRGULE -> ERREUR;
- *		PARANTHESE_OUVRANTE -> ERREUR;
- *		PARANTHESE_FERMANTE -> ERREUR;
+ *		PARENTHESE_OUVRANTE -> ERREUR;
+ *		PARENTHESE_FERMANTE -> ERREUR;
  *
  *		DECIMAL_ZERO -> OCTAL [label="0 à 7---"];
  *		DECIMAL_ZERO -> DEBUT_HEXADECIMAL [label="x ou X"];
@@ -141,15 +141,15 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
 			else if (c==',') etat=VIRGULE;
 			else if (c=='#') etat=COMMENTAIRE;
 			else if (c=='$') etat=REGISTRE;
-			else if (c=='(') etat=PARANTHESE_OUVRANTE;
-			else if (c==')') etat=PARANTHESE_FERMANTE;
+			else if (c=='(') etat=PARENTHESE_OUVRANTE;
+			else if (c==')') etat=PARENTHESE_FERMANTE;
 			else if (isalpha(c) || (c=='_')) etat=SYMBOLE;
 			else etat=ERREUR;
 			break;
 		
 		case VIRGULE:
-		case PARANTHESE_OUVRANTE:
-		case PARANTHESE_FERMANTE:
+		case PARENTHESE_OUVRANTE:
+		case PARENTHESE_FERMANTE:
 		case MOINS:
 		case PLUS:
 			etat=ERREUR; /* Ces états ont été standardisés et ne doivent pas être suivis d'autre caractère à la suite */
