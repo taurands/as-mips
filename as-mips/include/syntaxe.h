@@ -14,9 +14,23 @@
 /*
 #include <lex.h>
 #include <gen_list.h>
+
 #include <global.h>
 #include <notify.h>
 */
+
+/**
+ * @enum Nature_Section_t
+ * @brief Constantes de nature des sections du programme assembleur
+ */
+typedef enum Nature_Section_t {
+ 	S_UNDEF=0,				/**< état initial lorsque l'on n'a pas encore rencontré une direction de section */
+ 	S_TEXT=1,				/**< dès que l'on a rencontré une directive de section ".text", cela correspond aux instructions du programme */
+ 	S_DATA=2,				/**< dès que l'on a rencontré une directive de section ".data", cela correspond aux données statiques du programme */
+ 	S_BSS=3					/**< dès que l'on a rencontré une directive de section ".bss", cela correspond aux données du tas du programme */
+} Nature_Section_t;
+
+static const char *NOMS_SECTIONS[] = {"undefined", ".text", ".data", ".bss"};
 
 /**
  * @struct Mot_Dictionnaire_t
@@ -58,6 +72,8 @@ typedef struct Instruction_t {
 Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire);
 void effaceContenuDictionnaire(Dictionnaire_t *unDictionnaire_p);
 int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot);
+
+Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p);
 
 void bonneInstruction(Liste_t* ligne_lexemes_p);
 

@@ -22,7 +22,7 @@ Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 	FILE* f_p=fopen(nomFichierDictionnaire,"r"); /* Ouverture du dictionnaire d'instruction */
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
-	if (1!=fscanf(f_p,"%d\n",&(dictionnaireLu_p->nbMots))) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
+	if (1!=fscanf(f_p,"%d",&(dictionnaireLu_p->nbMots))) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
 
 	dictionnaireLu_p->mots=calloc(dictionnaireLu_p->nbMots,sizeof(Mot_Dictionnaire_t));
 	if (!dictionnaireLu_p->mots) ERROR_MSG("Plus assez de mémoire pour créer un dictionnaire");
@@ -30,7 +30,7 @@ Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 	while (f_p && (i<dictionnaireLu_p->nbMots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
 		if (1 != fscanf(f_p,"%s", nomInstruction)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
-		if (1 != fscanf(f_p,"%d\n", &nombreOperandes)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
+		if (1 != fscanf(f_p,"%d", &nombreOperandes)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		nomInstruction=strupr(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].instruction=strdup(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].nb_arg=nombreOperandes;
@@ -83,6 +83,81 @@ int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot) {
 	return trouve;
 }
 
+int machineEtatsFinisSyntaxique(int etat, Lexeme_t *lexeme_p) {
+	return etat;
+}
+
+Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p) {
+	ElementListe_t *elementListeLigneLexeme=NULL;
+	Liste_t *listeLexeme_p=NULL;
+	ElementListe_t *elementListeLexeme_p=NULL;
+	Lexeme_t *lexeme_p=NULL;
+
+	int ligneSource=0;
+
+	int etat;
+	enum Nature_Section_t i, section=S_UNDEF;
+
+	Liste_t *lignesCode_p=NULL;
+
+	if (lignesLexemes_p) {
+		elementListeLigneLexeme=lignesLexemes_p->debut_liste_p;
+		while (elementListeLigneLexeme) {
+			ligneSource++;
+			listeLexeme_p=(Liste_t *)elementListeLigneLexeme->donnees_p;
+			elementListeLexeme_p=listeLexeme_p->debut_liste_p;
+			while (elementListeLexeme_p) {
+				lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
+
+				etat=machineEtatsFinisSyntaxique(etat, lexeme_p);
+				if (lexeme_p->nature==L_DIRECTIVE) {
+					lexeme_p->data=strlwr(lexeme_p->data);
+					if (strcmp(lexeme_p->data, ".set")==0) {
+						DEBUG_MSG("La directive \".set\" a été reconnue");
+						elementListeLexeme_p=elementListeLexeme_p->suivant_p;
+						lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
+						if (lexeme_p->nature==L_SYMBOLE) {
+							if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
+								DEBUG_MSG("Reconnu le symbole \"noreoder\"");
+							}
+							else { /* Le symbole n'est pas "noreorder" */
+								ERROR_MSG("Symbole inconnu après la directive \".set\"");
+							}
+						}
+						else { /* Le lexème n'est pas un symbole */
+							DEBUG_MSG("Pas de symbole après la directive \".set\"");
+						}
+					}
+					else { /* La directive n'est pas un ".set" */
+						for (i=S_TEXT; i<=S_BSS; i++) { /* on regarde si la directive coorespond à un nom de section */
+							if (strcmp(lexeme_p->data, NOMS_SECTIONS[i])==0) {
+								section=i;
+								DEBUG_MSG("La directive \"%s\" a été reconnue. Changement de nature de section pour %d : %s", lexeme_p->data, section, NOMS_SECTIONS[section]);
+								break;
+							}
+						}
+						if (i>S_BSS) { /* La directive n'est pas un nom de section */
+							DEBUG_MSG("La directive \"%s\" est inconnue dans la section %d : \"%s\"", lexeme_p->data, section, NOMS_SECTIONS[section]);
+						}
+					}
+
+				}
+				else /* Le lexème n'est pas une directive */ if (section==S_TEXT) {
+
+				}
+				else {
+
+				}
+
+				elementListeLexeme_p=elementListeLexeme_p->suivant_p;
+			}
+
+			elementListeLigneLexeme=elementListeLigneLexeme->suivant_p;
+		}
+	}
+	return lignesCode_p;
+}
+
 /**
  * @param liste_lexemes_p
  * @return nothing
@@ -93,12 +168,13 @@ void bonneInstruction(Liste_t* ligne_lexemes_p) {
 	ElementListe_t* p_1=ligne_lexemes_p->debut_liste_p;
 	ElementListe_t* p_2=ligne_lexemes_p->debut_liste_p;
 
+	/*
 	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("dictionnaire_instruction.txt");
+	int i=0;
+	int nombre_instruction;
+	 */
 	/* Instruction_t instruction_courante; */
 
-	int i=0;
-
-	int nombre_instruction;
 	char* nom_instruction="";
 	int nombre_argument;
 
@@ -113,7 +189,7 @@ void bonneInstruction(Liste_t* ligne_lexemes_p) {
 
 		/* Comparaison du nom de symbole à l'ensemble des instructions possibles du dictionnaire */
 
-		while ((i<nombre_instruction)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
+		while (0==1/* (i<nombre_instruction) */) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
 
 			if (strcmp(nom_instruction,((Lexeme_t*)(p_1->donnees_p))->data)==0) { /* Si le lexeme correspond à une instruction du dictionnaire */

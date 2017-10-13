@@ -42,7 +42,9 @@ int main ( int argc, char *argv[] ) {
     
     Liste_t *lignesLexeme_p=NULL;
     Liste_t *lignesCode_p=NULL;
+    /*
     Liste_t *listeEtiquettes=NULL;
+    */
 
     if ( argc != 2 ) {
         print_usage(argv[0]);
@@ -67,6 +69,8 @@ int main ( int argc, char *argv[] ) {
 	visualisationLignesLexemes(lignesLexeme_p);
 
 	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
+	lignesCode_p=analyseSyntaxe(lignesLexeme_p, mon_dictionnaire_p);
+
 	DEBUG_MSG("index de ADD: %d",indexDictionnaire(mon_dictionnaire_p, "ADD"));
 	DEBUG_MSG("index de XOR: %d",indexDictionnaire(mon_dictionnaire_p, "XOR"));
 	DEBUG_MSG("index de TOTO: %d",indexDictionnaire(mon_dictionnaire_p, "TOTO"));
@@ -76,6 +80,9 @@ int main ( int argc, char *argv[] ) {
 	free(mon_dictionnaire_p);
 
     /* ---------------- Free memory and terminate -------------------*/
+
+	detruitListe(lignesCode_p);
+	free(lignesCode_p);
     detruitListe(lignesLexeme_p);
     free(lignesLexeme_p);
 

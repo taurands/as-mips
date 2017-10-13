@@ -18,7 +18,7 @@
  * @brief
  */
 void initialiseListe(Liste_t *liste_p, int tailleElement,
-	fonctionDestructeur *freeFn) {
+		fonctionDestructeur *freeFn) {
 	assert(tailleElement > 0);
 	assert(liste_p);
 	liste_p->nbElements = 0;
@@ -33,18 +33,20 @@ void initialiseListe(Liste_t *liste_p, int tailleElement,
  * @brief Détruit l'ensemble des éléments de la liste en libérant la mémoire dynamique direct et indirecte associée
  */
 void detruitListe(Liste_t *liste_p) {
-	DEBUG_MSG("Destruction de la Liste: %p : %d éléments",liste_p,liste_p->nbElements);
 	ElementListe_t *elementCourant_p;
-	while (liste_p->debut_liste_p != NULL) {
-		elementCourant_p = liste_p->debut_liste_p;
-		liste_p->debut_liste_p = elementCourant_p->suivant_p;
+	if (liste_p) {
+		DEBUG_MSG("Destruction de la Liste: %p : %d éléments",liste_p,liste_p->nbElements);
+		while (liste_p->debut_liste_p != NULL) {
+			elementCourant_p = liste_p->debut_liste_p;
+			liste_p->debut_liste_p = elementCourant_p->suivant_p;
 
-		if (liste_p->fnDestructeur_p) {
-			liste_p->fnDestructeur_p(elementCourant_p->donnees_p);
+			if (liste_p->fnDestructeur_p) {
+				liste_p->fnDestructeur_p(elementCourant_p->donnees_p);
+			}
+
+			free(elementCourant_p->donnees_p);
+			free(elementCourant_p);
 		}
-
-		free(elementCourant_p->donnees_p);
-		free(elementCourant_p);
 	}
 }
 
