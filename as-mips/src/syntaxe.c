@@ -25,7 +25,7 @@ const char *NOMS_DATA[] = {".space", ".byte", ".word", ".asciiz"};
 
 Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 	char *nomInstruction=calloc(128, sizeof(char));
-	char carNature;
+	/* char carNature; */
 	int nombreOperandes=0;
 	int i=0;
 
