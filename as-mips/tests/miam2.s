@@ -10,6 +10,7 @@ boucle 			:
     addi $t1 , $t1 , 1
     B boucle 
     NOP
+
 byebye:JAL viteviteauru
 .data
 lunchtime:.word 12

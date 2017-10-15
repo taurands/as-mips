@@ -69,7 +69,8 @@ typedef	enum Etat_lex_t {
 	INIT,					/**< Etat initial */
 	DEBUT_HEXADECIMAL,		/**< On a lu "0x" et on attend le premier caractère hexadécimal */
 	DECIMAL_ZERO,			/**< On a lu un "0" */
-	POINT					/**< On a lu un point */
+	POINT,					/**< On a lu un point */
+	FIN_LIGNE
 } Etat_lex_t;
 
 
@@ -80,8 +81,9 @@ typedef	enum Etat_lex_t {
  * La nature des lexème ainsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
  */
 typedef struct Lexeme_t {
+	char *data;						/**< Donnée éventuelle stockée sous forme de chaine de caractères. */
 	enum Nature_lexeme_t nature;	/**< Identifie la nature du lexème. */
-	char * data;					/**< Donnée éventuelle stockée sous forme de chaine de caractères. */
+	int ligne;						/**< Ligne source du lexème */
 } Lexeme_t;
 
 Liste_t * lex_read_line( char *, int);

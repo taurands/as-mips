@@ -1,9 +1,7 @@
 /**
- * @file lex.h
+ * @file syntaxe.h
  * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
- * @brief syntax-related stuff.
- *
- * Contains syntax types definitions, some low-level syntax error codes,
+ * @brief Definition de type et de prototypes de fonctions liées au traitement syntaxique du fichier
  */
 
 #ifndef _SYNTAXE_H_
@@ -24,13 +22,36 @@
  * @brief Constantes de nature des sections du programme assembleur
  */
 typedef enum Nature_Section_t {
- 	S_UNDEF=0,				/**< état initial lorsque l'on n'a pas encore rencontré une direction de section */
+ 	S_INIT=0,				/**< état initial lorsque l'on n'a pas encore rencontré une direction de section */
  	S_TEXT=1,				/**< dès que l'on a rencontré une directive de section ".text", cela correspond aux instructions du programme */
  	S_DATA=2,				/**< dès que l'on a rencontré une directive de section ".data", cela correspond aux données statiques du programme */
  	S_BSS=3					/**< dès que l'on a rencontré une directive de section ".bss", cela correspond aux données du tas du programme */
 } Nature_Section_t;
 
-static const char *NOMS_SECTIONS[] = {"undefined", ".text", ".data", ".bss"};
+/**
+ * @enum Nature_Instruction_t
+ * @brief Constantes de nature des instructions du programme assembleur
+ */
+typedef enum Nature_Instruction_t {
+ 	I_PSEUDO=0,				/**<  */
+ 	I_REGISTRE=1,			/**<  */
+ 	I_DIRECT=2,				/**<  */
+ 	I_BASE_DEPLACEMENT=3,	/**<  */
+	I_ABSOLU=4,				/**<  */
+	I_RELATIF=5				/**<  */
+} Nature_Instruction_t;
+
+/**
+ * @enum Nature_Donnee_t
+ * @brief Constantes de nature des données
+ */
+typedef enum Nature_Donnee_t {
+ 	D_SPACE=0,				/**<  */
+ 	D_BYTE=1,				/**<  */
+ 	D_WORD=2,				/**<  */
+ 	D_ASCIIZ=3				/**<  */
+} Nature_Donnee_t;
+
 
 /**
  * @struct Mot_Dictionnaire_t
@@ -38,7 +59,8 @@ static const char *NOMS_SECTIONS[] = {"undefined", ".text", ".data", ".bss"};
  */
 typedef struct Mot_Dictionnaire_t {
 	char* instruction;					/**< nom de l'instruction */
-	int nb_arg;							/**< nombre d'argument de l'instruction */
+	enum Nature_Instruction_t nature;	/**< nature de l'instruction */
+	int nb_arg;							/**< nombre d'arguments de l'instruction */
 } Mot_Dictionnaire_t;
 
 typedef Mot_Dictionnaire_t Mots_Dictionnaire_t[];

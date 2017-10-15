@@ -1,3 +1,9 @@
+/**
+ * @file syntaxe.c
+ * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
+ * @brief Definition des fonctions liées au traitement syntaxique du fichier
+ */
+
 #define _POSIX_C_SOURCE 200112L
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,9 +16,16 @@
 #include <gen_list.h>
 #include <syntaxe.h>
 #include <str_utils.h>
+#include <table_hachage.h>
+
+const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
+const char NATURE_INSTRUCTION[]= {'P', 'R', 'D', 'I', 'r', 'a'};
+const char *NOMS_DATA[] = {".space", ".byte", ".word", ".asciiz"};
+
 
 Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 	char *nomInstruction=calloc(128, sizeof(char));
+	char carNature;
 	int nombreOperandes=0;
 	int i=0;
 
@@ -31,9 +44,11 @@ Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 
 		if (1 != fscanf(f_p,"%s", nomInstruction)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		if (1 != fscanf(f_p,"%d", &nombreOperandes)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
+		/* if (1 != fscanf(f_p,"%c", &carNature)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours"); */
 		nomInstruction=strupr(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].instruction=strdup(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].nb_arg=nombreOperandes;
+		printf("Dictionnaire instructions[%d]\t: %s\t--> \t%d,\t%d\n", i, nomInstruction, hashKR2(nomInstruction) % 63, hashBernstein(nomInstruction) % 63);
 		if (i) if (strcmp((*dictionnaireLu_p->mots)[i-1].instruction, (*dictionnaireLu_p->mots)[i].instruction)>=0) ERROR_MSG("Le fichier dictionnaire d'instructions n'est par rangé par ordre alphabétique");
 		i++;
 	}
@@ -96,7 +111,7 @@ Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnair
 	int ligneSource=0;
 
 	int etat;
-	enum Nature_Section_t i, section=S_UNDEF;
+	enum Nature_Section_t i, section=S_INIT;
 
 	Liste_t *lignesCode_p=NULL;
 

@@ -45,6 +45,7 @@ char * etat_lex_to_str(Etat_lex_t etat) {
 		case PARENTHESE_OUVRANTE:	return "PARENTHESE_OUVRANTE";
 		case PARENTHESE_FERMANTE:	return "PARENTHESE_FERMANTE";
 		case ERREUR:				return "ERREUR";
+		case FIN_LIGNE:				return "FIN_LIGNE";
 		default : 	ERROR_MSG("Erreur de résolution du nom de l'état %d de la machine à états finis lexicale... Il manque donc au moins un nom d'état à rajouter", etat);
 	}
 	return NULL;
@@ -247,6 +248,7 @@ Liste_t * lex_read_line( char * line, int nline) {
          	if (!(lexemeCourant.data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
     		strcpy(lexemeCourant.data, diese_p);
          	lexemeCourant.nature=COMMENTAIRE;
+         	lexemeCourant.ligne=nline;
          	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
          	break;
         }
@@ -272,12 +274,18 @@ Liste_t * lex_read_line( char * line, int nline) {
 				default :
 					;		
         	}
+        	if (etat==ETIQUETTE) token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
          	if (!(lexemeCourant.data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
     		strcpy(lexemeCourant.data, token);
          	lexemeCourant.nature=etat;
+         	lexemeCourant.ligne=nline;
          	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
     	}
     }
+    lexemeCourant.data=NULL;
+    lexemeCourant.nature=FIN_LIGNE;
+    lexemeCourant.ligne=nline;
+    ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
     return ligneLexemeCourante_p;
 }
 
@@ -392,7 +400,7 @@ void detruitContenuLexeme(void *Lexeme_p) {
  *
  */
 void visualisationLexeme(Lexeme_t * lexeme_p) {
-	printf("(%s|%s)",etat_lex_to_str(lexeme_p->nature),lexeme_p->data);
+	printf("(%s|%s|%d)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data, lexeme_p->ligne);
 }
 
 /**

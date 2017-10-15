@@ -14,6 +14,7 @@
 #include <notify.h>
 #include <lex.h>
 #include <syntaxe.h>
+#include <table_hachage.h>
 
 /**
  * @param exec Name of executable.
@@ -86,6 +87,17 @@ int main ( int argc, char *argv[] ) {
     detruitListe(lignesLexeme_p);
     free(lignesLexeme_p);
 
+    printf("Hachage B null : %x\n", hashBernstein(NULL));
+    printf("Hachage B vide : %x\n", hashBernstein(""));
+    printf("Hachage B t : %x\n", hashBernstein("t"));
+    printf("Hachage B to : %x\n", hashBernstein("to"));
+
+    printf("Hachage KR2 null : %x\n", hashKR2(NULL));
+    printf("Hachage KR2 vide : %x\n", hashKR2(""));
+    printf("Hachage KR2 t : %x\n", hashKR2("t"));
+    printf("Hachage KR2 to : %x\n", hashKR2("to"));
+
+    test_hachage();
     exit( EXIT_SUCCESS );
 }
 
