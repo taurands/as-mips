@@ -7,6 +7,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <str_utils.h>
+#include <table_hachage.h>
+
 #define MIN_TABLE_SIZE 10
 
 /*
@@ -19,7 +23,7 @@ enum EntryType {
  * Node Declaration
  */
 struct HashNode {
-    int element;
+    char *element;
     enum EntryType info;
 };
 /*
@@ -27,6 +31,7 @@ struct HashNode {
  */
 struct HashTable {
     int size;
+    fonctionClef *fnClef_p;
     struct HashNode *table;
 };
 
@@ -37,7 +42,7 @@ unsigned int hashBernstein(char *chaine) {
     if (!chaine)
     	return 0;
     else {
-        while ((caractere = (unsigned char)*chaine++))
+        while ((caractere = (unsigned char)*(chaine++)))
         	hachage = ((hachage << 5) + hachage) + caractere; /* hash * 33 + caractere */
         return hachage;
     }
@@ -50,34 +55,49 @@ unsigned int hashKR2(char *chaine) {
     if (!chaine)
     	return 0;
     else {
-        while ((caractere = (unsigned char)*chaine++))
+        while ((caractere = (unsigned char)*(chaine++)))
         	hachage = 31*hachage + caractere;
         return hachage;
     }
 }
 
-/*
- * Function to Genereate First Hash
- */
-int HashFunc1(int key, int size) {
-    return key % size;
-}
-/*
- * Function to Genereate Second Hash
- */
-int HashFunc2(int key, int size) {
-    return (key * size - 1) % size;
+char *clefStr(void *uneStr) {
+	return (char *)uneStr;
 }
 /*
  * Function to Initialize Table
  */
-struct HashTable *initializeTable(int size) {
+struct HashTable *initializeTable(int size, fonctionClef *fnClef_p) {
 	int i;
     struct HashTable * htable;
     if (size < MIN_TABLE_SIZE) {
         printf("Table Size Too Small\n");
         return NULL;
     }
+    htable = malloc(sizeof(struct HashTable));
+    if (htable == NULL) {
+        printf("Out of Space\n");
+        return NULL;
+    }
+    htable->size = size;
+    htable->fnClef_p=fnClef_p;
+    htable->table = malloc(sizeof(struct HashNode[htable->size]));
+    if (htable->table == NULL) {
+        printf("Table Size Too Small\n");
+        return NULL;
+    }
+    for (i = 0; i < htable->size; i++) {
+        htable->table[i].info = Empty;
+        htable->table[i].element = NULL;
+    }
+    return htable;
+}
+/*
+ * Function to Release Table
+ */
+void releaseTable(struct HashTable *htable) {
+	/*
+	int i;
     htable = malloc(sizeof(struct HashTable));
     if (htable == NULL) {
         printf("Out of Space\n");
@@ -93,39 +113,38 @@ struct HashTable *initializeTable(int size) {
         htable->table[i].info = Empty;
         htable->table[i].element = NULL;
     }
-    return htable;
+    */
 }
 /*
  * Function to Find Element from the table
  */
-int Find(int key, struct HashTable *htable) {
-    int hashVal = HashFunc1(key, htable->size);
-    int stepSize = HashFunc2(key, htable->size);
+int Find(char *key, struct HashTable *htable) {
+    unsigned int hashVal = hashKR2(key) % htable->size;
+    unsigned int stepSize = (hashBernstein(key) % (htable->size - 1)) + 1;
     while (htable->table[hashVal].info != Empty
-            && htable->table[hashVal].element != key) {
-        hashVal = hashVal + stepSize;
-        hashVal = hashVal % htable->size;
+            && (0 != strcmp(key, htable->table[hashVal].element))) {
+        hashVal = (hashVal + stepSize) % htable->size;
     }
     return hashVal;
 }
 /*
  * Function to Insert Element into the table
  */
-void Insert(int key, struct HashTable *htable) {
-    int pos = Find(key, htable);
+void Insert(char *key, struct HashTable *htable) {
+    unsigned int pos = Find(key, htable);
     if (htable->table[pos].info != Legitimate) {
         htable->table[pos].info = Legitimate;
-        htable->table[pos].element = key;
+        htable->table[pos].element = strdup(key);
     }
 }
 /*
  * Function to Rehash the table
  */
-struct HashTable *Rehash(struct HashTable *htable) {
+struct HashTable *Rehash(struct HashTable *htable, int newSize) {
 	int i;
     int size = htable->size;
     struct HashNode *table = htable->table;
-    htable = initializeTable(2 * size);
+    htable = initializeTable(newSize,htable->fnClef_p);
     for (i = 0; i < size; i++) {
         if (table[i].info == Legitimate)
             Insert(table[i].element, htable);
@@ -139,18 +158,17 @@ struct HashTable *Rehash(struct HashTable *htable) {
 void Retrieve(struct HashTable *htable) {
 	int i;
     for (i = 0; i < htable->size; i++) {
-        int value = htable->table[i].element;
-        if (!value)
-            printf("Position: %d Element: Null\n", (i + 1));
-        else
-            printf("Position: %d Element: %d\n", (i + 1), value);
+        char *value = htable->table[i].element;
+        printf("Position: %d Element: %s\n", (i + 1), value);
     }
 }
 /*
  * test du fonctionnement
  */
 int test_hachage() {
-    int value, size, pos, i = 1;
+    char *value = calloc(1,128);
+
+	int size, i = 1;
     int choice;
     struct HashTable * htable;
     while (1) {
@@ -168,7 +186,7 @@ int test_hachage() {
         case 1:
             printf("Enter size of the Hash Table: ");
             scanf("%d", &size);
-            htable = initializeTable(size);
+            htable = initializeTable(size, clefStr);
             break;
         case 2:
             if (i > htable->size) {
@@ -176,7 +194,7 @@ int test_hachage() {
                 continue;
             }
             printf("Enter element to be inserted: ");
-            scanf("%d", &value);
+            scanf("%s", value);
             Insert(value, htable);
             i++;
             break;
@@ -184,7 +202,9 @@ int test_hachage() {
             Retrieve(htable);
             break;
         case 4:
-            htable = Rehash(htable);
+            printf("Enter new size of the Hash Table: ");
+            scanf("%d", &size);
+            htable = Rehash(htable, size);
             break;
         case 5:
             exit(0);
@@ -192,5 +212,7 @@ int test_hachage() {
             printf("\nEnter correct option\n");
         }
     }
+
+    free(value);
     return 0;
 }

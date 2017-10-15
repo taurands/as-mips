@@ -7,6 +7,9 @@
 #ifndef _TABLE_HACHAGE_H
 #define _TABLE_HACHAGE_H
 
+/* Definition commune de fonction permettant d'accéder à clef (str) en passant un pointeur sur une structure */
+typedef char *(fonctionClef)(void *);
+
 unsigned int hashBernstein(char *chaine);
 unsigned int hashKR2(char *chaine);
 
