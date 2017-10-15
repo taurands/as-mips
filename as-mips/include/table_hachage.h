@@ -10,8 +10,27 @@
 /* Definition commune de fonction permettant d'accéder à clef (str) en passant un pointeur sur une structure */
 typedef char *(fonctionClef)(void *);
 
+/* Definition commune d'une fonction de destruction du contenu des éléments */
+typedef void (fonctionDestruction)(void *);
+
+/*
+ * Table Declaration
+ */
+typedef struct HashTable_t {
+    int nbElementsMax;
+    int nbElements;
+    void **table;
+    fonctionClef *fnClef_p;
+    fonctionDestruction *fnDestruction_p;
+} HashTable_t;
+
 unsigned int hashBernstein(char *chaine);
 unsigned int hashKR2(char *chaine);
+
+HashTable_t *initializeTable(int nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
+unsigned int Find(HashTable_t *htable_p, char *key);
+void Insert(HashTable_t *htable_p, void *donnee_p);
+HashTable_t *Rehash(HashTable_t *htable_p, int newSize);
 
 int test_hachage();
 

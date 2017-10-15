@@ -13,16 +13,6 @@
 
 #define MIN_TABLE_SIZE 11
 
-/*
- * Table Declaration
- */
-typedef struct HashTable_t {
-    int nbElementsMax;
-    int nbElements;
-    void **table;
-    fonctionClef *fnClef_p;
-} HashTable_t;
-
 unsigned int hashBernstein(char *chaine) {
     unsigned int hachage = 5381;
     unsigned int caractere;
@@ -56,7 +46,7 @@ char *clefStr(void *uneStr) {
 /*
  * Function to Initialize Table
  */
-HashTable_t *initializeTable(int nbElementsMax, fonctionClef *fnClef_p) {
+HashTable_t *initializeTable(int nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
 	HashTable_t *htable;
     if (nbElementsMax < MIN_TABLE_SIZE) {
         printf("Table Size Too Small\n");
@@ -70,6 +60,7 @@ HashTable_t *initializeTable(int nbElementsMax, fonctionClef *fnClef_p) {
     htable->nbElementsMax = nbElementsMax;
     htable->nbElements=0;
     htable->fnClef_p=fnClef_p;
+    htable->fnDestruction_p=fnDestruction_p;
     htable->table = calloc(htable->nbElementsMax, sizeof(*htable->table));
     if (htable->table == NULL) {
         printf("Table Size Too Small\n");
@@ -103,7 +94,7 @@ void releaseTable(HashTable_t *htable) {
 /*
  * Function to Find Element from the table
  */
-int Find(char *key, HashTable_t *htable_p) {
+unsigned int Find(HashTable_t *htable_p, char *key) {
     unsigned int hashVal = hashKR2(key) % htable_p->nbElementsMax;
     unsigned int stepSize = (hashBernstein(key) % (htable_p->nbElementsMax - 1)) + 1;
     while ((htable_p->table[hashVal]) && (strcmp(key, htable_p->fnClef_p(htable_p->table[hashVal])))) {
@@ -114,9 +105,9 @@ int Find(char *key, HashTable_t *htable_p) {
 /*
  * Function to Insert Element into the table - L'élément donnee_p n'est pas recopié et devra rester permanent
  */
-void Insert(void *donnee_p, HashTable_t *htable_p) {
+void Insert(HashTable_t *htable_p, void *donnee_p) {
 	char *key=htable_p->fnClef_p(donnee_p);
-    unsigned int pos = Find(key, htable_p);
+    unsigned int pos = Find(htable_p, key);
     if (!htable_p->table[pos]) {
     	htable_p->table[pos] = donnee_p;
     }
@@ -128,10 +119,10 @@ HashTable_t *Rehash(HashTable_t *htable_p, int newSize) {
 	int i;
     int size = htable_p->nbElementsMax;
     void **table = htable_p->table;
-    htable_p = initializeTable(newSize, htable_p->fnClef_p);
+    htable_p = initializeTable(newSize, htable_p->fnClef_p, htable_p->fnDestruction_p);
     for (i = 0; i < size; i++) {
         if (table[i])
-            Insert(table[i], htable_p);
+            Insert(htable_p, table[i]);
     }
     free(table);
     return htable_p;
@@ -170,7 +161,7 @@ int test_hachage() {
         case 1:
             printf("Enter nbElementsMax of the Hash Table: ");
             scanf("%d", &size);
-            htable_p = initializeTable(size, clefStr);
+            htable_p = initializeTable(size, clefStr, NULL);
             break;
         case 2:
             if (i > htable_p->nbElementsMax) {
@@ -179,7 +170,7 @@ int test_hachage() {
             }
             printf("Enter element to be inserted: ");
             scanf("%s", value);
-            Insert(strdup(value), htable_p);
+            Insert(htable_p, strdup(value));
             i++;
             break;
         case 3:
