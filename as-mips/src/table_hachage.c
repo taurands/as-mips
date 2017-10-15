@@ -13,6 +13,20 @@
 
 #define MIN_TABLE_SIZE 11
 
+unsigned int nextPrime(unsigned int num) {
+	unsigned int i;
+	num++; /* prend le nombre suivant */
+	if (!(num%2)) num++; /* si pair, +1 le rend impair (les multiples de 2 ne sont pas premiers */
+
+	for (i = 3; i*i <= num; i+=2) {
+		if (!(num%i)) {
+			num+=2;
+			i=1;
+		}
+	}
+	return num;
+}
+
 unsigned int hashBernstein(char *chaine) {
     unsigned int hachage = 5381;
     unsigned int caractere;
@@ -146,6 +160,13 @@ int test_hachage() {
 	int size, i = 1;
     int choice;
     HashTable_t *htable_p;
+
+    printf("premier >10 = %u\n", nextPrime(10));
+    printf("premier >11 = %u\n", nextPrime(11));
+    printf("premier >1000 = %u\n", nextPrime(1000));
+    printf("premier >10000 = %u\n", nextPrime(10000));
+    printf("premier >100000 = %u\n", nextPrime(100000));
+    printf("premier >26 = %u\n", nextPrime(26));
     while (1) {
         printf("\n----------------------\n");
         printf("Operations on Double Hashing\n");
