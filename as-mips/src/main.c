@@ -38,8 +38,11 @@ void print_usage( char *exec ) {
  */
 int main ( int argc, char *argv[] ) {
 
-    unsigned int 	nlines 	= 0;
-    char         	 *file 	= NULL;
+    unsigned int nbLignes 	= 0;
+    unsigned int nbEtiquettes = 0;
+    unsigned int nbInstructions = 0;
+
+    char         *file 	= NULL;
     
     Liste_t *lignesLexeme_p=NULL;
     Liste_t *lignesCode_p=NULL;
@@ -63,24 +66,27 @@ int main ( int argc, char *argv[] ) {
 
 
     /* ---------------- do the lexical analysis -------------------*/
-    lignesLexeme_p=lex_load_file( file, &nlines);
+    lignesLexeme_p=lex_load_file( file, &nbLignes, &nbEtiquettes, &nbInstructions);
 
     /* ---------------- print the lexical analysis -------------------*/
-    DEBUG_MSG("Le fichier source comporte %d lignes",nlines);
+    DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nbLignes, nbEtiquettes, nbInstructions);
 	visualisationLignesLexemes(lignesLexeme_p);
 
 	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
 	lignesCode_p=analyseSyntaxe(lignesLexeme_p, mon_dictionnaire_p);
 
+	/*
 	DEBUG_MSG("index de ADD: %d",indexDictionnaire(mon_dictionnaire_p, "ADD"));
 	DEBUG_MSG("index de XOR: %d",indexDictionnaire(mon_dictionnaire_p, "XOR"));
 	DEBUG_MSG("index de TOTO: %d",indexDictionnaire(mon_dictionnaire_p, "TOTO"));
 	DEBUG_MSG("index de 0: %d",indexDictionnaire(mon_dictionnaire_p, "0"));
 	DEBUG_MSG("index de Z: %d",indexDictionnaire(mon_dictionnaire_p, "Z"));
-	effaceContenuDictionnaire(mon_dictionnaire_p);
-	free(mon_dictionnaire_p);
+	*/
 
     /* ---------------- Free memory and terminate -------------------*/
+
+	effaceContenuDictionnaire(mon_dictionnaire_p);
+	free(mon_dictionnaire_p);
 
 	detruitListe(lignesCode_p);
 	free(lignesCode_p);

@@ -37,6 +37,7 @@ char * etat_lex_to_str(Etat_lex_t etat) {
 		case PLUS:					return "PLUS";
 		case REGISTRE:				return "REGISTRE";
 		case SYMBOLE:				return "SYMBOLE";
+		case INSTRUCTION:			return "INSTRUCTION";
 		case DIRECTIVE:				return "DIRECTIVE";
 		case ETIQUETTE:				return "ETIQUETTE";
 		case COMMENTAIRE:			return "COMMENTAIRE";
@@ -215,7 +216,7 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  * @brief This function performs lexical analysis of one standardized line.
  *
  */
-Liste_t * lex_read_line( char * line, int nline) {
+Liste_t * lex_read_line( char * line, unsigned int nline, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
 
     Liste_t *ligneLexemeCourante_p=NULL;
     Lexeme_t lexemeCourant;
@@ -223,6 +224,7 @@ Liste_t * lex_read_line( char * line, int nline) {
 	enum Etat_lex_t etat;
 	char c;
 	int i;
+	int debutLigne = 1;
 	
     char *seps = " ";
     char *token = NULL;
@@ -274,7 +276,17 @@ Liste_t * lex_read_line( char * line, int nline) {
 				default :
 					;		
         	}
-        	if (etat==ETIQUETTE) token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
+        	if (etat==ETIQUETTE) {
+        		token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
+        		(*nbEtiquettes_p)++;
+        	}
+        	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
+        		if (debutLigne && etat==SYMBOLE) {
+        			etat=L_INSTRUCTION;
+        			(*nbInstructions_p)++;
+        		}
+        		debutLigne=0;
+        	}
          	if (!(lexemeCourant.data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
     		strcpy(lexemeCourant.data, token);
          	lexemeCourant.nature=etat;
@@ -291,12 +303,12 @@ Liste_t * lex_read_line( char * line, int nline) {
 
 /**
  * @param file Assembly source code file name.
- * @param nlines Pointer to the number of lines in the file.
+ * @param nbLignes Pointer to the number of lines in the file.
  * @return should return the collection of lexemes
  * @brief This function loads an assembly code from a file into memory.
  *
  */
-Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
+Liste_t * lex_load_file( char *file, unsigned int *nbLignes, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
 
     FILE        *fp   = NULL;
     char         line[STRLEN]; /* original source line */
@@ -313,17 +325,17 @@ Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
         /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
         ERROR_MSG("Impossible d'ouvrir le fichier \"%s\". Abandon du traitement",file);
     }
-    *nlines = 0;
+    *nbLignes = 0;
 
     while(!feof(fp)) {
         /*read source code line-by-line */
         if ( NULL != fgets( line, STRLEN-1, fp ) ) {
             if (strlen(line)) if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';  /* remove final '\n' */
-            (*nlines)++;
+            (*nbLignes)++;
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
-                ligneLexemeCourante_p=lex_read_line( res, *nlines );
+                ligneLexemeCourante_p=lex_read_line( res, *nbLignes, nbEtiquettes_p, nbInstructions_p );
                 ajouteElementFinListe(lignesLexeme_p, ligneLexemeCourante_p);
                 free(ligneLexemeCourante_p);
             }
@@ -331,7 +343,7 @@ Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
     }
 
     fclose(fp);
-    if (!*nlines) WARNING_MSG("Attention, le fichier \"%s\" est vide",file);
+    if (!*nbLignes) WARNING_MSG("Attention, le fichier \"%s\" est vide",file);
     return lignesLexeme_p;
 }
 

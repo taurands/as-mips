@@ -47,6 +47,7 @@ typedef enum Nature_lexeme_t {
  */
 typedef	enum Etat_lex_t {
 	SYMBOLE=L_SYMBOLE,
+	INSTRUCTION=L_INSTRUCTION,
 	DIRECTIVE=L_DIRECTIVE,
 	ETIQUETTE=L_ETIQUETTE,
 
@@ -86,8 +87,8 @@ typedef struct Lexeme_t {
 	int ligne;						/**< Ligne source du lexème */
 } Lexeme_t;
 
-Liste_t * lex_read_line( char *, int);
-Liste_t * lex_load_file( char *, unsigned int * );
+Liste_t * lex_read_line( char *, unsigned int, unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
+Liste_t * lex_load_file( char *, unsigned int * ,unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
 void lex_standardise( char*, char*  );
 
 void visualisationLignesLexemes(Liste_t * liste_p);
