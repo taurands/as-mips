@@ -82,14 +82,52 @@ typedef struct Instruction_t {
 	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	uint32_t pc;							/**< Adresse de l'instruction */
 	uint32_t op_code;						/**< Code opération de l'instruction */
-	Lexeme_t *etiquette;					/**< Etiquette de la ligne */
-	Lexeme_t *instruction;					/**< Nom de l'instruction */
+	/*Lexeme_t *etiquette;	*/				/**< Etiquette de la ligne */
+	Lexeme_t *nom_instruction;					/**< Nom de l'instruction */
 	Lexeme_t *arg1;							/**< Lexème de l'argument 1 */
 	Lexeme_t *arg2;							/**< Lexème de l'argument 2 */
 	Lexeme_t *arg3;							/**< Lexème de l'argument 3 */
-	Lexeme_t *arg4;							/**< Lexème de l'argument 4 */
-	Lexeme_t *commentaire;					/**< Lexème commentaire */
+	/*Lexeme_t *arg4;	*/					/**< Lexème de l'argument 4 */
+	/*Lexeme_t *commentaire;	*/			/**< Lexème commentaire */
 } Instruction_t;
+
+
+/**
+ * @struct Etiquette_t
+ * @brief Elément définissant une étiquette
+ */
+typedef struct Etiquette_t {
+	Lexeme_t *nom_etiquette;				/**< nom de l'étiquette */
+	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	Nature_Section_t section;				/**< Section où se trouve l'étiquette */
+	uint32_t decalage_etiquette;						/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
+} Etiquette_t;
+
+
+/**
+ * @struct Directive_t
+ * @brief Elément définissant une directive
+ */
+typedef struct Directive_t {
+	Lexeme_t *nom_directive; 					/**< nom de la directive */
+	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	int nb_operande;						/**< Nombre d'opérande de la directive */
+	uint32_t decalage_operande;				/**< décalage de l'adresse de la directive par rapport à l'étiquette de la section */
+	Lexeme_t *operande;						/**< Opérande suivant la directive */
+} Directive_t;
+
+
+/**
+ * @struct Element_databss_t
+ * @brief Elément définissant un élément que l'on peut retrouver dans les sections .sata ou .bss
+ */
+typedef struct Element_databss_t {
+	Nature_lexeme_t identifiant;			/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
+	union {
+		Etiquette_t etiquette;
+		Directive_t directive;
+	}union_databss;
+} Element_databss_t;
 
 Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire);
 void effaceContenuDictionnaire(Dictionnaire_t *unDictionnaire_p);
