@@ -24,14 +24,22 @@ typedef struct HashTable_t {
     fonctionDestruction *fnDestruction_p;
 } HashTable_t;
 
+char *clefStr(void *uneStr);
+void destructionStr(void *uneStr);
+
+unsigned int nombrePremierGET(unsigned int nombre);
+unsigned int tailleTableHachageRecommandee(unsigned int nbElementsPrevus);
+
 unsigned int hashBernstein(char *chaine);
 unsigned int hashKR2(char *chaine);
 
-HashTable_t *initializeTable(int nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
-unsigned int Find(HashTable_t *htable_p, char *key);
-void Insert(HashTable_t *htable_p, void *donnee_p);
-HashTable_t *Rehash(HashTable_t *htable_p, int newSize);
+HashTable_t *creeTable(unsigned int nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
+unsigned int trouve(HashTable_t *htable_p, char *key);
+int insere(HashTable_t *htable_p, void *donnee_p);
 
+/*
+HashTable_t *Rehash(HashTable_t *htable_p, int newSize);
+*/
 int test_hachage();
 
 #endif /* _TABLE_HACHAGE_H */

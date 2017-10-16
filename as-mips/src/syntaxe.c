@@ -48,7 +48,6 @@ Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 		nomInstruction=strupr(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].instruction=strdup(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].nb_arg=nombreOperandes;
-		printf("Dictionnaire instructions[%d]\t: %s\t--> \t%d,\t%d\n", i, nomInstruction, hashKR2(nomInstruction) % 63, hashBernstein(nomInstruction) % 63);
 		if (i) if (strcmp((*dictionnaireLu_p->mots)[i-1].instruction, (*dictionnaireLu_p->mots)[i].instruction)>=0) ERROR_MSG("Le fichier dictionnaire d'instructions n'est par rangé par ordre alphabétique");
 		i++;
 	}
