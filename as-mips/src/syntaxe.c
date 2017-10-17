@@ -102,7 +102,8 @@ int machineEtatsFinisSyntaxique(int etat, Lexeme_t *lexeme_p) {
 	return etat;
 }
 
-Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p) {
+void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p,
+					Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p) {
 	ElementListe_t *elementListeLigneLexeme=NULL;
 	Liste_t *listeLexeme_p=NULL;
 	ElementListe_t *elementListeLexeme_p=NULL;
@@ -118,8 +119,6 @@ Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnair
 
 	int etat;
 	enum Section_e i, section=S_INIT;
-
-	Liste_t *lignesCode_p=NULL;
 
 	if (lignesLexemes_p) {
 		elementListeLigneLexeme=lignesLexemes_p->debut_liste_p;
@@ -176,7 +175,6 @@ Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnair
 			elementListeLigneLexeme=elementListeLigneLexeme->suivant_p;
 		}
 	}
-	return lignesCode_p;
 }
 
 /**

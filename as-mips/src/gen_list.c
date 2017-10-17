@@ -28,11 +28,30 @@ void initialiseListe(Liste_t *liste_p, int tailleElement,
 }
 
 /**
+ * @param liste_p Pointeur sur une liste générique simplement chaînée
+ * @param tailleElement Taille mémoire nécessaire pour contenir un élément de la liste
+ * @param freeFn Pointeur sur la fonction de destruction des données dynamiques liées à l'élement de liste
+ * @return Rien
+ * @brief
+ */
+Liste_t *creeListe(size_t tailleElement, fonctionDestructeur *freeFn) {
+	assert(tailleElement > 0);
+
+	Liste_t *liste_p=calloc(1, sizeof(*liste_p));
+	if (!liste_p) ERROR_MSG("Impossible de créer une nouvelle liste");
+
+	liste_p->tailleElements = tailleElement;
+	liste_p->fnDestructeur_p = freeFn;
+
+	return liste_p;
+}
+
+/**
  * @param liste_p pointeur sur une liste générique simplement chaînée
  * @return Rien
  * @brief Détruit l'ensemble des éléments de la liste en libérant la mémoire dynamique direct et indirecte associée
  */
-void detruitListe(Liste_t *liste_p) {
+Liste_t *detruitListe(Liste_t *liste_p) {
 	ElementListe_t *elementCourant_p;
 	if (liste_p) {
 		DEBUG_MSG("Destruction de la Liste: %p : %d éléments",liste_p,liste_p->nbElements);
@@ -43,11 +62,15 @@ void detruitListe(Liste_t *liste_p) {
 			if (liste_p->fnDestructeur_p) {
 				liste_p->fnDestructeur_p(elementCourant_p->donnees_p);
 			}
+			else {
+				free(elementCourant_p->donnees_p);
+			}
 
-			free(elementCourant_p->donnees_p);
 			free(elementCourant_p);
 		}
+		free(liste_p);
 	}
+	return NULL;
 }
 
 /**

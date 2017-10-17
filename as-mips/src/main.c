@@ -46,11 +46,11 @@ int main ( int argc, char *argv[] ) {
     char         *file 	= NULL;
     
     Liste_t *lignesLexeme_p=NULL;
-    Liste_t *lignesCode_p=NULL;
-    /*
-    Liste_t *listeEtiquettes=NULL;
-    */
+
     TableHachage_t *tableEtiquettes_p;
+    Liste_t *listeText_p=NULL;
+    Liste_t *listeData_p=NULL;
+    Liste_t *listeBss_p=NULL;
 
     if ( argc != 2 ) {
         print_usage(argv[0]);
@@ -67,18 +67,22 @@ int main ( int argc, char *argv[] ) {
     }
 
 
+    listeText_p=creeListe(sizeof(Instruction_t), NULL);
+    listeData_p=creeListe(sizeof(Donnee_t), NULL);
+    listeBss_p=creeListe(sizeof(Donnee_t), NULL);
+	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
+
     /* ---------------- do the lexical analysis -------------------*/
-    lignesLexeme_p=lex_load_file( file, &nbLignes, &nbEtiquettes, &nbInstructions);
+    lignesLexeme_p=lex_load_file(file, &nbLignes, &nbEtiquettes, &nbInstructions);
 
     /* ---------------- print the lexical analysis -------------------*/
     DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nbLignes, nbEtiquettes, nbInstructions);
 	visualisationLignesLexemes(lignesLexeme_p);
 
-	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
 
 	tableEtiquettes_p=creeTable(nbEtiquettes, clefStr, destructionStr);
 
-	lignesCode_p=analyseSyntaxe(lignesLexeme_p, mon_dictionnaire_p, tableEtiquettes_p);
+	analyseSyntaxe(lignesLexeme_p, mon_dictionnaire_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
 
 	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
 
@@ -95,10 +99,11 @@ int main ( int argc, char *argv[] ) {
 	effaceContenuDictionnaire(mon_dictionnaire_p);
 	free(mon_dictionnaire_p);
 
-	detruitListe(lignesCode_p);
-	free(lignesCode_p);
-    detruitListe(lignesLexeme_p);
-    free(lignesLexeme_p);
+	lignesLexeme_p=detruitListe(lignesLexeme_p);
+
+	listeText_p=detruitListe(listeText_p);
+    listeData_p=detruitListe(listeData_p);
+    listeBss_p=detruitListe(listeBss_p);
 
     /*
     printf("Hachage B null : %x\n", hashBernstein(NULL));

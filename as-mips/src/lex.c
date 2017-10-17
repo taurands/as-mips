@@ -403,6 +403,7 @@ void lex_standardise( char* in, char* out ) {
 void detruitContenuLexeme(void *Lexeme_p) {
 	DEBUG_MSG("Lexeme: %p ... %s",Lexeme_p,((Lexeme_t *)Lexeme_p)->data);
 	free(((Lexeme_t *)Lexeme_p)->data);
+	free(Lexeme_p);
 }
 
 /**

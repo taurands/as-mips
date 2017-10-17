@@ -34,7 +34,8 @@ typedef struct Liste_t {
 } Liste_t;
 
 void initialiseListe(Liste_t *liste_p, int elementSize, fonctionDestructeur *freeFn);
-void detruitListe(Liste_t *liste_p);
+Liste_t *creeListe(size_t elementSize, fonctionDestructeur *freeFn);
+Liste_t *detruitListe(Liste_t *liste_p);
 
 void ajouteElementDebutListe(Liste_t *liste_p, void *nouvelElement_p);
 void ajouteElementFinListe(Liste_t *liste_p, void *nouvelElement_p);
