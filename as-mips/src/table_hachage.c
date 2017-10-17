@@ -12,11 +12,9 @@
 #include <notify.h>
 #include <table_hachage.h>
 
-#define MIN_TABLE_SIZE 5
-
-unsigned int nombrePremierGET(unsigned int nombre) {
-	unsigned int diviseur;
-	if (!(nombre%2)) nombre++; /* si pair, +1 le rend impair (les multiples de 2 ne sont pas premiers */
+size_t nombrePremierGET(size_t nombre) {
+	size_t diviseur;
+	if (!(nombre%2)) nombre++; /* si pair, +1 le rend impair (les multiples de 2 ne sont pas premiers) */
 
 	for (diviseur = 3; diviseur*diviseur <= nombre; diviseur+=2) {
 		if (!(nombre%diviseur)) {
@@ -27,39 +25,43 @@ unsigned int nombrePremierGET(unsigned int nombre) {
 	return nombre;
 }
 
-unsigned int tailleTableHachageRecommandee(unsigned int nbElementsPrevus) {
+size_t tailleTableHachageRecommandee(size_t nbElementsPrevus) {
 	/* le facteur de charge recommandé pour un double hachage est entre 50% et 80% */
 	/* Le choix suivant le place à 2/3 (2/(2+1)). La taille de la table doit être un nombre premier */
 	/* afin d'avoir un groupe cyclique pour le deuxième hachage */
 	return nombrePremierGET(nbElementsPrevus + (nbElementsPrevus >> 1));
 }
 
-unsigned int hashKR2(char *chaine) {
-    unsigned int hachage = 0;
-    unsigned int caractere;
+size_t hashKR2(char *chaine) {
+	size_t hachage = 0;
+	size_t caractere;
 
-    if (!chaine)
-    	return 0;
-    else {
-        while ((caractere = (unsigned char)*(chaine++)))
+    if (chaine)
+    	while ((caractere = (unsigned char)*(chaine++)))
         	hachage = ((hachage << 5) - hachage) + caractere; /* hash * 31 + caractere */
-        return hachage;
-    }
+
+    return hachage;
 }
 
-unsigned int hashBernstein(char *chaine) {
-    unsigned int hachage = 5381;
-    unsigned int caractere;
+size_t hashBernstein(char *chaine) {
+	size_t hachage = 5381;
+	size_t caractere;
 
-    if (!chaine)
-    	return 0;
-    else {
-        while ((caractere = (unsigned char)*(chaine++)))
+    if (chaine)
+    	while ((caractere = (unsigned char)*(chaine++)))
         	hachage = ((hachage << 5) + hachage) + caractere; /* hash * 33 + caractere */
-        return hachage;
-    }
+
+    return hachage;
 }
 
+void *copiePointeur(void *original_p, size_t taille) {
+	void *copie_p=NULL;
+	if (original_p) {
+		if (!(copie_p=malloc(taille))) ERROR_MSG("Impossible de dupliquer la structure de données");
+		memcpy(copie_p, original_p, taille);
+	}
+	return copie_p;
+}
 char *clefStr(void *uneStr) {
 	return (char *)uneStr;
 }
@@ -71,8 +73,8 @@ void destructionStr(void *uneStr) {
 /*
  * Function to Initialize Table
  */
-HashTable_t *creeTable(unsigned int nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
-	HashTable_t *htable = calloc(1, sizeof(*htable));
+TableHachage_t *creeTable(size_t nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
+	TableHachage_t *htable = calloc(1, sizeof(*htable));
 
     if (!htable) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la structure de la table de hachage");
 
@@ -90,41 +92,57 @@ HashTable_t *creeTable(unsigned int nbElementsMax, fonctionClef *fnClef_p, fonct
 /*
  * Function to Release Table
  */
-HashTable_t *detruitTable(HashTable_t *htable) {
-	unsigned int i;
+TableHachage_t *detruitTable(TableHachage_t *htable) {
+	size_t i;
 
-	if (htable->fnDestruction_p)
-		for (i=0; i<htable->nbElementsMax; i++)
-			if (htable->table[i])
-				htable->fnDestruction_p(htable->table[i]);
+	if (htable) {
+		if (htable->fnDestruction_p)
+			for (i=0; i<htable->nbElementsMax; i++)
+				if (htable->table[i])
+					htable->fnDestruction_p(htable->table[i]);
 
-	free(htable->table);
-	free(htable);
-
+		free(htable->table);
+		free(htable);
+	}
 	return NULL;
 }
 
 /*
  * Function to Find Element from the table
  */
-unsigned int trouve(HashTable_t *htable_p, char *key) {
-    unsigned int hashVal = hashKR2(key) % htable_p->nbElementsMax;
-    unsigned int stepSize = (hashBernstein(key) % (htable_p->nbElementsMax - 1)) + 1;
-    while ((htable_p->table[hashVal]) && (strcmp(key, htable_p->fnClef_p(htable_p->table[hashVal])))) {
-        hashVal = (hashVal + stepSize) % htable_p->nbElementsMax;
+size_t trouve(TableHachage_t *htable_p, char *clef) {
+	size_t hachage = hashKR2(clef) % htable_p->nbElementsMax;
+	size_t pasCyclique = (hashBernstein(clef) % (htable_p->nbElementsMax - 1)) + 1;
+    while ((htable_p->table[hachage]) &&
+    		(strcmp(clef, (htable_p->fnClef_p ? htable_p->fnClef_p(htable_p->table[hachage]) : (char *)htable_p->table[hachage])))) {
+        hachage = (hachage + pasCyclique) % htable_p->nbElementsMax;
     }
-    return hashVal;
+    return hachage;
 }
 
 /*
  * Function to Insert Element into the table - L'élément donnee_p n'est pas recopié et devra rester permanent
  */
-int insere(HashTable_t *htable_p, void *donnee_p) {
-	char *key=htable_p->fnClef_p(donnee_p);
-    unsigned int pos = trouve(htable_p, key);
-    if (!htable_p->table[pos]) {
-    	htable_p->table[pos] = donnee_p;
+int insere(TableHachage_t *htable_p, void *donnee_p) {
+	char *clef = (htable_p->fnClef_p ? htable_p->fnClef_p(donnee_p) : donnee_p);
+    size_t position = trouve(htable_p, clef);
+
+    if (!htable_p->table[position]) {
+    	htable_p->table[position] = donnee_p;
     	htable_p->nbElements++;
+    	return 1;
+    }
+    else
+    	return 0;
+}
+
+int supprime(TableHachage_t *htable_p, char *clef) {
+    size_t position = trouve(htable_p, clef);
+
+    if (htable_p->table[position] && htable_p->fnDestruction_p) {
+    	htable_p->fnDestruction_p(htable_p->table[position]);
+    	htable_p->table[position] = NULL;
+    	htable_p->nbElements--;
     	return 1;
     }
     else
@@ -152,7 +170,7 @@ HashTable_t *redimensionneTable(HashTable_t *htable_p, int newSize) {
 /*
  * Function to Retrieve the table
  */
-void afficheTableHachage(HashTable_t *htable_p) {
+void afficheTableHachage(TableHachage_t *htable_p) {
 	int i;
     for (i = 0; i < htable_p->nbElementsMax; i++) {
         char *value = htable_p->fnClef_p(htable_p->table[i]);
@@ -167,7 +185,7 @@ int test_hachage() {
 
 	int size, i = 1;
     int choice;
-    HashTable_t *htable_p;
+    TableHachage_t *htable_p;
 
     /*
     printf("premier >10 = %u\n", nombrePremierGET(10));

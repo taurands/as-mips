@@ -8,14 +8,8 @@
 #define _SYNTAXE_H_
 
 #include <stdint.h>
-
-/*
-#include <lex.h>
 #include <gen_list.h>
-
-#include <global.h>
-#include <notify.h>
-*/
+#include <table_hachage.h>
 
 /**
  * @enum Section_e
@@ -59,13 +53,13 @@ enum Donnee_e {
  * @struct Mot_Dictionnaire_s
  * @brief Structure permettant de stocker la définition d'une instruction
  */
-typedef struct Mot_Dictionnaire_s {
-	char* instruction;					/**< nom de l'instruction */
-	enum Instruction_e nature;			/**< nature de l'instruction */
-	int nb_arg;							/**< nombre d'arguments de l'instruction */
-} Mot_Dictionnaire_t;
+typedef struct DefinitionInstruction_s {
+	char* nom;						/**< nom de l'instruction */
+	enum Instruction_e nature;		/**< nature de l'instruction */
+	unsigned int nbOperandes;		/**< nombre d'arguments de l'instruction */
+} DefinitionInstruction_t;
 
-typedef Mot_Dictionnaire_t Mots_Dictionnaire_t[];
+typedef DefinitionInstruction_t Mots_Dictionnaire_t[];
 
 /**
  * @struct Dictionnaire_t
@@ -76,22 +70,18 @@ typedef struct Dictionnaire_t {
 	Mots_Dictionnaire_t *mots;			/**< Tableau contenant la définition de l'ensemble des instructions */
 } Dictionnaire_t;
 
-
 /**
- * @struct Instruction_t
+ * @struct Instruction_s
  * @brief Elément définissant une instruction machine
  */
-typedef struct Instruction_t {
-	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
-	uint32_t pc;							/**< Adresse de l'instruction */
-	uint32_t op_code;						/**< Code opération de l'instruction */
-	/*Lexeme_t *etiquette;	*/				/**< Etiquette de la ligne */
-	Lexeme_t *nom_instruction;					/**< Nom de l'instruction */
-	Lexeme_t *arg1;							/**< Lexème de l'argument 1 */
-	Lexeme_t *arg2;							/**< Lexème de l'argument 2 */
-	Lexeme_t *arg3;							/**< Lexème de l'argument 3 */
-	/*Lexeme_t *arg4;	*/					/**< Lexème de l'argument 4 */
-	/*Lexeme_t *commentaire;	*/			/**< Lexème commentaire */
+typedef struct Instruction_s {
+	unsigned int ligneSource;				/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	uint32_t decalage;						/**< Décalage de l'instruction */
+	uint32_t opCode;						/**< Code opération de l'instruction */
+	DefinitionInstruction_t *definition_p;	/**< Nom de l'instruction */
+	Lexeme_t *operande1_p;					/**< Lexème de l'opérande 1 */
+	Lexeme_t *operande2_p;					/**< Lexème de l'opérande 2 */
+	Lexeme_t *operande3_p;					/**< Lexème de l'opérande 3 */
 } Instruction_t;
 
 
@@ -100,10 +90,10 @@ typedef struct Instruction_t {
  * @brief Elément définissant une étiquette
  */
 typedef struct Etiquette_s {
-	Lexeme_t *nom_etiquette;				/**< nom de l'étiquette */
-	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	unsigned int ligneSource;			/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Section_e section;				/**< Section où se trouve l'étiquette */
-	uint32_t decalage_etiquette;						/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
+	uint32_t decalage;					/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
+	Lexeme_t *nom_p;					/**< pointeur vers le Lexème contenant le nom de l'étiquette */
 } Etiquette_t;
 
 
@@ -136,7 +126,9 @@ Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire);
 void effaceContenuDictionnaire(Dictionnaire_t *unDictionnaire_p);
 int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot);
 
-Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p);
+char *clefDefinitionInstruction(void *donnee_p);
+
+Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p);
 
 void bonneInstruction(Liste_t* ligne_lexemes_p);
 

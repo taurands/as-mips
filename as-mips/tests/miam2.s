@@ -11,7 +11,7 @@ boucle 			:
     B boucle 
     NOP
 
-byebye:JAL viteviteauru
+byebye:toto:JAL viteviteauru
 .data
 lunchtime:.word 12
 __:ADD$1,$2_,-0x#Commx

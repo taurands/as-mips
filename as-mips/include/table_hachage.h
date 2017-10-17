@@ -16,28 +16,30 @@ typedef void (fonctionDestruction)(void *);
 /*
  * Table Declaration
  */
-typedef struct HashTable_t {
-    int nbElementsMax;
-    int nbElements;
+typedef struct TableHachage_s {
+    size_t nbElementsMax;
+    size_t nbElements;
     void **table;
     fonctionClef *fnClef_p;
     fonctionDestruction *fnDestruction_p;
-} HashTable_t;
+} TableHachage_t;
 
+void *copiePointeur(void *original_p, size_t taille);
 char *clefStr(void *uneStr);
 void destructionStr(void *uneStr);
 
-unsigned int nombrePremierGET(unsigned int nombre);
-unsigned int tailleTableHachageRecommandee(unsigned int nbElementsPrevus);
+size_t nombrePremierGET(size_t nombre);
+size_t tailleTableHachageRecommandee(size_t nbElementsPrevus);
 
-unsigned int hashBernstein(char *chaine);
-unsigned int hashKR2(char *chaine);
+size_t hashBernstein(char *chaine);
+size_t hashKR2(char *chaine);
 
-HashTable_t *creeTable(unsigned int nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
-HashTable_t *detruitTable(HashTable_t *htable);
+TableHachage_t *creeTable(size_t nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
+TableHachage_t *detruitTable(TableHachage_t *htable);
 
-unsigned int trouve(HashTable_t *htable_p, char *key);
-int insere(HashTable_t *htable_p, void *donnee_p);
+size_t trouve(TableHachage_t *htable_p, char *clef);
+int insere(TableHachage_t *htable_p, void *donnee_p);
+int supprime(TableHachage_t *htable_p, char *clef);
 
 /*
 HashTable_t *redimensionneTable(HashTable_t *htable_p, int newSize);

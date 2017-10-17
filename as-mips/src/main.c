@@ -14,6 +14,7 @@
 #include <notify.h>
 #include <lex.h>
 #include <syntaxe.h>
+#include <str_utils.h>
 #include <table_hachage.h>
 
 /**
@@ -49,6 +50,7 @@ int main ( int argc, char *argv[] ) {
     /*
     Liste_t *listeEtiquettes=NULL;
     */
+    TableHachage_t *tableEtiquettes_p;
 
     if ( argc != 2 ) {
         print_usage(argv[0]);
@@ -73,7 +75,12 @@ int main ( int argc, char *argv[] ) {
 	visualisationLignesLexemes(lignesLexeme_p);
 
 	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
-	lignesCode_p=analyseSyntaxe(lignesLexeme_p, mon_dictionnaire_p);
+
+	tableEtiquettes_p=creeTable(nbEtiquettes, clefStr, destructionStr);
+
+	lignesCode_p=analyseSyntaxe(lignesLexeme_p, mon_dictionnaire_p, tableEtiquettes_p);
+
+	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
 
 	/*
 	DEBUG_MSG("index de ADD: %d",indexDictionnaire(mon_dictionnaire_p, "ADD"));
@@ -93,6 +100,7 @@ int main ( int argc, char *argv[] ) {
     detruitListe(lignesLexeme_p);
     free(lignesLexeme_p);
 
+    /*
     printf("Hachage B null : %x\n", hashBernstein(NULL));
     printf("Hachage B vide : %x\n", hashBernstein(""));
     printf("Hachage B t : %x\n", hashBernstein("t"));
@@ -102,8 +110,9 @@ int main ( int argc, char *argv[] ) {
     printf("Hachage KR2 vide : %x\n", hashKR2(""));
     printf("Hachage KR2 t : %x\n", hashKR2("t"));
     printf("Hachage KR2 to : %x\n", hashKR2("to"));
+    */
 
-    test_hachage();
+    /* test_hachage(); */
     exit( EXIT_SUCCESS );
 }
 
