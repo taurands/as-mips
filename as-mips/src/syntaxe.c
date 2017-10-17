@@ -110,7 +110,7 @@ Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnair
 	int ligneSource=0;
 
 	int etat;
-	enum Nature_Section_t i, section=S_INIT;
+	enum Section_e i, section=S_INIT;
 
 	Liste_t *lignesCode_p=NULL;
 

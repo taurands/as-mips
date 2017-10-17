@@ -90,25 +90,18 @@ HashTable_t *creeTable(unsigned int nbElementsMax, fonctionClef *fnClef_p, fonct
 /*
  * Function to Release Table
  */
-void releaseTable(HashTable_t *htable) {
-	/*
-	int i;
-    htable = malloc(sizeof(struct HashTable));
-    if (htable == NULL) {
-        printf("Out of Space\n");
-        return NULL;
-    }
-    htable->size = size;
-    htable->table = malloc(sizeof(struct HashNode[htable->size]));
-    if (htable->table == NULL) {
-        printf("Table Size Too Small\n");
-        return NULL;
-    }
-    for (i = 0; i < htable->size; i++) {
-        htable->table[i].info = Empty;
-        htable->table[i].element = NULL;
-    }
-    */
+HashTable_t *detruitTable(HashTable_t *htable) {
+	unsigned int i;
+
+	if (htable->fnDestruction_p)
+		for (i=0; i<htable->nbElementsMax; i++)
+			if (htable->table[i])
+				htable->fnDestruction_p(htable->table[i]);
+
+	free(htable->table);
+	free(htable);
+
+	return NULL;
 }
 
 /*
@@ -139,10 +132,10 @@ int insere(HashTable_t *htable_p, void *donnee_p) {
 }
 
 /*
- * Function to Rehash the table
+ * Function to redimensionneTable the table
  */
 /*
-HashTable_t *Rehash(HashTable_t *htable_p, int newSize) {
+HashTable_t *redimensionneTable(HashTable_t *htable_p, int newSize) {
 	int i;
     int size = htable_p->nbElementsMax;
     void **table = htable_p->table;
@@ -191,7 +184,7 @@ int test_hachage() {
         printf("1.Initialize size of the table\n");
         printf("2.Insert element into the table\n");
         printf("3.Display Hash Table\n");
-        printf("4.Rehash The Table\n");
+        printf("4.redimensionneTable The Table\n");
         printf("5.Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -203,7 +196,7 @@ int test_hachage() {
             break;
         case 2:
             if (i > htable_p->nbElementsMax) {
-                printf("Table is Full, Rehash the table\n");
+                printf("Table is Full, redimensionneTable the table\n");
                 continue;
             }
             printf("Enter element to be inserted: ");
@@ -218,7 +211,7 @@ int test_hachage() {
             printf("Enter new nbElementsMax of the Hash Table: ");
             scanf("%d", &size);
             /*
-            htable_p = Rehash(htable_p, size);
+            htable_p = redimensionneTable(htable_p, size);
             */
             break;
         case 5:

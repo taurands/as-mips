@@ -34,11 +34,13 @@ unsigned int hashBernstein(char *chaine);
 unsigned int hashKR2(char *chaine);
 
 HashTable_t *creeTable(unsigned int nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
+HashTable_t *detruitTable(HashTable_t *htable);
+
 unsigned int trouve(HashTable_t *htable_p, char *key);
 int insere(HashTable_t *htable_p, void *donnee_p);
 
 /*
-HashTable_t *Rehash(HashTable_t *htable_p, int newSize);
+HashTable_t *redimensionneTable(HashTable_t *htable_p, int newSize);
 */
 int test_hachage();
 
