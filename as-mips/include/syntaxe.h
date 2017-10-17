@@ -90,10 +90,10 @@ typedef struct Instruction_s {
  * @brief Elément définissant une étiquette
  */
 typedef struct Etiquette_s {
+	Lexeme_t *nom_p;					/**< pointeur vers le Lexème contenant le nom de l'étiquette */
 	unsigned int ligneSource;			/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Section_e section;				/**< Section où se trouve l'étiquette */
 	uint32_t decalage;					/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
-	Lexeme_t *nom_p;					/**< pointeur vers le Lexème contenant le nom de l'étiquette */
 } Etiquette_t;
 
 
@@ -109,6 +109,25 @@ typedef struct Directive_s {
 	Lexeme_t *operande;						/**< Opérande suivant la directive */
 } Directive_t;
 
+/**
+ * @struct Donnee_s
+ * @brief Elément définissant un élément que l'on peut retrouver dans les sections .data ou .bss
+ */
+typedef struct Donnee_s {
+	Lexeme_t *nom_p;				/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
+	unsigned int ligneSource;	/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	enum Section_e section;		/**< Section où se trouve l'étiquette */
+	uint32_t decalage;			/**< décalage de l'adresse de la donnée par rapport à l'étiquette de la section */
+	union {
+		int8_t		octet;
+		uint8_t		octetNS;
+		char		car;
+		char		*chaine;
+		int32_t		mot;
+		uint32_t	motNS;
+		uint32_t	nbOctets;
+	} valeur;
+} Donnee_t;
 
 /**
  * @struct Element_databss_t

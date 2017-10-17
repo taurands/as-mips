@@ -108,9 +108,11 @@ Liste_t *analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnair
 	ElementListe_t *elementListeLexeme_p=NULL;
 	Lexeme_t *lexeme_p=NULL;
 
+	/*
 	uint32_t decalageText=0;
 	uint32_t decalageData=0;
 	uint32_t decalageBss=0;
+	*/
 
 	int ligneSource=0;
 
