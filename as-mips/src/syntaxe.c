@@ -24,6 +24,10 @@ char *clefDefinitionInstruction(void *donnee_p) {
 	return (donnee_p ? ((DefinitionInstruction_t *)donnee_p)->nom : NULL);
 }
 
+char *clefEtiquette(void *donnee_p) {
+	return (donnee_p ? ((Etiquette_t *)donnee_p)->nom_p->data : NULL);
+}
+
 Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 	char *nomInstruction=calloc(128, sizeof(char));
 	/* char carNature; */
@@ -103,9 +107,7 @@ int machineEtatsFinisSyntaxique(int etat, Lexeme_t *lexeme_p) {
 }
 
 void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p,
-					Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p) {
-	ElementListe_t *elementListeLigneLexeme=NULL;
-	Liste_t *listeLexeme_p=NULL;
+		Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p) {
 	ElementListe_t *elementListeLexeme_p=NULL;
 	Lexeme_t *lexeme_p=NULL;
 
@@ -113,66 +115,61 @@ void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p,
 	uint32_t decalageText=0;
 	uint32_t decalageData=0;
 	uint32_t decalageBss=0;
-	*/
-
-	int ligneSource=0;
+	 */
 
 	int etat;
 	enum Section_e i, section=S_INIT;
 
 	if (lignesLexemes_p) {
-		elementListeLigneLexeme=lignesLexemes_p->debut_liste_p;
-		while (elementListeLigneLexeme) {
-			ligneSource++;
-			listeLexeme_p=(Liste_t *)elementListeLigneLexeme->donnees_p;
-			elementListeLexeme_p=listeLexeme_p->debut_liste_p;
-			while (elementListeLexeme_p) {
-				lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
+		elementListeLexeme_p=lignesLexemes_p->debut_liste_p;
+		while (elementListeLexeme_p) { /* Boucle sur la liste de lignes de lexèmes */
+			lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
 
-				etat=machineEtatsFinisSyntaxique(etat, lexeme_p);
-				if (lexeme_p->nature==L_DIRECTIVE) {
-					lexeme_p->data=strlwr(lexeme_p->data);
-					if (strcmp(lexeme_p->data, ".set")==0) {
-						DEBUG_MSG("La directive \".set\" a été reconnue");
-						elementListeLexeme_p=elementListeLexeme_p->suivant_p;
-						lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
-						if (lexeme_p->nature==L_SYMBOLE) {
-							if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
-								DEBUG_MSG("Reconnu le symbole \"noreoder\"");
-							}
-							else { /* Le symbole n'est pas "noreorder" */
-								ERROR_MSG("Symbole inconnu après la directive \".set\"");
-							}
+			etat=machineEtatsFinisSyntaxique(etat, lexeme_p);
+			if (lexeme_p->nature==L_DIRECTIVE) {
+				lexeme_p->data=strlwr(lexeme_p->data);
+				if (strcmp(lexeme_p->data, ".set")==0) {
+					DEBUG_MSG("La directive \".set\" a été reconnue");
+					elementListeLexeme_p=elementListeLexeme_p->suivant_p;
+					lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
+					if (lexeme_p->nature==L_SYMBOLE) {
+						if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
+							DEBUG_MSG("Reconnu le symbole \"noreoder\"");
 						}
-						else { /* Le lexème n'est pas un symbole */
-							DEBUG_MSG("Pas de symbole après la directive \".set\"");
+						else { /* Le symbole n'est pas "noreorder" */
+							ERROR_MSG("Symbole inconnu après la directive \".set\"");
 						}
 					}
-					else { /* La directive n'est pas un ".set" */
-						for (i=S_TEXT; i<=S_BSS; i++) { /* on regarde si la directive coorespond à un nom de section */
-							if (strcmp(lexeme_p->data, NOMS_SECTIONS[i])==0) {
-								section=i;
-								DEBUG_MSG("La directive \"%s\" a été reconnue. Changement de nature de section pour %d : %s", lexeme_p->data, section, NOMS_SECTIONS[section]);
-								break;
-							}
-						}
-						if (i>S_BSS) { /* La directive n'est pas un nom de section */
-							DEBUG_MSG("La directive \"%s\" est inconnue dans la section %d : \"%s\"", lexeme_p->data, section, NOMS_SECTIONS[section]);
+					else { /* Le lexème n'est pas un symbole */
+						DEBUG_MSG("Pas de symbole après la directive \".set\"");
+					}
+				}
+				else { /* La directive n'est pas un ".set" */
+					for (i=S_TEXT; i<=S_BSS; i++) { /* on regarde si la directive coorespond à un nom de section */
+						if (strcmp(lexeme_p->data, NOMS_SECTIONS[i])==0) {
+							section=i;
+							DEBUG_MSG("La directive \"%s\" a été reconnue. Changement de nature de section pour %d : %s", lexeme_p->data, section, NOMS_SECTIONS[section]);
+							break;
 						}
 					}
-
-				}
-				else /* Le lexème n'est pas une directive */ if (section==S_TEXT) {
-
-				}
-				else {
-
+					if (i>S_BSS) { /* La directive n'est pas un nom de section */
+						DEBUG_MSG("La directive \"%s\" est inconnue dans la section %d : \"%s\"", lexeme_p->data, section, NOMS_SECTIONS[section]);
+					}
 				}
 
-				elementListeLexeme_p=elementListeLexeme_p->suivant_p;
+			}
+			else /* Le lexème n'est pas une directive */ if (FALSE) {
+
 			}
 
-			elementListeLigneLexeme=elementListeLigneLexeme->suivant_p;
+			else if (section==S_TEXT) {
+
+			}
+			else {
+
+			}
+
+			elementListeLexeme_p=elementListeLexeme_p->suivant_p;
 		}
 	}
 }

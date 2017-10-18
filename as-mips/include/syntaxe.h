@@ -146,6 +146,7 @@ void effaceContenuDictionnaire(Dictionnaire_t *unDictionnaire_p);
 int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot);
 
 char *clefDefinitionInstruction(void *donnee_p);
+char *clefEtiquette(void *donnee_p);
 
 void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p,
 					Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p);

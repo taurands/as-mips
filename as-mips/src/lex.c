@@ -216,9 +216,8 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  * @brief This function performs lexical analysis of one standardized line.
  *
  */
-Liste_t * lex_read_line( char * line, unsigned int nline, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
+void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
 
-    Liste_t *ligneLexemeCourante_p=NULL;
     Lexeme_t lexemeCourant;
 
 	enum Etat_lex_t etat;
@@ -229,9 +228,6 @@ Liste_t * lex_read_line( char * line, unsigned int nline, unsigned int *nbEtique
     char *seps = " ";
     char *token = NULL;
     char save[2*STRLEN];
-
-    if (!(ligneLexemeCourante_p=malloc(sizeof(*ligneLexemeCourante_p)))) ERROR_MSG("Impossible de créer une nouvelle ligne de lexèmes");
-    initialiseListe(ligneLexemeCourante_p, sizeof(lexemeCourant), detruitContenuLexeme);
 
     /* copy the input line so that we can do anything with it without impacting outside world*/
     memcpy( save, line, 2*STRLEN );
@@ -251,7 +247,7 @@ Liste_t * lex_read_line( char * line, unsigned int nline, unsigned int *nbEtique
     		strcpy(lexemeCourant.data, diese_p);
          	lexemeCourant.nature=COMMENTAIRE;
          	lexemeCourant.ligne=nline;
-         	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
+         	ajouteElementFinListe(listeLexemes_p, &lexemeCourant);
          	break;
         }
         else {
@@ -291,14 +287,13 @@ Liste_t * lex_read_line( char * line, unsigned int nline, unsigned int *nbEtique
     		strcpy(lexemeCourant.data, token);
          	lexemeCourant.nature=etat;
          	lexemeCourant.ligne=nline;
-         	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
+         	ajouteElementFinListe(listeLexemes_p, &lexemeCourant);
     	}
     }
     lexemeCourant.data=NULL;
     lexemeCourant.nature=FIN_LIGNE;
     lexemeCourant.ligne=nline;
-    ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
-    return ligneLexemeCourante_p;
+    ajouteElementFinListe(listeLexemes_p, &lexemeCourant);
 }
 
 /**
@@ -308,17 +303,11 @@ Liste_t * lex_read_line( char * line, unsigned int nline, unsigned int *nbEtique
  * @brief This function loads an assembly code from a file into memory.
  *
  */
-Liste_t * lex_load_file( char *file, unsigned int *nbLignes, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
+void lex_load_file( char *file, Liste_t *listeLexemes_p, unsigned int *nbLignes, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
 
     FILE        *fp   = NULL;
     char         line[STRLEN]; /* original source line */
     char         res[2*STRLEN]; /* standardised source line, can be longeur due to some possible added spaces*/
-    
-    Liste_t *ligneLexemeCourante_p=NULL;
-    Liste_t *lignesLexeme_p=NULL;
-
-    if (!(lignesLexeme_p=malloc(sizeof(*lignesLexeme_p)))) ERROR_MSG("Impossible de créer une liste de ligne de lexèmes");
-    initialiseListe(lignesLexeme_p, sizeof(*ligneLexemeCourante_p), (fonctionDestructeur *)detruitListe);
     
     fp = fopen( file, "r" );
     if ( NULL == fp ) {
@@ -335,16 +324,13 @@ Liste_t * lex_load_file( char *file, unsigned int *nbLignes, unsigned int *nbEti
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
-                ligneLexemeCourante_p=lex_read_line( res, *nbLignes, nbEtiquettes_p, nbInstructions_p );
-                ajouteElementFinListe(lignesLexeme_p, ligneLexemeCourante_p);
-                free(ligneLexemeCourante_p);
+                lex_read_line( res, listeLexemes_p, *nbLignes, nbEtiquettes_p, nbInstructions_p );
             }
         }       
     }
 
     fclose(fp);
     if (!*nbLignes) WARNING_MSG("Attention, le fichier \"%s\" est vide",file);
-    return lignesLexeme_p;
 }
 
 /**
@@ -400,7 +386,7 @@ void lex_standardise( char* in, char* out ) {
     DEBUG_MSG("out = \"%s\"", out);
 }
 
-void detruitContenuLexeme(void *Lexeme_p) {
+void detruitLexeme(void *Lexeme_p) {
 	DEBUG_MSG("Lexeme: %p ... %s",Lexeme_p,((Lexeme_t *)Lexeme_p)->data);
 	free(((Lexeme_t *)Lexeme_p)->data);
 	free(Lexeme_p);
@@ -422,29 +408,16 @@ void visualisationLexeme(Lexeme_t * lexeme_p) {
  * @brief Cette fonction permet de visualiser le contenu d'une liste de lexeme
  *
  */
-void visualisationLigneLexemes(Liste_t * liste_p) {
-
+void visualisationListeLexemes(Liste_t * liste_p) {
 	ElementListe_t * lexemeCourant_p=liste_p->debut_liste_p;
+
 	while (lexemeCourant_p) {
 		visualisationLexeme((Lexeme_t *)lexemeCourant_p->donnees_p);
+		if (((Lexeme_t *)lexemeCourant_p->donnees_p)->nature == L_FIN_LIGNE)
+			printf("\n");
+		else
+			if (lexemeCourant_p->suivant_p) printf(", ");
 		lexemeCourant_p=lexemeCourant_p->suivant_p;
-		if (lexemeCourant_p) printf(", ");
 	}
 }
 
-/**
- * @param debut_liste_p pointeur sur le début d'une liste de ligne de lexeme
- * @return rien
- * @brief Cette fonction permet de visualiser le contenu de la liste de lignes de lexeme
- *
- */
-void visualisationLignesLexemes(Liste_t * liste_p) {
-	int numeroLigne=0;
-	ElementListe_t * ligneCourante_p=liste_p->debut_liste_p;
-    
-    while(ligneCourante_p) {
-    	if (ligneCourante_p == liste_p->debut_liste_p) printf("Ligne (Nature lexème|Contenu lexème), ...\n");
-    	printf("%5d ", ++numeroLigne); visualisationLigneLexemes((Liste_t *)ligneCourante_p->donnees_p); printf("\n");
-    	ligneCourante_p=ligneCourante_p->suivant_p;
-    }
-}

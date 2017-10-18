@@ -45,9 +45,10 @@ int main ( int argc, char *argv[] ) {
 
     char         *file 	= NULL;
     
-    Liste_t *lignesLexeme_p=NULL;
-
-    TableHachage_t *tableEtiquettes_p;
+    TableHachage_t *tableDefinitionInstructions_p=NULL;
+    TableHachage_t *tableDefinitionRegistres_p=NULL;
+    TableHachage_t *tableEtiquettes_p=NULL;
+    Liste_t *listeLexemes_p=NULL;
     Liste_t *listeText_p=NULL;
     Liste_t *listeData_p=NULL;
     Liste_t *listeBss_p=NULL;
@@ -66,25 +67,28 @@ int main ( int argc, char *argv[] ) {
         exit( EXIT_FAILURE );
     }
 
-
+    listeLexemes_p=creeListe(sizeof(Lexeme_t), (fonctionDestructeur *)detruitLexeme);
     listeText_p=creeListe(sizeof(Instruction_t), NULL);
     listeData_p=creeListe(sizeof(Donnee_t), NULL);
     listeBss_p=creeListe(sizeof(Donnee_t), NULL);
+
 	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
 
     /* ---------------- do the lexical analysis -------------------*/
-    lignesLexeme_p=lex_load_file(file, &nbLignes, &nbEtiquettes, &nbInstructions);
+    lex_load_file(file, listeLexemes_p, &nbLignes, &nbEtiquettes, &nbInstructions);
 
     /* ---------------- print the lexical analysis -------------------*/
     DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nbLignes, nbEtiquettes, nbInstructions);
-	visualisationLignesLexemes(lignesLexeme_p);
+	visualisationListeLexemes(listeLexemes_p);
 
 
-	tableEtiquettes_p=creeTable(nbEtiquettes, clefStr, destructionStr);
-
-	analyseSyntaxe(lignesLexeme_p, mon_dictionnaire_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
-
+	tableEtiquettes_p=creeTable(nbEtiquettes, clefEtiquette, NULL);
+	/* */
+	analyseSyntaxe(listeLexemes_p, mon_dictionnaire_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
+	/* */
 	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
+    tableDefinitionInstructions_p=detruitTable(tableDefinitionInstructions_p);
+    tableDefinitionRegistres_p=detruitTable(tableDefinitionRegistres_p);
 
 	/*
 	DEBUG_MSG("index de ADD: %d",indexDictionnaire(mon_dictionnaire_p, "ADD"));
@@ -99,11 +103,10 @@ int main ( int argc, char *argv[] ) {
 	effaceContenuDictionnaire(mon_dictionnaire_p);
 	free(mon_dictionnaire_p);
 
-	lignesLexeme_p=detruitListe(lignesLexeme_p);
-
 	listeText_p=detruitListe(listeText_p);
     listeData_p=detruitListe(listeData_p);
     listeBss_p=detruitListe(listeBss_p);
+	listeLexemes_p=detruitListe(listeLexemes_p);
 
     /*
     printf("Hachage B null : %x\n", hashBernstein(NULL));

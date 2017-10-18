@@ -37,6 +37,7 @@ typedef enum Nature_lexeme_t {
  	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
+	L_FIN_LIGNE,
  	L_ERREUR				/**< Mauvaise configuration de caractères. */
 } Nature_lexeme_t;
 
@@ -71,7 +72,7 @@ typedef	enum Etat_lex_t {
 	DEBUT_HEXADECIMAL,		/**< On a lu "0x" et on attend le premier caractère hexadécimal */
 	DECIMAL_ZERO,			/**< On a lu un "0" */
 	POINT,					/**< On a lu un point */
-	FIN_LIGNE
+	FIN_LIGNE=L_FIN_LIGNE
 } Etat_lex_t;
 
 
@@ -87,15 +88,14 @@ typedef struct Lexeme_t {
 	int ligne;						/**< Ligne source du lexème */
 } Lexeme_t;
 
-Liste_t * lex_read_line( char *, unsigned int, unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
-Liste_t * lex_load_file( char *, unsigned int * ,unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
+void lex_read_line( char *, Liste_t *listeLexemes_p, unsigned int, unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
+void lex_load_file( char *, Liste_t *listeLexemes_p, unsigned int * ,unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
 void lex_standardise( char*, char*  );
 
-void visualisationLignesLexemes(Liste_t * liste_p);
 void visualisationLexeme(Lexeme_t * lexeme_p);
-void visualisationLigneLexemes(Liste_t * liste_p);
+void visualisationListeLexemes(Liste_t * liste_p);
 
-void detruitContenuLexeme(void *Lexeme_p);
+void detruitLexeme(void *Lexeme_p);
 char * etat_lex_to_str(Etat_lex_t etat);
 
 #endif /* _LEX_H_ */
