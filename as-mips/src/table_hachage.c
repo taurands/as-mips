@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <global.h>
 #include <str_utils.h>
 #include <notify.h>
 #include <table_hachage.h>
@@ -28,7 +30,7 @@ size_t nombrePremierGET(size_t nombre) {
 size_t tailleTableHachageRecommandee(size_t nbElementsPrevus) {
 	/* le facteur de charge recommandé pour un double hachage est entre 50% et 80% */
 	/* Le choix suivant le place à 2/3 (2/(2+1)). La taille de la table doit être un nombre premier */
-	/* afin d'avoir un groupe cyclique pour le deuxième hachage */
+	/* afin d'avoir un groupe cyclique pour la deuxième clef de hachage */
 	return nombrePremierGET(nbElementsPrevus + (nbElementsPrevus >> 1));
 }
 
@@ -61,13 +63,6 @@ void *copiePointeur(void *original_p, size_t taille) {
 		memcpy(copie_p, original_p, taille);
 	}
 	return copie_p;
-}
-char *clefStr(void *uneStr) {
-	return (char *)uneStr;
-}
-
-void destructionStr(void *uneStr) {
-	free(uneStr);
 }
 
 /*
@@ -110,9 +105,10 @@ TableHachage_t *detruitTable(TableHachage_t *htable) {
 /*
  * Function to Find Element from the table
  */
-size_t trouve(TableHachage_t *htable_p, char *clef) {
+size_t indexTable(TableHachage_t *htable_p, char *clef) {
 	size_t hachage = hashKR2(clef) % htable_p->nbElementsMax;
 	size_t pasCyclique = (hashBernstein(clef) % (htable_p->nbElementsMax - 1)) + 1;
+    /* la clef existe dans la table si le pointeur n'est pas null et que la clef pointée est identique (pour pour gérer les collisions) */
     while ((htable_p->table[hachage]) &&
     		(strcmp(clef, (htable_p->fnClef_p ? htable_p->fnClef_p(htable_p->table[hachage]) : (char *)htable_p->table[hachage])))) {
         hachage = (hachage + pasCyclique) % htable_p->nbElementsMax;
@@ -120,12 +116,17 @@ size_t trouve(TableHachage_t *htable_p, char *clef) {
     return hachage;
 }
 
+void *donneeTable(TableHachage_t *htable_p, char *clef) {
+    size_t position = indexTable(htable_p, clef);
+    return htable_p->table[position];
+}
+
 /*
  * Function to Insert Element into the table - L'élément donnee_p n'est pas recopié et devra rester permanent
  */
-int insere(TableHachage_t *htable_p, void *donnee_p) {
+int insereElementTable(TableHachage_t *htable_p, void *donnee_p) {
 	char *clef = (htable_p->fnClef_p ? htable_p->fnClef_p(donnee_p) : donnee_p);
-    size_t position = trouve(htable_p, clef);
+    size_t position = indexTable(htable_p, clef);
 
     if (!htable_p->table[position]) {
     	htable_p->table[position] = donnee_p;
@@ -136,8 +137,8 @@ int insere(TableHachage_t *htable_p, void *donnee_p) {
     	return 0;
 }
 
-int supprime(TableHachage_t *htable_p, char *clef) {
-    size_t position = trouve(htable_p, clef);
+int supprimeElementTable(TableHachage_t *htable_p, char *clef) {
+    size_t position = indexTable(htable_p, clef);
 
     if (htable_p->table[position] && htable_p->fnDestruction_p) {
     	htable_p->fnDestruction_p(htable_p->table[position]);
@@ -210,7 +211,7 @@ int test_hachage() {
         case 1:
             printf("Enter nbElementsMax of the Hash Table: ");
             scanf("%d", &size);
-            htable_p = creeTable(tailleTableHachageRecommandee(size), clefStr, NULL);
+            htable_p = creeTable(tailleTableHachageRecommandee(size), NULL, NULL);
             break;
         case 2:
             if (i > htable_p->nbElementsMax) {
@@ -219,7 +220,7 @@ int test_hachage() {
             }
             printf("Enter element to be inserted: ");
             scanf("%s", value);
-            insere(htable_p, strdup(value));
+            insereElementTable(htable_p, strdup(value));
             i++;
             break;
         case 3:

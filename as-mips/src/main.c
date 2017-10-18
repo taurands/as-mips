@@ -83,9 +83,9 @@ int main ( int argc, char *argv[] ) {
 
 
 	tableEtiquettes_p=creeTable(nbEtiquettes, clefEtiquette, NULL);
-	/* */
+
 	analyseSyntaxe(listeLexemes_p, mon_dictionnaire_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
-	/* */
+
 	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
     tableDefinitionInstructions_p=detruitTable(tableDefinitionInstructions_p);
     tableDefinitionRegistres_p=detruitTable(tableDefinitionRegistres_p);

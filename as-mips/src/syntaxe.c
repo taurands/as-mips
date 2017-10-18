@@ -102,135 +102,158 @@ int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot) {
 	return trouve;
 }
 
-int machineEtatsFinisSyntaxique(int etat, Lexeme_t *lexeme_p) {
-	return etat;
+void analyseSyntaxeSauteCommentaire(ElementListe_t **elementListeLexeme_pp) {
+	if ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_COMMENTAIRE) {
+		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+		DEBUG_MSG("Saute le commentaire");
+	}
 }
 
-void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p,
-		Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p) {
-	ElementListe_t *elementListeLexeme_p=NULL;
-	Lexeme_t *lexeme_p=NULL;
+void analyseSyntaxeVaFinLigne(ElementListe_t **elementListeLexeme_pp) {
+	while ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+		DEBUG_MSG("Saute le lexème %s", ((Lexeme_t *)(*elementListeLexeme_pp)->donnees_p)->data);
+		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+	}
+}
 
-	/*
+void analyseSyntaxeSection(ElementListe_t **elementListeLexeme_pp, enum Section_e *section_p) {
+	enum Section_e i;
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
+		if (lexeme_p->nature==L_DIRECTIVE) {
+			lexeme_p->data=strlwr(lexeme_p->data);
+
+			for (i=S_TEXT; i<=S_BSS; i++) { /* on regarde si la directive coorespond à un nom de section */
+				if (strcmp(lexeme_p->data, NOMS_SECTIONS[i])==0) {
+					*section_p=i;
+					DEBUG_MSG("La directive \"%s\" a été reconnue. Changement de nature de section pour %d : %s",
+							lexeme_p->data, *section_p, NOMS_SECTIONS[*section_p]);
+					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+					analyseSyntaxeSauteCommentaire(elementListeLexeme_pp);
+					break;
+				}
+			}
+		}
+	}
+}
+
+void analyseSyntaxeInit(
+		ElementListe_t **elementListeLexeme_pp,
+		enum Section_e *section_p) {
+
+	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
+		if (lexeme_p->nature==L_DIRECTIVE) {
+			lexeme_p->data=strlwr(lexeme_p->data);
+			if (strcmp(lexeme_p->data, ".set")==0) {
+				DEBUG_MSG("La directive \".set\" a été reconnue dans la section initiale");
+				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+				lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
+				if (lexeme_p->nature==L_SYMBOLE) {
+					if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
+						DEBUG_MSG("le symbole \"noreoder\" est bien présent");
+						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+					}
+					else { /* Le symbole n'est pas "noreorder" */
+						DEBUG_MSG("Symbole inconnu après la directive \".set\" dans la section initiale");
+					}
+				}
+				else { /* Le lexème n'est pas un symbole */
+					DEBUG_MSG("Pas de symbole après la directive \".set\" dans la section initiale");
+				}
+			}
+		}
+		analyseSyntaxeSauteCommentaire(elementListeLexeme_pp);
+	}
+}
+
+void analyseSyntaxeText(
+		ElementListe_t **elementListeLexeme_pp,
+		enum Section_e *section_p,
+		uint32_t *decalage_p,
+		Liste_t *liste_p,
+		TableHachage_t *tableEtiquettes_p,
+		Dictionnaire_t *dictionnaireInstructions_p) {
+
+	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+
+	}
+}
+
+void analyseSyntaxeData(
+		ElementListe_t **elementListeLexeme_pp,
+		enum Section_e *section_p,
+		uint32_t *decalage_p,
+		Liste_t *liste_p,
+		TableHachage_t *tableEtiquettes_p) {
+
+	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+
+	}
+}
+
+void analyseSyntaxeBss(
+		ElementListe_t **elementListeLexeme_pp,
+		enum Section_e *section_p,
+		uint32_t *decalage_p,
+		Liste_t *liste_p,
+		TableHachage_t *tableEtiquettes_p) {
+
+	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+
+	}
+}
+
+void analyseSyntaxe(
+		Liste_t *lignesLexemes_p,
+		Dictionnaire_t *dictionnaireInstructions_p,
+		TableHachage_t *tableEtiquettes_p,
+		Liste_t *listeText_p,
+		Liste_t *listeData_p,
+		Liste_t *listeBss_p) {
+
 	uint32_t decalageText=0;
 	uint32_t decalageData=0;
 	uint32_t decalageBss=0;
-	 */
 
-	int etat;
-	enum Section_e i, section=S_INIT;
+	ElementListe_t *elementListeLexeme_p=NULL;
+
+	enum Section_e section=S_INIT;
 
 	if (lignesLexemes_p) {
 		elementListeLexeme_p=lignesLexemes_p->debut_liste_p;
-		while (elementListeLexeme_p) { /* Boucle sur la liste de lignes de lexèmes */
-			lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
+		while (elementListeLexeme_p) { /* Boucle sur la liste des lexèmes */
 
-			etat=machineEtatsFinisSyntaxique(etat, lexeme_p);
-			if (lexeme_p->nature==L_DIRECTIVE) {
-				lexeme_p->data=strlwr(lexeme_p->data);
-				if (strcmp(lexeme_p->data, ".set")==0) {
-					DEBUG_MSG("La directive \".set\" a été reconnue");
-					elementListeLexeme_p=elementListeLexeme_p->suivant_p;
-					lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
-					if (lexeme_p->nature==L_SYMBOLE) {
-						if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
-							DEBUG_MSG("Reconnu le symbole \"noreoder\"");
-						}
-						else { /* Le symbole n'est pas "noreorder" */
-							ERROR_MSG("Symbole inconnu après la directive \".set\"");
-						}
-					}
-					else { /* Le lexème n'est pas un symbole */
-						DEBUG_MSG("Pas de symbole après la directive \".set\"");
-					}
-				}
-				else { /* La directive n'est pas un ".set" */
-					for (i=S_TEXT; i<=S_BSS; i++) { /* on regarde si la directive coorespond à un nom de section */
-						if (strcmp(lexeme_p->data, NOMS_SECTIONS[i])==0) {
-							section=i;
-							DEBUG_MSG("La directive \"%s\" a été reconnue. Changement de nature de section pour %d : %s", lexeme_p->data, section, NOMS_SECTIONS[section]);
-							break;
-						}
-					}
-					if (i>S_BSS) { /* La directive n'est pas un nom de section */
-						DEBUG_MSG("La directive \"%s\" est inconnue dans la section %d : \"%s\"", lexeme_p->data, section, NOMS_SECTIONS[section]);
-					}
-				}
+			/* On va analyser la syntaxe en fonction de la section dans lequelle on se trouve */
+			switch(section) {
+			case S_INIT:
+				analyseSyntaxeInit(&elementListeLexeme_p, &section);
+				break;
 
-			}
-			else /* Le lexème n'est pas une directive */ if (FALSE) {
+			case S_TEXT:
+				analyseSyntaxeText(&elementListeLexeme_p, &section, &decalageText, listeText_p, tableEtiquettes_p, dictionnaireInstructions_p);
+				break;
 
+			case S_DATA:
+				analyseSyntaxeData(&elementListeLexeme_p, &section, &decalageData, listeData_p, tableEtiquettes_p);
+				break;
+
+			case S_BSS:
+				analyseSyntaxeBss(&elementListeLexeme_p, &section, &decalageBss, listeBss_p, tableEtiquettes_p);
+				break;
+
+			default: ERROR_MSG("Cas non prévu, section inconnue");
 			}
 
-			else if (section==S_TEXT) {
-
-			}
-			else {
-
-			}
-
-			elementListeLexeme_p=elementListeLexeme_p->suivant_p;
+			DEBUG_MSG("Ignore les lexèmes suivants non traités");
+			analyseSyntaxeVaFinLigne(&elementListeLexeme_p); /* On s'assure de bien être en fin de ligne */
+			DEBUG_MSG("Passage à la ligne suivante");
+			elementListeLexeme_p=elementListeLexeme_p->suivant_p; /* puis on passe à la nouvelle */
 		}
 	}
 }
 
-/**
- * @param liste_lexemes_p
- * @return nothing
- * @brief Cette fonction permet de dire s'il y a une instruction du dictionnaire valable sur une ligne
- */
-void bonneInstruction(Liste_t* ligne_lexemes_p) {
-
-	ElementListe_t* p_1=ligne_lexemes_p->debut_liste_p;
-	ElementListe_t* p_2=ligne_lexemes_p->debut_liste_p;
-
-	/*
-	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("dictionnaire_instruction.txt");
-	int i=0;
-	int nombre_instruction;
-	 */
-	/* Instruction_t instruction_courante; */
-
-	char* nom_instruction="";
-	int nombre_argument;
-
-	int compteur_lexeme_utile=0;
-
-	while (((Lexeme_t*)(p_1->donnees_p))->nature!=L_SYMBOLE) { /* On cherche le premier symbole (seul lexeme sucsecptible d'être une instruction) */
-		p_1=p_1->suivant_p;
-		p_2=p_2->suivant_p;
-	}
-	/* On arrive à un lexeme SYMBOLE */
-	if (((Lexeme_t*)(p_1->donnees_p))->nature==L_SYMBOLE) {
-
-		/* Comparaison du nom de symbole à l'ensemble des instructions possibles du dictionnaire */
-
-		while (0==1/* (i<nombre_instruction) */) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
-
-
-			if (strcmp(nom_instruction,((Lexeme_t*)(p_1->donnees_p))->data)==0) { /* Si le lexeme correspond à une instruction du dictionnaire */
-				INFO_MSG("Le lexeme correspond à une instruction du dictionnaire");
-				while (p_1) {
-					if (((Lexeme_t*)(p_1->donnees_p))->nature != (L_VIRGULE || L_PARENTHESE_OUVRANTE || L_PARENTHESE_FERMANTE || L_COMMENTAIRE)) {   /* Si le lexeme est un lexeme utile */
-						compteur_lexeme_utile++;
-					}
-					p_1=p_1->suivant_p;
-				}
-				if (compteur_lexeme_utile==nombre_argument) {
-					INFO_MSG("L'instruction possède bien le bon nombre de d'argument");
-					/* Ajout du lexeme à la liste d'instruction */
-					/*
-					ajouteElementFinListe(liste_instruction_p, p_2->donnees_p);
-					for (i=0;i<nombre_argument;i++){
-						while (((Lexeme_t*)(p_1->donnees_p))->nature != (L_VIRGULE || L_PARENTHESE_OUVRANTE || L_PARENTHESE_FERMANTE || L_COMMENTAIRE)) {
-							p_2=p_2->suivant_p;
-						}
-						ajouteElementFinListe(liste_instruction_p, p_2->donnees_p);
-					}
-					 */
-				}
-			}
-		}
-
-	}
-}

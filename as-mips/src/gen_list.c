@@ -54,7 +54,7 @@ Liste_t *creeListe(size_t tailleElement, fonctionDestructeur *freeFn) {
 Liste_t *detruitListe(Liste_t *liste_p) {
 	ElementListe_t *elementCourant_p;
 	if (liste_p) {
-		DEBUG_MSG("Destruction de la Liste: %p : %d éléments",liste_p,liste_p->nbElements);
+		INFO_MSG("Destruction de la Liste: %p : %d éléments",liste_p,liste_p->nbElements);
 		while (liste_p->debut_liste_p != NULL) {
 			elementCourant_p = liste_p->debut_liste_p;
 			liste_p->debut_liste_p = elementCourant_p->suivant_p;

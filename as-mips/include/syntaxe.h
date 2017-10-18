@@ -50,7 +50,7 @@ enum Donnee_e {
 
 
 /**
- * @struct Mot_Dictionnaire_s
+ * @struct DefinitionInstruction_s
  * @brief Structure permettant de stocker la définition d'une instruction
  */
 typedef struct DefinitionInstruction_s {
@@ -58,6 +58,15 @@ typedef struct DefinitionInstruction_s {
 	enum Instruction_e nature;		/**< nature de l'instruction */
 	unsigned int nbOperandes;		/**< nombre d'arguments de l'instruction */
 } DefinitionInstruction_t;
+
+/**
+ * @struct DefinitionRegistre_s
+ * @brief Structure permettant de stocker la correspondance entre le nom du registre et sa valeur
+ */
+typedef struct DefinitionRegistre_s {
+	char* nom;						/**< nom du registre */
+	uint8_t valeur;					/**< nombre d'arguments de l'instruction */
+} DefinitionRegistre_t;
 
 typedef DefinitionInstruction_t Mots_Dictionnaire_t[];
 
@@ -150,7 +159,5 @@ char *clefEtiquette(void *donnee_p);
 
 void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p,
 					Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p);
-
-void bonneInstruction(Liste_t* ligne_lexemes_p);
 
 #endif /* _SYNTAXE_H_ */

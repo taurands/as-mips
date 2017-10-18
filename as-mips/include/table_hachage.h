@@ -1,6 +1,6 @@
 /**
  * @file table_hachage.h
- * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
+ * @author BERTRAND Antoine TAURAND Sébastien
  * @brief Definition de type et de prototypes de fonctions de dictionnaire par fonction de hachage
  */
 
@@ -37,9 +37,10 @@ size_t hashKR2(char *chaine);
 TableHachage_t *creeTable(size_t nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
 TableHachage_t *detruitTable(TableHachage_t *htable);
 
-size_t trouve(TableHachage_t *htable_p, char *clef);
-int insere(TableHachage_t *htable_p, void *donnee_p);
-int supprime(TableHachage_t *htable_p, char *clef);
+size_t indexTable(TableHachage_t *htable_p, char *clef);
+void *donneeTable(TableHachage_t *htable_p, char *clef);
+int insereElementTable(TableHachage_t *htable_p, void *donnee_p);
+int supprimeElementTable(TableHachage_t *htable_p, char *clef);
 
 /*
 HashTable_t *redimensionneTable(HashTable_t *htable_p, int newSize);
