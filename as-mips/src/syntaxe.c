@@ -102,22 +102,24 @@ int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot) {
 	return trouve;
 }
 
-void analyseSyntaxeSauteCommentaire(ElementListe_t **elementListeLexeme_pp) {
+void analyseSyntaxePasseCommentaire(ElementListe_t **elementListeLexeme_pp) {
 	if ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_COMMENTAIRE) {
 		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
-		DEBUG_MSG("Saute le commentaire");
+		DEBUG_MSG("Passe le commentaire");
 	}
 }
 
-void analyseSyntaxeVaFinLigne(ElementListe_t **elementListeLexeme_pp) {
-	while ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
-		DEBUG_MSG("Saute le lexème %s", ((Lexeme_t *)(*elementListeLexeme_pp)->donnees_p)->data);
+void analyseSyntaxeIgonreResteLigne(ElementListe_t **elementListeLexeme_pp) {
+	Lexeme_t *lexeme_p;
+	while ((*elementListeLexeme_pp) && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+		DEBUG_MSG("Ignore le lexème (%s|%s)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data);
 		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 	}
 }
 
 void analyseSyntaxeSection(ElementListe_t **elementListeLexeme_pp, enum Section_e *section_p) {
 	enum Section_e i;
+
 	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
 		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
@@ -129,11 +131,68 @@ void analyseSyntaxeSection(ElementListe_t **elementListeLexeme_pp, enum Section_
 					DEBUG_MSG("La directive \"%s\" a été reconnue. Changement de nature de section pour %d : %s",
 							lexeme_p->data, *section_p, NOMS_SECTIONS[*section_p]);
 					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
-					analyseSyntaxeSauteCommentaire(elementListeLexeme_pp);
+					analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
 					break;
 				}
 			}
 		}
+	}
+}
+
+int suiteEstDataWord(ElementListe_t *elementListeLexeme_p) {
+	int resultat=FALSE;
+	Lexeme_t *lexeme_p;
+
+	while (elementListeLexeme_p) {
+		lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
+
+		if ((lexeme_p->nature == L_COMMENTAIRE) ||
+			(lexeme_p->nature == L_FIN_LIGNE) ||
+			(lexeme_p->nature == L_ETIQUETTE))
+
+			elementListeLexeme_p=elementListeLexeme_p->suivant_p;
+
+		else if ((lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".word"))) {
+			resultat=TRUE;
+			break;
+		}
+		else
+			break;
+	}
+	return resultat;
+}
+
+void analyseSyntaxeEtiquette(
+		ElementListe_t **elementListeLexeme_pp,
+		enum Section_e section,
+		uint32_t *decalage_p,
+		TableHachage_t *tableEtiquettes_p) {
+
+	const uint32_t masqueAlignement = 0x00000003; /* Les deux derniers bits doivent être à zéro pour avoir un aligement par mot de 32 bits */
+
+	Lexeme_t *lexeme_p;
+
+	while (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_ETIQUETTE) {
+		Etiquette_t *etiquetteCourante_p=malloc(sizeof(*etiquetteCourante_p));
+		if (!etiquetteCourante_p) ERROR_MSG("Impossible de créer une nouvelle étiquette");
+
+		if ((*decalage_p & masqueAlignement) && (section == S_DATA) && (suiteEstDataWord((*elementListeLexeme_pp)->suivant_p))) {
+			*decalage_p=(*decalage_p + masqueAlignement) & ~masqueAlignement;
+		}
+		etiquetteCourante_p->nom_p=lexeme_p;
+		etiquetteCourante_p->section=section;
+		etiquetteCourante_p->decalage=*decalage_p;
+		etiquetteCourante_p->ligneSource=lexeme_p->ligne;
+
+		if (insereElementTable(tableEtiquettes_p, etiquetteCourante_p)) {
+			DEBUG_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElements, lexeme_p->data, *decalage_p);
+		}
+		else {
+			DEBUG_MSG("Erreur, l'étiquette %s était déjà présente", lexeme_p->data);
+			free(etiquetteCourante_p);
+		}
+
+		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* On passe au lexème suivant */
 	}
 }
 
@@ -142,6 +201,7 @@ void analyseSyntaxeInit(
 		enum Section_e *section_p) {
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+
 	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
 		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
@@ -164,7 +224,7 @@ void analyseSyntaxeInit(
 				}
 			}
 		}
-		analyseSyntaxeSauteCommentaire(elementListeLexeme_pp);
+		analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
 	}
 }
 
@@ -177,6 +237,7 @@ void analyseSyntaxeText(
 		Dictionnaire_t *dictionnaireInstructions_p) {
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+
 	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
 
 	}
@@ -189,9 +250,83 @@ void analyseSyntaxeData(
 		Liste_t *liste_p,
 		TableHachage_t *tableEtiquettes_p) {
 
-	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+	Lexeme_t *lexeme_p=NULL;
+	Lexeme_t *lexemeDirective_p=NULL;
+	int32_t signeMoins=0;
+	Donnee_t *donnee_p;
 
+	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+
+	if (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+		analyseSyntaxeEtiquette(elementListeLexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
+
+		if (lexeme_p->nature == L_DIRECTIVE) {
+			if (!strcmp(lexeme_p->data, ".byte")) {
+				lexemeDirective_p=lexeme_p;
+				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
+				lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p);
+				while (	(lexeme_p->nature == L_PLUS) ||
+						(lexeme_p->nature == L_MOINS) ||
+						(lexeme_p->nature == L_NOMBRE_DECIMAL) ||
+						(lexeme_p->nature == L_NOMBRE_HEXADECIMAL) ||
+						(lexeme_p->nature == L_NOMBRE_OCTAL) ||
+						(lexeme_p->nature == L_SYMBOLE) ) {
+
+					signeMoins=0;
+					if (lexeme_p->nature == L_PLUS) {
+						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
+						lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p);
+					}
+					if (lexeme_p->nature == L_MOINS) {
+						signeMoins=1; /* se rappeler qu'il faudra changer le signe de l'opérande */
+						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
+						lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p);
+					}
+
+					/* ajouter la donnée dans la liste ici */
+					if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
+					donnee_p->decalage=*decalage_p;
+					donnee_p->section=*section_p;
+					donnee_p->nom_p=lexemeDirective_p;
+					donnee_p->ligneSource=lexemeDirective_p->ligne;
+
+					donnee_p->valeur.octet=0; /* XXX A compléter*/
+
+					ajouteElementFinListe(liste_p, donnee_p);
+					free(donnee_p); /* XXX A supprimer dès que liste modifiée */
+
+					DEBUG_MSG("Ajout d'un byte au décalage %u", *decalage_p);
+					(*decalage_p)++;
+
+					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
+					if (((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_VIRGULE)
+						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+					else
+						break;
+				}
+
+				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
+			}
+			else if (!strcmp(lexeme_p->data, ".word")) {
+
+				(*decalage_p)+=4;
+				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
+			}
+			else if (!strcmp(lexeme_p->data, ".asciiz")) {
+
+				(*decalage_p)+=0+1;
+				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
+			}
+			else if (!strcmp(lexeme_p->data, ".space")) {
+
+				(*decalage_p)+=0;
+				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
+			}
+			else {
+
+			}
+		}
 	}
 }
 
@@ -202,9 +337,11 @@ void analyseSyntaxeBss(
 		Liste_t *liste_p,
 		TableHachage_t *tableEtiquettes_p) {
 
+	Lexeme_t *lexeme_p=NULL;
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
 
+	if (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+		analyseSyntaxeEtiquette(elementListeLexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
 	}
 }
 
@@ -217,7 +354,7 @@ void analyseSyntaxe(
 		Liste_t *listeBss_p) {
 
 	uint32_t decalageText=0;
-	uint32_t decalageData=0;
+	uint32_t decalageData=2;
 	uint32_t decalageBss=0;
 
 	ElementListe_t *elementListeLexeme_p=NULL;
@@ -249,8 +386,11 @@ void analyseSyntaxe(
 			default: ERROR_MSG("Cas non prévu, section inconnue");
 			}
 
-			DEBUG_MSG("Ignore les lexèmes suivants non traités");
-			analyseSyntaxeVaFinLigne(&elementListeLexeme_p); /* On s'assure de bien être en fin de ligne */
+			if (((Lexeme_t *)(elementListeLexeme_p->donnees_p))->nature != L_FIN_LIGNE) {
+				DEBUG_MSG("Ignore les lexèmes suivants non traités");
+				analyseSyntaxeIgonreResteLigne(&elementListeLexeme_p); /* On s'assure de bien être en fin de ligne */
+			}
+
 			DEBUG_MSG("Passage à la ligne suivante");
 			elementListeLexeme_p=elementListeLexeme_p->suivant_p; /* puis on passe à la nouvelle */
 		}

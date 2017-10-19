@@ -91,10 +91,13 @@ TableHachage_t *detruitTable(TableHachage_t *htable) {
 	size_t i;
 
 	if (htable) {
-		if (htable->fnDestruction_p)
-			for (i=0; i<htable->nbElementsMax; i++)
-				if (htable->table[i])
+		for (i=0; i<htable->nbElementsMax; i++)
+			if (htable->table[i]) {
+				if (htable->fnDestruction_p)
 					htable->fnDestruction_p(htable->table[i]);
+				else
+					free(htable->table[i]);
+			}
 
 		free(htable->table);
 		free(htable);
@@ -131,10 +134,10 @@ int insereElementTable(TableHachage_t *htable_p, void *donnee_p) {
     if (!htable_p->table[position]) {
     	htable_p->table[position] = donnee_p;
     	htable_p->nbElements++;
-    	return 1;
+    	return TRUE;
     }
     else
-    	return 0;
+    	return FALSE;
 }
 
 int supprimeElementTable(TableHachage_t *htable_p, char *clef) {

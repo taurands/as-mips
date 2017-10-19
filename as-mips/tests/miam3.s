@@ -13,7 +13,11 @@ boucle:
 byebye:
     JAL viteviteauru
 .data
-lunchtime : .word 12,9,byebye
+titi:
+	.byte 12, 4, 5, 6 # un petit commentaire pour voir
+
+
+lunchtime :toto:toto:.word 12,9,byebye
             .asciiz "", "\"\"", "a a a"
             .byte 209,-127
 .bss

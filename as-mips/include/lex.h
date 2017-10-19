@@ -35,6 +35,9 @@ typedef enum Nature_lexeme_t {
 	L_NOMBRE_DECIMAL,		/**< Nombre décimal. */
  	L_NOMBRE_OCTAL,			/**< Nombre octal. */
  	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
+
+	L_CAR,					/**< caractère */
+	L_CHAINE,				/**< chaine de caractère avec un zero final */
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
 	L_FIN_LIGNE,
@@ -63,6 +66,9 @@ typedef	enum Etat_lex_t {
 	DECIMAL=L_NOMBRE_DECIMAL,
 	OCTAL=L_NOMBRE_OCTAL,
 	HEXADECIMAL=L_NOMBRE_HEXADECIMAL,
+
+	CAR=L_CAR,
+	CHAINE=L_CHAINE,
 
 	COMMENTAIRE=L_COMMENTAIRE,
 
