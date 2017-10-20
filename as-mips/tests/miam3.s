@@ -14,10 +14,11 @@ byebye:
     JAL viteviteauru
 .data
 titi:
-	.byte 12, 4, 5, 6 # un petit commentaire pour voir
+	.byte 255, +4, 077, -066, 0xAA, -0xFF # un petit commentaire pour voir
+.space 512
 
-
-lunchtime :toto:toto:.word 12,9,byebye
+lunchtime :toto:toto:.word 12
+.word 9,byebye
             .asciiz "", "\"\"", "a a a"
             .byte 209,-127
 .bss

@@ -42,6 +42,7 @@ enum Instruction_e {
  * @brief Constantes de nature des données
  */
 enum Donnee_e {
+	D_UNDEF=-1,
  	D_SPACE=0,				/**<  */
  	D_BYTE=1,				/**<  */
  	D_WORD=2,				/**<  */
@@ -124,9 +125,9 @@ typedef struct Directive_s {
  */
 typedef struct Donnee_s {
 	Lexeme_t *nom_p;				/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
-	unsigned int ligneSource;	/**< Numéro de ligne source associé à la ligne de lexème traitée */
-	enum Section_e section;		/**< Section où se trouve l'étiquette */
-	uint32_t decalage;			/**< décalage de l'adresse de la donnée par rapport à l'étiquette de la section */
+	unsigned int ligneSource;		/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	enum Donnee_e type;				/**< Type de la donnée à stocker */
+	uint32_t decalage;				/**< décalage de l'adresse de la donnée par rapport à l'étiquette de la section */
 	union {
 		int8_t		octet;
 		uint8_t		octetNS;

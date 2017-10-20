@@ -69,7 +69,7 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  *		graph [label="\nMachine à états finis d'analyse lexicale"; fontname = "helvetica"; fontsize = 16;];
  *		edge [fontname = "helvetica"; fontsize = 10;];
  *		node [shape="circle";  fontname = "helvetica"; fontsize = 10;]; ERREUR; INIT;
- *		node [shape="ellipse";  fontname = "helvetica"; fontsize = 10;]; DECIMAL_ZERO; DEBUT_HEXADECIMAL; POINT;
+ *		node [shape="ellipse";  fontname = "helvetica"; fontsize = 10;]; DECIMAL_ZERO; DEBUT_HEXADECIMAL; POINT; PLUS; MOINS;
  *		node [shape="ellipse"; fontname = "helvetica"; fontsize = 10; color=green;];
  *		rankdir=LR; // de gauche vers la droite
  * 		INIT -> DECIMAL [label="1 à 9"];
@@ -88,8 +88,12 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  *		COMMENTAIRE -> COMMENTAIRE;
  *		ERREUR -> ERREUR;
  *
- *		MOINS -> ERREUR;
- *		PLUS -> ERREUR;
+ *		MOINS -> DECIMAL_ZERO [label="0"];
+ *		MOINS -> DECIMAL [label="1 à 9"];
+ *		MOINS -> ERREUR [label="sinon"];
+ *		PLUS -> DECIMAL_ZERO [label="0"];
+ *		PLUS -> DECIMAL [label="1 à 9"];
+ *		PLUS -> ERREUR [label="sinon"];
  *		VIRGULE -> ERREUR;
  *		PARENTHESE_OUVRANTE -> ERREUR;
  *		PARENTHESE_FERMANTE -> ERREUR;
@@ -156,7 +160,8 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
 		case PARENTHESE_FERMANTE:
 		case MOINS:
 		case PLUS:
-			etat=ERREUR; /* Ces états ont été standardisés et ne doivent pas être suivis d'autre caractère à la suite */
+			if (isdigit(c)) etat=(c=='0')? DECIMAL_ZERO : DECIMAL;
+			else etat=ERREUR; /* Ces états ont été standardisés et ne doivent pas être suivis d'autre caractère à la suite */
 			break;
 		
 		case DECIMAL_ZERO: /* On va chercher si le prochain caractere est 'x' pour savoir si la valeur sera un nombre hexadecimal ou non */
@@ -258,6 +263,11 @@ void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, un
         		case DECIMAL_ZERO:
         			etat=DECIMAL;
         			break;
+
+    			case MOINS:
+    			case PLUS:
+    				etat=ERREUR; /* les signes doivent être accolés à un nombre */
+    				break;
         			
     			case DEBUT_HEXADECIMAL:
     				etat=ERREUR;
@@ -348,8 +358,8 @@ void lex_standardise( char* in, char* out ) {
     unsigned int i, j;
     const char * ESPACE_AVANT = "#$,-()+";
     const char * PAS_ESPACE_AVANT = ":";
-    const char * ESPACE_APRES = ":,-()+";
-    const char * PAS_ESPACE_APRES = ".";
+    const char * ESPACE_APRES = ":,()";
+    const char * PAS_ESPACE_APRES = ".-+";
 
     DEBUG_MSG("in  = \"%s\"", in);
     

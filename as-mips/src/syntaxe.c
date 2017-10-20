@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <inttypes.h>
+#include <errno.h>
 
 #include <global.h>
 #include <notify.h>
@@ -243,7 +245,7 @@ void analyseSyntaxeText(
 	}
 }
 
-void analyseSyntaxeData(
+void analyseSyntaxeDataBss(
 		ElementListe_t **elementListeLexeme_pp,
 		enum Section_e *section_p,
 		uint32_t *decalage_p,
@@ -251,9 +253,11 @@ void analyseSyntaxeData(
 		TableHachage_t *tableEtiquettes_p) {
 
 	Lexeme_t *lexeme_p=NULL;
-	Lexeme_t *lexemeDirective_p=NULL;
-	int32_t signeMoins=0;
 	Donnee_t *donnee_p;
+	enum Nature_lexeme_e nature;
+	enum Donnee_e typeDonnee;
+	long int nombre;
+
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
@@ -261,42 +265,95 @@ void analyseSyntaxeData(
 		analyseSyntaxeEtiquette(elementListeLexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
 
 		if (lexeme_p->nature == L_DIRECTIVE) {
-			if (!strcmp(lexeme_p->data, ".byte")) {
-				lexemeDirective_p=lexeme_p;
-				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
-				lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p);
-				while (	(lexeme_p->nature == L_PLUS) ||
-						(lexeme_p->nature == L_MOINS) ||
-						(lexeme_p->nature == L_NOMBRE_DECIMAL) ||
-						(lexeme_p->nature == L_NOMBRE_HEXADECIMAL) ||
-						(lexeme_p->nature == L_NOMBRE_OCTAL) ||
-						(lexeme_p->nature == L_SYMBOLE) ) {
+			typeDonnee=D_UNDEF;
+			if (!strcmp(lexeme_p->data, ".byte"))
+				typeDonnee=D_BYTE;
+			if (!strcmp(lexeme_p->data, ".word"))
+				typeDonnee=D_WORD;
+			if (!strcmp(lexeme_p->data, ".asciiz"))
+				typeDonnee=D_ASCIIZ;
+			if (!strcmp(lexeme_p->data, ".space"))
+				typeDonnee=D_SPACE;
 
-					signeMoins=0;
-					if (lexeme_p->nature == L_PLUS) {
-						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
-						lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p);
-					}
-					if (lexeme_p->nature == L_MOINS) {
-						signeMoins=1; /* se rappeler qu'il faudra changer le signe de l'opérande */
-						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
-						lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p);
-					}
+			if (typeDonnee != D_UNDEF) {
+				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
+
+				while (	(nature=(lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature) &&
+						((((typeDonnee==D_SPACE) || ((*section_p==S_DATA) && (typeDonnee==D_BYTE))) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) ||	(nature==L_NOMBRE_OCTAL))) ||
+						 ((*section_p==S_DATA) && (typeDonnee==D_WORD) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) || (nature==L_NOMBRE_OCTAL) || (nature==L_SYMBOLE))) ||
+						 ((*section_p==S_DATA) && ((typeDonnee==D_ASCIIZ)) && ((nature==L_CHAINE))
+						)
+						)) {
 
 					/* ajouter la donnée dans la liste ici */
 					if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 					donnee_p->decalage=*decalage_p;
-					donnee_p->section=*section_p;
-					donnee_p->nom_p=lexemeDirective_p;
-					donnee_p->ligneSource=lexemeDirective_p->ligne;
+					donnee_p->type=typeDonnee;
+					donnee_p->nom_p=lexeme_p;
+					donnee_p->ligneSource=lexeme_p->ligne;
 
-					donnee_p->valeur.octet=0; /* XXX A compléter*/
+					if (lexeme_p->nature != L_SYMBOLE) {
+						if (typeDonnee!=D_ASCIIZ) {
+							errno=0; /* remet le code d'erreur à 0 */
+							nombre=strtol(lexeme_p->data, NULL, 0); /* Convertit la chaine en nombre, avec base automatique */
+							if (errno) {
+								DEBUG_MSG("Erreur de conversion numérique");
+								free(donnee_p);
+							}
+							else {
+								if ((typeDonnee==D_BYTE) && (nombre>=0) && (nombre<=UINT8_MAX)) {
+									donnee_p->valeur.octetNS=(uint8_t)nombre;
+									DEBUG_MSG("Ajout d'un byte non signé (%s=%ld) de valeur %" SCNu8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octetNS, *decalage_p);
+									ajouteElementFinListe(liste_p, donnee_p);
+									(*decalage_p)++;
+									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 
-					ajouteElementFinListe(liste_p, donnee_p);
-					free(donnee_p); /* XXX A supprimer dès que liste modifiée */
+								}
+								else if ((typeDonnee==D_BYTE) && (nombre<0) && (nombre>=INT8_MIN)) {
+									donnee_p->valeur.octet=(int8_t)nombre;
+									DEBUG_MSG("Ajout d'un byte signé (%s=%ld) de valeur %" SCNi8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octet, *decalage_p);
+									ajouteElementFinListe(liste_p, donnee_p);
+									(*decalage_p)++;
+									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
+								}
+								else if ((typeDonnee==D_WORD) && (nombre>=0) && (nombre<=UINT32_MAX)) {
+									donnee_p->valeur.motNS=(uint32_t)nombre;
+									DEBUG_MSG("Ajout d'un mot non signé (%s=%ld) de valeur %" SCNu32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.motNS, *decalage_p);
+									ajouteElementFinListe(liste_p, donnee_p);
+									(*decalage_p)+=4;
+									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 
-					DEBUG_MSG("Ajout d'un byte au décalage %u", *decalage_p);
-					(*decalage_p)++;
+								}
+								else if ((typeDonnee==D_WORD) && (nombre<0) && (nombre>=INT32_MIN)) {
+									donnee_p->valeur.mot=(int32_t)nombre;
+									DEBUG_MSG("Ajout d'un mot signé (%s=%ld) de valeur %" SCNi32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.mot, *decalage_p);
+									ajouteElementFinListe(liste_p, donnee_p);
+									(*decalage_p)+=4;
+									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
+								}
+								else if ((typeDonnee==D_SPACE) && (nombre>=0) && (nombre+*decalage_p<=UINT32_MAX)) {
+									donnee_p->valeur.nbOctets=(uint32_t)nombre;
+									DEBUG_MSG("Ajout d'un espace de (%s=%ld) %" SCNu32 " octets au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.nbOctets, *decalage_p);
+									ajouteElementFinListe(liste_p, donnee_p);
+									(*decalage_p)+=donnee_p->valeur.nbOctets;
+									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
+								}
+								else {
+									DEBUG_MSG("Format numérique hors limites du byte (errno=%d)", errno); /* XXX A compléter*/
+									free(donnee_p);
+								}
+							}
+						}
+						else { /* On est sur une chaine ascii */
+
+						}
+					}
+					else { /* C'est un symbole, on ne peut pas encore calculer sa valeur mais on met quand même dans la liste*/
+						DEBUG_MSG("Ajout d'un mot symbole (%s=%ld) au décalage %" SCNu32, lexeme_p->data, nombre, *decalage_p);
+						ajouteElementFinListe(liste_p, donnee_p);
+						(*decalage_p)+=4;
+						free(donnee_p); /* XXX A supprimer dès que liste modifiée */
+					}
 
 					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
 					if (((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_VIRGULE)
@@ -307,41 +364,10 @@ void analyseSyntaxeData(
 
 				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
 			}
-			else if (!strcmp(lexeme_p->data, ".word")) {
-
-				(*decalage_p)+=4;
-				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
-			}
-			else if (!strcmp(lexeme_p->data, ".asciiz")) {
-
-				(*decalage_p)+=0+1;
-				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
-				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
-			}
-			else if (!strcmp(lexeme_p->data, ".space")) {
-
-				(*decalage_p)+=0;
-				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
-			}
 			else {
 
 			}
 		}
-	}
-}
-
-void analyseSyntaxeBss(
-		ElementListe_t **elementListeLexeme_pp,
-		enum Section_e *section_p,
-		uint32_t *decalage_p,
-		Liste_t *liste_p,
-		TableHachage_t *tableEtiquettes_p) {
-
-	Lexeme_t *lexeme_p=NULL;
-	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
-
-	if (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
-		analyseSyntaxeEtiquette(elementListeLexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
 	}
 }
 
@@ -376,11 +402,11 @@ void analyseSyntaxe(
 				break;
 
 			case S_DATA:
-				analyseSyntaxeData(&elementListeLexeme_p, &section, &decalageData, listeData_p, tableEtiquettes_p);
+				analyseSyntaxeDataBss(&elementListeLexeme_p, &section, &decalageData, listeData_p, tableEtiquettes_p);
 				break;
 
 			case S_BSS:
-				analyseSyntaxeBss(&elementListeLexeme_p, &section, &decalageBss, listeBss_p, tableEtiquettes_p);
+				analyseSyntaxeDataBss(&elementListeLexeme_p, &section, &decalageBss, listeBss_p, tableEtiquettes_p);
 				break;
 
 			default: ERROR_MSG("Cas non prévu, section inconnue");

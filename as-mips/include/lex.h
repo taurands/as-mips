@@ -18,7 +18,7 @@
  * 
  * La nature des lexème einsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
  */
-typedef enum Nature_lexeme_t {
+typedef enum Nature_lexeme_e {
  	L_SYMBOLE,				/**< Chaine de caractères alphanumériques ne commençant pas par un nombre.
  							     Peut désigner une étiquette ou une instruction suivant sa place dans la ligne */
 	L_INSTRUCTION,			/**< Le premier symbole d'une ligne sera une instruction */
@@ -30,8 +30,6 @@ typedef enum Nature_lexeme_t {
  	L_PARENTHESE_OUVRANTE,	/**< '(' utilisé pour adressage indirect. */
  	L_PARENTHESE_FERMANTE,	/**< ')' utilisé pour finir adressage indirect. */
 
-  	L_MOINS,
-	L_PLUS,
 	L_NOMBRE_DECIMAL,		/**< Nombre décimal. */
  	L_NOMBRE_OCTAL,			/**< Nombre octal. */
  	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
@@ -60,9 +58,6 @@ typedef	enum Etat_lex_t {
 	PARENTHESE_OUVRANTE=L_PARENTHESE_OUVRANTE,
 	PARENTHESE_FERMANTE=L_PARENTHESE_FERMANTE,
 
-	MOINS=L_MOINS,
-	PLUS=L_PLUS,
-
 	DECIMAL=L_NOMBRE_DECIMAL,
 	OCTAL=L_NOMBRE_OCTAL,
 	HEXADECIMAL=L_NOMBRE_HEXADECIMAL,
@@ -75,6 +70,8 @@ typedef	enum Etat_lex_t {
 	ERREUR=L_ERREUR,
 
 	INIT,					/**< Etat initial */
+	MOINS,
+	PLUS,
 	DEBUT_HEXADECIMAL,		/**< On a lu "0x" et on attend le premier caractère hexadécimal */
 	DECIMAL_ZERO,			/**< On a lu un "0" */
 	POINT,					/**< On a lu un point */
@@ -90,7 +87,7 @@ typedef	enum Etat_lex_t {
  */
 typedef struct Lexeme_t {
 	char *data;						/**< Donnée éventuelle stockée sous forme de chaine de caractères. */
-	enum Nature_lexeme_t nature;	/**< Identifie la nature du lexème. */
+	enum Nature_lexeme_e nature;	/**< Identifie la nature du lexème. */
 	int ligne;						/**< Ligne source du lexème */
 } Lexeme_t;
 
