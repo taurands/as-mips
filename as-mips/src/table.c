@@ -56,15 +56,6 @@ size_t hashBernstein(char *chaine) {
     return hachage;
 }
 
-void *copiePointeur(void *original_p, size_t taille) {
-	void *copie_p=NULL;
-	if (original_p) {
-		if (!(copie_p=malloc(taille))) ERROR_MSG("Impossible de dupliquer la structure de données");
-		memcpy(copie_p, original_p, taille);
-	}
-	return copie_p;
-}
-
 /*
  * Function to Initialize Table
  */

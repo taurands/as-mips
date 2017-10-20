@@ -10,15 +10,15 @@
 #ifndef _LEX_H_
 #define _LEX_H_
 
-#include "liste.h"
+#include <liste.h>
 
 /**
- * @enum Nature_lexeme_t
+ * @enum Nature_lexeme_e
  * @brief Constantes de nature de lexèmes
  * 
  * La nature des lexème einsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
  */
-typedef enum Nature_lexeme_e {
+enum Nature_lexeme_e {
  	L_SYMBOLE,				/**< Chaine de caractères alphanumériques ne commençant pas par un nombre.
  							     Peut désigner une étiquette ou une instruction suivant sa place dans la ligne */
 	L_INSTRUCTION,			/**< Le premier symbole d'une ligne sera une instruction */
@@ -40,14 +40,14 @@ typedef enum Nature_lexeme_e {
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
 	L_FIN_LIGNE,
  	L_ERREUR				/**< Mauvaise configuration de caractères. */
-} Nature_lexeme_t;
+};
 
 /**
- * @enum Etat_lex_t
+ * @enum Etat_lex_e
  * @brief Constantes de définition des états de la machine à états finis d'analyse lexicale
  * 
  */
-typedef	enum Etat_lex_t {
+enum Etat_lex_e {
 	SYMBOLE=L_SYMBOLE,
 	INSTRUCTION=L_INSTRUCTION,
 	DIRECTIVE=L_DIRECTIVE,
@@ -76,30 +76,30 @@ typedef	enum Etat_lex_t {
 	DECIMAL_ZERO,			/**< On a lu un "0" */
 	POINT,					/**< On a lu un point */
 	FIN_LIGNE=L_FIN_LIGNE
-} Etat_lex_t;
+};
 
 
 /**
- * @struct Lexeme_t
+ * @struct Lexeme_e
  * @brief Type de l'objet Lexeme
  * 
  * La nature des lexème ainsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
  */
-typedef struct Lexeme_t {
+struct Lexeme_s {
 	char *data;						/**< Donnée éventuelle stockée sous forme de chaine de caractères. */
 	enum Nature_lexeme_e nature;	/**< Identifie la nature du lexème. */
 	int ligne;						/**< Ligne source du lexème */
-} Lexeme_t;
+};
 
 void lex_read_line( char *, struct Liste_s *listeLexemes_p, unsigned int, unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
 void lex_load_file( char *, struct Liste_s *listeLexemes_p, unsigned int * ,unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
 void lex_standardise( char*, char*  );
 
-void visualisationLexeme(Lexeme_t * lexeme_p);
+void visualisationLexeme(struct Lexeme_s * lexeme_p);
 void visualisationListeLexemes(struct Liste_s * liste_p);
 
 void detruitLexeme(void *Lexeme_p);
-char * etat_lex_to_str(Etat_lex_t etat);
+char * etat_lex_to_str(enum Etat_lex_e etat);
 
 #endif /* _LEX_H_ */
 

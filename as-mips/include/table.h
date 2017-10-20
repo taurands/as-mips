@@ -24,10 +24,6 @@ struct Table_s {
     fonctionDestruction *fnDestruction_p;
 };
 
-void *copiePointeur(void *original_p, size_t taille);
-char *clefStr(void *uneStr);
-void destructionStr(void *uneStr);
-
 size_t nombrePremierGET(size_t nombre);
 size_t tailleTableHachageRecommandee(size_t nbElementsPrevus);
 

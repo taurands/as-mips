@@ -88,9 +88,9 @@ typedef struct Instruction_s {
 	struct DefinitionInstruction_s *definition_p;	/**< Définition de l'instruction */
 	unsigned int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	uint32_t decalage;								/**< Décalage de l'instruction */
-	Lexeme_t *operande1_p;							/**< Lexème de l'opérande 1 */
-	Lexeme_t *operande2_p;							/**< Lexème de l'opérande 2 */
-	Lexeme_t *operande3_p;							/**< Lexème de l'opérande 3 */
+	struct Lexeme_s *operande1_p;							/**< Lexème de l'opérande 1 */
+	struct Lexeme_s *operande2_p;							/**< Lexème de l'opérande 2 */
+	struct Lexeme_s *operande3_p;							/**< Lexème de l'opérande 3 */
 } Instruction_t;
 
 /**
@@ -98,7 +98,7 @@ typedef struct Instruction_s {
  * @brief Elément définissant une étiquette
  */
 struct Etiquette_s {
-	Lexeme_t *nom_p;					/**< pointeur vers le Lexème contenant le nom de l'étiquette */
+	struct Lexeme_s *nom_p;					/**< pointeur vers le Lexème contenant le nom de l'étiquette */
 	unsigned int ligneSource;			/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Section_e section;				/**< Section où se trouve l'étiquette */
 	uint32_t decalage;					/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
@@ -109,11 +109,11 @@ struct Etiquette_s {
  * @brief Elément définissant une directive
  */
 struct Directive_s {
-	Lexeme_t *nom_directive; 					/**< nom de la directive */
+	struct Lexeme_s *nom_directive; 					/**< nom de la directive */
 	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	int nb_operande;						/**< Nombre d'opérande de la directive */
 	uint32_t decalage_operande;				/**< décalage de l'adresse de la directive par rapport à l'étiquette de la section */
-	Lexeme_t *operande;						/**< Opérande suivant la directive */
+	struct Lexeme_s *operande;						/**< Opérande suivant la directive */
 };
 
 /**
@@ -121,7 +121,7 @@ struct Directive_s {
  * @brief Elément définissant un élément que l'on peut retrouver dans les sections .data ou .bss
  */
 struct Donnee_s {
-	Lexeme_t *nom_p;				/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
+	struct Lexeme_s *nom_p;				/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
 	unsigned int ligneSource;		/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Donnee_e type;				/**< Type de la donnée à stocker */
 	uint32_t decalage;				/**< décalage de l'adresse de la donnée par rapport à l'étiquette de la section */

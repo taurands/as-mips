@@ -107,15 +107,15 @@ int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot) {
 }
 
 void analyseSyntaxePasseCommentaire(struct NoeudListe_s **elementListeLexeme_pp) {
-	if ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_COMMENTAIRE) {
+	if ((*elementListeLexeme_pp) && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature == L_COMMENTAIRE) {
 		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 		DEBUG_MSG("Passe le commentaire");
 	}
 }
 
 void analyseSyntaxeIgonreResteLigne(struct NoeudListe_s **elementListeLexeme_pp) {
-	Lexeme_t *lexeme_p;
-	while ((*elementListeLexeme_pp) && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+	struct Lexeme_s *lexeme_p;
+	while ((*elementListeLexeme_pp) && (lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 		DEBUG_MSG("Ignore le lexème (%s|%s)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data);
 		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 	}
@@ -124,8 +124,8 @@ void analyseSyntaxeIgonreResteLigne(struct NoeudListe_s **elementListeLexeme_pp)
 void analyseSyntaxeSection(struct NoeudListe_s **elementListeLexeme_pp, enum Section_e *section_p) {
 	enum Section_e i;
 
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
-		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnee_p;
+	if (*elementListeLexeme_pp && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+		struct Lexeme_s *lexeme_p=(struct Lexeme_s *)(*elementListeLexeme_pp)->donnee_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
 			lexeme_p->data=strlwr(lexeme_p->data);
 
@@ -145,10 +145,10 @@ void analyseSyntaxeSection(struct NoeudListe_s **elementListeLexeme_pp, enum Sec
 
 int suiteEstDataWord(struct NoeudListe_s *elementListeLexeme_p) {
 	int resultat=FALSE;
-	Lexeme_t *lexeme_p;
+	struct Lexeme_s *lexeme_p;
 
 	while (elementListeLexeme_p) {
-		lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnee_p;
+		lexeme_p=(struct Lexeme_s *)elementListeLexeme_p->donnee_p;
 
 		if ((lexeme_p->nature == L_COMMENTAIRE) ||
 			(lexeme_p->nature == L_FIN_LIGNE) ||
@@ -174,9 +174,9 @@ void analyseSyntaxeEtiquette(
 
 	const uint32_t masqueAlignement = 0x00000003; /* Les deux derniers bits doivent être à zéro pour avoir un aligement par mot de 32 bits */
 
-	Lexeme_t *lexeme_p;
+	struct Lexeme_s *lexeme_p;
 
-	while (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_ETIQUETTE) {
+	while (*elementListeLexeme_pp && (lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature == L_ETIQUETTE) {
 		struct Etiquette_s *etiquetteCourante_p=malloc(sizeof(*etiquetteCourante_p));
 		if (!etiquetteCourante_p) ERROR_MSG("Impossible de créer une nouvelle étiquette");
 
@@ -206,14 +206,14 @@ void analyseSyntaxeInit(
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
-		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnee_p;
+	if (*elementListeLexeme_pp && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+		struct Lexeme_s *lexeme_p=(struct Lexeme_s *)(*elementListeLexeme_pp)->donnee_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
 			lexeme_p->data=strlwr(lexeme_p->data);
 			if (strcmp(lexeme_p->data, ".set")==0) {
 				DEBUG_MSG("La directive \".set\" a été reconnue dans la section initiale");
 				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
-				lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnee_p;
+				lexeme_p=(struct Lexeme_s *)(*elementListeLexeme_pp)->donnee_p;
 				if (lexeme_p->nature==L_SYMBOLE) {
 					if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
 						DEBUG_MSG("le symbole \"noreoder\" est bien présent");
@@ -242,7 +242,7 @@ void analyseSyntaxeText(
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+	if (*elementListeLexeme_pp && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 
 	}
 }
@@ -254,7 +254,7 @@ void analyseSyntaxeDataBss(
 		struct Liste_s *liste_p,
 		struct Table_s *tableEtiquettes_p) {
 
-	Lexeme_t *lexeme_p=NULL;
+	struct Lexeme_s *lexeme_p=NULL;
 	struct Donnee_s *donnee_p;
 	enum Nature_lexeme_e nature;
 	enum Donnee_e typeDonnee;
@@ -263,7 +263,7 @@ void analyseSyntaxeDataBss(
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+	if (*elementListeLexeme_pp && (lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 		analyseSyntaxeEtiquette(elementListeLexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
 
 		if (lexeme_p->nature == L_DIRECTIVE) {
@@ -280,7 +280,7 @@ void analyseSyntaxeDataBss(
 			if (typeDonnee != D_UNDEF) {
 				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
 
-				while (	(nature=(lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature) &&
+				while (	(nature=(lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature) &&
 						((((typeDonnee==D_SPACE) || ((*section_p==S_DATA) && (typeDonnee==D_BYTE))) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) ||	(nature==L_NOMBRE_OCTAL))) ||
 						 ((*section_p==S_DATA) && (typeDonnee==D_WORD) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) || (nature==L_NOMBRE_OCTAL) || (nature==L_SYMBOLE))) ||
 						 ((*section_p==S_DATA) && ((typeDonnee==D_ASCIIZ)) && ((nature==L_CHAINE))
@@ -351,7 +351,7 @@ void analyseSyntaxeDataBss(
 					}
 
 					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
-					if (((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_VIRGULE)
+					if (((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature == L_VIRGULE)
 						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 					else
 						break;
@@ -408,7 +408,7 @@ void analyse_syntaxe(
 			default: ERROR_MSG("Cas non prévu, section inconnue");
 			}
 
-			if (((Lexeme_t *)(elementListeLexeme_p->donnee_p))->nature != L_FIN_LIGNE) {
+			if (((struct Lexeme_s *)(elementListeLexeme_p->donnee_p))->nature != L_FIN_LIGNE) {
 				DEBUG_MSG("Ignore les lexèmes suivants non traités");
 				analyseSyntaxeIgonreResteLigne(&elementListeLexeme_p); /* On s'assure de bien être en fin de ligne */
 			}

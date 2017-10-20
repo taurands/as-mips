@@ -1,4 +1,3 @@
-
 /**
  * @file lex.c
  * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
@@ -26,7 +25,7 @@
  * @brief Cette fonction permet de donne le mon correspondant à un état
  *
  */	
-char * etat_lex_to_str(Etat_lex_t etat) {
+char * etat_lex_to_str(enum Etat_lex_e etat) {
 	switch(etat) {
 		case INIT:					return "INIT";
 		case POINT:					return "POINT";
@@ -62,7 +61,7 @@ char * etat_lex_to_str(Etat_lex_t etat) {
  * @brief Cette fonction catégorise un lexème en analysant le(s) caractère(s) le composant.
  *
  */
-enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
+enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c) {
 
 /**	@dot
  *	digraph Machine_Etat_Lex {
@@ -226,9 +225,9 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  */
 void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nline, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
 
-    Lexeme_t lexemeCourant;
+    struct Lexeme_s *lexeme_p;
 
-	enum Etat_lex_t etat;
+	enum Etat_lex_e etat;
 	char c;
 	int i;
 	int debutLigne = 1;
@@ -251,11 +250,13 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
         
         if (etat==COMMENTAIRE) {
          	char * diese_p=strchr(line,'#');
-         	if (!(lexemeCourant.data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
-    		strcpy(lexemeCourant.data, diese_p);
-         	lexemeCourant.nature=COMMENTAIRE;
-         	lexemeCourant.ligne=nline;
-         	ajouter_fin_liste(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
+
+         	lexeme_p = malloc(sizeof(*lexeme_p));
+         	if (!(lexeme_p->data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
+    		strcpy(lexeme_p->data, diese_p);
+         	lexeme_p->nature=COMMENTAIRE;
+         	lexeme_p->ligne=nline;
+         	ajouter_fin_liste(listeLexemes_p, lexeme_p);
          	break;
         }
         else {
@@ -296,17 +297,23 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
         		}
         		debutLigne=0;
         	}
-         	if (!(lexemeCourant.data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
-    		strcpy(lexemeCourant.data, token);
-         	lexemeCourant.nature=etat;
-         	lexemeCourant.ligne=nline;
-         	ajouter_fin_liste(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
+        	lexeme_p = malloc(sizeof(*lexeme_p));
+
+         	if (!(lexeme_p->data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
+    		strcpy(lexeme_p->data, token);
+         	lexeme_p->nature=etat;
+         	lexeme_p->ligne=nline;
+         	ajouter_fin_liste(listeLexemes_p, lexeme_p);
     	}
     }
-    lexemeCourant.data=NULL;
-    lexemeCourant.nature=FIN_LIGNE;
-    lexemeCourant.ligne=nline;
-    ajouter_fin_liste(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
+
+    /* rajoute un lexeme marqueur de fin de ligne */
+    lexeme_p = malloc(sizeof(*lexeme_p));
+
+    lexeme_p->data=NULL;
+    lexeme_p->nature=FIN_LIGNE;
+    lexeme_p->ligne=nline;
+    ajouter_fin_liste(listeLexemes_p, lexeme_p);
 }
 
 /**
@@ -400,8 +407,8 @@ void lex_standardise( char* in, char* out ) {
 }
 
 void detruitLexeme(void *Lexeme_p) {
-	INFO_MSG("Lexeme: %p ... %s",Lexeme_p,((Lexeme_t *)Lexeme_p)->data);
-	free(((Lexeme_t *)Lexeme_p)->data);
+	INFO_MSG("Lexeme: %p ... %s",Lexeme_p,((struct Lexeme_s *)Lexeme_p)->data);
+	free(((struct Lexeme_s *)Lexeme_p)->data);
 	free(Lexeme_p);
 }
 
@@ -411,7 +418,7 @@ void detruitLexeme(void *Lexeme_p) {
  * @brief Cette fonction permet de visualiser le contenu d'un lexeme
  *
  */
-void visualisationLexeme(Lexeme_t * lexeme_p) {
+void visualisationLexeme(struct Lexeme_s * lexeme_p) {
 	printf("(%s|%s|%d)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data, lexeme_p->ligne);
 }
 
@@ -425,8 +432,8 @@ void visualisationListeLexemes(struct Liste_s * liste_p) {
 	struct NoeudListe_s * lexemeCourant_p=liste_p->debut_liste_p;
 
 	while (lexemeCourant_p) {
-		visualisationLexeme((Lexeme_t *)lexemeCourant_p->donnee_p);
-		if (((Lexeme_t *)lexemeCourant_p->donnee_p)->nature == L_FIN_LIGNE)
+		visualisationLexeme((struct Lexeme_s *)lexemeCourant_p->donnee_p);
+		if (((struct Lexeme_s *)lexemeCourant_p->donnee_p)->nature == L_FIN_LIGNE)
 			printf("\n");
 		else
 			if (lexemeCourant_p->suivant_p) printf(", ");
