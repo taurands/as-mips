@@ -1,5 +1,5 @@
 /**
- * @file syntaxe.c
+ * @file syn.c
  * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
  * @brief Definition des fonctions liées au traitement syntaxique du fichier
  */
@@ -15,7 +15,7 @@
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
-#include <syntaxe.h>
+#include <syn.h>
 #include <str_utils.h>
 
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
@@ -105,7 +105,7 @@ int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot) {
 }
 
 void analyseSyntaxePasseCommentaire(ElementListe_t **elementListeLexeme_pp) {
-	if ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_COMMENTAIRE) {
+	if ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_COMMENTAIRE) {
 		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 		DEBUG_MSG("Passe le commentaire");
 	}
@@ -113,7 +113,7 @@ void analyseSyntaxePasseCommentaire(ElementListe_t **elementListeLexeme_pp) {
 
 void analyseSyntaxeIgonreResteLigne(ElementListe_t **elementListeLexeme_pp) {
 	Lexeme_t *lexeme_p;
-	while ((*elementListeLexeme_pp) && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+	while ((*elementListeLexeme_pp) && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 		DEBUG_MSG("Ignore le lexème (%s|%s)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data);
 		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 	}
@@ -122,8 +122,8 @@ void analyseSyntaxeIgonreResteLigne(ElementListe_t **elementListeLexeme_pp) {
 void analyseSyntaxeSection(ElementListe_t **elementListeLexeme_pp, enum Section_e *section_p) {
 	enum Section_e i;
 
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
-		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnee_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
 			lexeme_p->data=strlwr(lexeme_p->data);
 
@@ -146,7 +146,7 @@ int suiteEstDataWord(ElementListe_t *elementListeLexeme_p) {
 	Lexeme_t *lexeme_p;
 
 	while (elementListeLexeme_p) {
-		lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnees_p;
+		lexeme_p=(Lexeme_t *)elementListeLexeme_p->donnee_p;
 
 		if ((lexeme_p->nature == L_COMMENTAIRE) ||
 			(lexeme_p->nature == L_FIN_LIGNE) ||
@@ -174,7 +174,7 @@ void analyseSyntaxeEtiquette(
 
 	Lexeme_t *lexeme_p;
 
-	while (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_ETIQUETTE) {
+	while (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_ETIQUETTE) {
 		Etiquette_t *etiquetteCourante_p=malloc(sizeof(*etiquetteCourante_p));
 		if (!etiquetteCourante_p) ERROR_MSG("Impossible de créer une nouvelle étiquette");
 
@@ -204,14 +204,14 @@ void analyseSyntaxeInit(
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
-		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+		Lexeme_t *lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnee_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
 			lexeme_p->data=strlwr(lexeme_p->data);
 			if (strcmp(lexeme_p->data, ".set")==0) {
 				DEBUG_MSG("La directive \".set\" a été reconnue dans la section initiale");
 				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
-				lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnees_p;
+				lexeme_p=(Lexeme_t *)(*elementListeLexeme_pp)->donnee_p;
 				if (lexeme_p->nature==L_SYMBOLE) {
 					if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
 						DEBUG_MSG("le symbole \"noreoder\" est bien présent");
@@ -240,7 +240,7 @@ void analyseSyntaxeText(
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 
 	}
 }
@@ -261,7 +261,7 @@ void analyseSyntaxeDataBss(
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature != L_FIN_LIGNE) {
+	if (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 		analyseSyntaxeEtiquette(elementListeLexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
 
 		if (lexeme_p->nature == L_DIRECTIVE) {
@@ -278,7 +278,7 @@ void analyseSyntaxeDataBss(
 			if (typeDonnee != D_UNDEF) {
 				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
 
-				while (	(nature=(lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature) &&
+				while (	(nature=(lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature) &&
 						((((typeDonnee==D_SPACE) || ((*section_p==S_DATA) && (typeDonnee==D_BYTE))) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) ||	(nature==L_NOMBRE_OCTAL))) ||
 						 ((*section_p==S_DATA) && (typeDonnee==D_WORD) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) || (nature==L_NOMBRE_OCTAL) || (nature==L_SYMBOLE))) ||
 						 ((*section_p==S_DATA) && ((typeDonnee==D_ASCIIZ)) && ((nature==L_CHAINE))
@@ -304,39 +304,32 @@ void analyseSyntaxeDataBss(
 								if ((typeDonnee==D_BYTE) && (nombre>=0) && (nombre<=UINT8_MAX)) {
 									donnee_p->valeur.octetNS=(uint8_t)nombre;
 									DEBUG_MSG("Ajout d'un byte non signé (%s=%ld) de valeur %" SCNu8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octetNS, *decalage_p);
-									ajouteElementFinListe(liste_p, donnee_p);
+									listeAjouteFin(liste_p, donnee_p);
 									(*decalage_p)++;
-									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
-
 								}
 								else if ((typeDonnee==D_BYTE) && (nombre<0) && (nombre>=INT8_MIN)) {
 									donnee_p->valeur.octet=(int8_t)nombre;
 									DEBUG_MSG("Ajout d'un byte signé (%s=%ld) de valeur %" SCNi8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octet, *decalage_p);
-									ajouteElementFinListe(liste_p, donnee_p);
+									listeAjouteFin(liste_p, donnee_p);
 									(*decalage_p)++;
-									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 								}
 								else if ((typeDonnee==D_WORD) && (nombre>=0) && (nombre<=UINT32_MAX)) {
 									donnee_p->valeur.motNS=(uint32_t)nombre;
 									DEBUG_MSG("Ajout d'un mot non signé (%s=%ld) de valeur %" SCNu32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.motNS, *decalage_p);
-									ajouteElementFinListe(liste_p, donnee_p);
+									listeAjouteFin(liste_p, donnee_p);
 									(*decalage_p)+=4;
-									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
-
 								}
 								else if ((typeDonnee==D_WORD) && (nombre<0) && (nombre>=INT32_MIN)) {
 									donnee_p->valeur.mot=(int32_t)nombre;
 									DEBUG_MSG("Ajout d'un mot signé (%s=%ld) de valeur %" SCNi32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.mot, *decalage_p);
-									ajouteElementFinListe(liste_p, donnee_p);
+									listeAjouteFin(liste_p, donnee_p);
 									(*decalage_p)+=4;
-									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 								}
 								else if ((typeDonnee==D_SPACE) && (nombre>=0) && (nombre+*decalage_p<=UINT32_MAX)) {
 									donnee_p->valeur.nbOctets=(uint32_t)nombre;
 									DEBUG_MSG("Ajout d'un espace de (%s=%ld) %" SCNu32 " octets au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.nbOctets, *decalage_p);
-									ajouteElementFinListe(liste_p, donnee_p);
+									listeAjouteFin(liste_p, donnee_p);
 									(*decalage_p)+=donnee_p->valeur.nbOctets;
-									free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 								}
 								else {
 									DEBUG_MSG("Format numérique hors limites du byte (errno=%d)", errno); /* XXX A compléter*/
@@ -350,13 +343,13 @@ void analyseSyntaxeDataBss(
 					}
 					else { /* C'est un symbole, on ne peut pas encore calculer sa valeur mais on met quand même dans la liste*/
 						DEBUG_MSG("Ajout d'un mot symbole (%s=%ld) au décalage %" SCNu32, lexeme_p->data, nombre, *decalage_p);
-						ajouteElementFinListe(liste_p, donnee_p);
+						listeAjouteFin(liste_p, donnee_p);
 						(*decalage_p)+=4;
 						free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 					}
 
 					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
-					if (((Lexeme_t *)((*elementListeLexeme_pp)->donnees_p))->nature == L_VIRGULE)
+					if (((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_VIRGULE)
 						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 					else
 						break;
@@ -412,7 +405,7 @@ void analyseSyntaxe(
 			default: ERROR_MSG("Cas non prévu, section inconnue");
 			}
 
-			if (((Lexeme_t *)(elementListeLexeme_p->donnees_p))->nature != L_FIN_LIGNE) {
+			if (((Lexeme_t *)(elementListeLexeme_p->donnee_p))->nature != L_FIN_LIGNE) {
 				DEBUG_MSG("Ignore les lexèmes suivants non traités");
 				analyseSyntaxeIgonreResteLigne(&elementListeLexeme_p); /* On s'assure de bien être en fin de ligne */
 			}

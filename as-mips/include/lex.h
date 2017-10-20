@@ -10,7 +10,7 @@
 #ifndef _LEX_H_
 #define _LEX_H_
 
-#include <gen_list.h>
+#include "liste.h"
 
 /**
  * @enum Nature_lexeme_t

@@ -17,7 +17,7 @@
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
-/* #include <gen_list.h> */
+#include <table.h>
 
 /**
  * @param etat etat de la machine à états finis lexicale
@@ -254,7 +254,7 @@ void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, un
     		strcpy(lexemeCourant.data, diese_p);
          	lexemeCourant.nature=COMMENTAIRE;
          	lexemeCourant.ligne=nline;
-         	ajouteElementFinListe(listeLexemes_p, &lexemeCourant);
+         	listeAjouteFin(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
          	break;
         }
         else {
@@ -299,13 +299,13 @@ void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, un
     		strcpy(lexemeCourant.data, token);
          	lexemeCourant.nature=etat;
          	lexemeCourant.ligne=nline;
-         	ajouteElementFinListe(listeLexemes_p, &lexemeCourant);
+         	listeAjouteFin(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
     	}
     }
     lexemeCourant.data=NULL;
     lexemeCourant.nature=FIN_LIGNE;
     lexemeCourant.ligne=nline;
-    ajouteElementFinListe(listeLexemes_p, &lexemeCourant);
+    listeAjouteFin(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
 }
 
 /**
@@ -424,8 +424,8 @@ void visualisationListeLexemes(Liste_t * liste_p) {
 	ElementListe_t * lexemeCourant_p=liste_p->debut_liste_p;
 
 	while (lexemeCourant_p) {
-		visualisationLexeme((Lexeme_t *)lexemeCourant_p->donnees_p);
-		if (((Lexeme_t *)lexemeCourant_p->donnees_p)->nature == L_FIN_LIGNE)
+		visualisationLexeme((Lexeme_t *)lexemeCourant_p->donnee_p);
+		if (((Lexeme_t *)lexemeCourant_p->donnee_p)->nature == L_FIN_LIGNE)
 			printf("\n");
 		else
 			if (lexemeCourant_p->suivant_p) printf(", ");

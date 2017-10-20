@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
  
-#include <gen_list.h>
+#include "../include/liste.h"
 
 
 void list_with_ints();
@@ -29,12 +29,12 @@ void list_with_ints()
   initialiseListe(&list, sizeof(int), NULL);
  
   for(i = 1; i <= numbers; i++) {
-    ajouteElementFinListe(&list, &i);
+    listeAjouteFin(&list, &i);
   }
 
   ElementListe_t *elementCourant_p = list.debut_liste_p;
   while (elementCourant_p) {
-	  printf("%d\n",*(int *)elementCourant_p->donnees_p);
+	  printf("%d\n",*(int *)elementCourant_p->donnee_p);
 	  elementCourant_p = elementCourant_p->suivant_p;
   }
  
@@ -55,12 +55,12 @@ void list_with_strings()
   for(i = 0; i < numNames; i++) {
 	name = (char *)malloc(sizeof(*name)*(1+strlen(names[i])));
     strcpy(name, names[i]);
-    ajouteElementFinListe(&list, &name);
+    listeAjouteFin(&list, &name);
   }
  
   ElementListe_t *elementCourant_p = list.debut_liste_p;
   while (elementCourant_p) {
-	  printf("%s\n",*(char **)elementCourant_p->donnees_p);
+	  printf("%s\n",*(char **)elementCourant_p->donnee_p);
 	  elementCourant_p = elementCourant_p->suivant_p;
   }
  

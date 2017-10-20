@@ -1,5 +1,5 @@
 /**
- * @file table_hachage.c
+ * @file table.c
  * @author BERTRAND Antoine TAURAND Sébastien
  * @brief Definition de fonctions de dictionnaire par fonction de hachage
  */
@@ -12,7 +12,7 @@
 #include <global.h>
 #include <str_utils.h>
 #include <notify.h>
-#include <table_hachage.h>
+#include <table.h>
 
 size_t nombrePremierGET(size_t nombre) {
 	size_t diviseur;

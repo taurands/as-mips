@@ -13,9 +13,9 @@
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
-#include <syntaxe.h>
 #include <str_utils.h>
-#include <table_hachage.h>
+#include "../include/syn.h"
+#include "../include/table.h"
 
 /**
  * @param exec Name of executable.
@@ -67,10 +67,10 @@ int main ( int argc, char *argv[] ) {
         exit( EXIT_FAILURE );
     }
 
-    listeLexemes_p=creeListe(sizeof(Lexeme_t), (fonctionDestructeur *)detruitLexeme);
-    listeText_p=creeListe(sizeof(Instruction_t), NULL);
-    listeData_p=creeListe(sizeof(Donnee_t), NULL);
-    listeBss_p=creeListe(sizeof(Donnee_t), NULL);
+    listeLexemes_p=creeListe((fonctionDestructeur *)detruitLexeme);
+    listeText_p=creeListe(NULL);
+    listeData_p=creeListe(NULL);
+    listeBss_p=creeListe(NULL);
 
 	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
 

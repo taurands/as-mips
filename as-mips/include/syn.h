@@ -1,15 +1,16 @@
 /**
- * @file syntaxe.h
+ * @file syn.h
  * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
  * @brief Definition de type et de prototypes de fonctions liées au traitement syntaxique du fichier
  */
 
-#ifndef _SYNTAXE_H_
-#define _SYNTAXE_H_
+#ifndef _SYN_H_
+#define _SYN_H_
 
 #include <stdint.h>
-#include <gen_list.h>
-#include <table_hachage.h>
+
+#include "liste.h"
+#include "table.h"
 
 /**
  * @enum Section_e
@@ -161,4 +162,4 @@ char *clefEtiquette(void *donnee_p);
 void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p,
 					Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p);
 
-#endif /* _SYNTAXE_H_ */
+#endif /* _SYN_H_ */

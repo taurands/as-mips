@@ -1,11 +1,11 @@
 /**
- * @file table_hachage.h
+ * @file table.h
  * @author BERTRAND Antoine TAURAND Sébastien
  * @brief Definition de type et de prototypes de fonctions de dictionnaire par fonction de hachage
  */
 
-#ifndef _TABLE_HACHAGE_H
-#define _TABLE_HACHAGE_H
+#ifndef _TABLE_H_
+#define _TABLE_H_
 
 /* Definition commune de fonction permettant d'accéder à clef (str) en passant un pointeur sur une structure */
 typedef char *(fonctionClef)(void *);
@@ -47,4 +47,4 @@ HashTable_t *redimensionneTable(HashTable_t *htable_p, int newSize);
 */
 int test_hachage();
 
-#endif /* _TABLE_HACHAGE_H */
+#endif /* _TABLE_H_ */
