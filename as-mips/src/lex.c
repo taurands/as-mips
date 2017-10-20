@@ -33,7 +33,6 @@ char * etat_lex_to_str(enum Etat_lex_e etat) {
 		case DECIMAL:				return "DECIMAL";
 		case HEXADECIMAL:			return "HEXADECIMAL";
 		case OCTAL:					return "OCTAL";
-		case CAR:					return "CAR";
 		case CHAINE:				return "CHAINE";
 		case MOINS:					return "MOINS";
 		case PLUS:					return "PLUS";

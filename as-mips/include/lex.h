@@ -19,6 +19,8 @@
  * La nature des lexème einsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
  */
 enum Nature_lexeme_e {
+ 	L_ERREUR,				/**< Mauvaise configuration de caractères. */
+
  	L_SYMBOLE,				/**< Chaine de caractères alphanumériques ne commençant pas par un nombre.
  							     Peut désigner une étiquette ou une instruction suivant sa place dans la ligne */
 	L_INSTRUCTION,			/**< Le premier symbole d'une ligne sera une instruction */
@@ -34,12 +36,10 @@ enum Nature_lexeme_e {
  	L_NOMBRE_OCTAL,			/**< Nombre octal. */
  	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
 
-	L_CAR,					/**< caractère */
 	L_CHAINE,				/**< chaine de caractère avec un zero final */
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
-	L_FIN_LIGNE,
- 	L_ERREUR				/**< Mauvaise configuration de caractères. */
+	L_FIN_LIGNE
 };
 
 /**
@@ -48,6 +48,8 @@ enum Nature_lexeme_e {
  * 
  */
 enum Etat_lex_e {
+	ERREUR=L_ERREUR,
+
 	SYMBOLE=L_SYMBOLE,
 	INSTRUCTION=L_INSTRUCTION,
 	DIRECTIVE=L_DIRECTIVE,
@@ -62,20 +64,17 @@ enum Etat_lex_e {
 	OCTAL=L_NOMBRE_OCTAL,
 	HEXADECIMAL=L_NOMBRE_HEXADECIMAL,
 
-	CAR=L_CAR,
 	CHAINE=L_CHAINE,
 
 	COMMENTAIRE=L_COMMENTAIRE,
-
-	ERREUR=L_ERREUR,
+	FIN_LIGNE=L_FIN_LIGNE,
 
 	INIT,					/**< Etat initial */
 	MOINS,
 	PLUS,
 	DEBUT_HEXADECIMAL,		/**< On a lu "0x" et on attend le premier caractère hexadécimal */
 	DECIMAL_ZERO,			/**< On a lu un "0" */
-	POINT,					/**< On a lu un point */
-	FIN_LIGNE=L_FIN_LIGNE
+	POINT					/**< On a lu un point */
 };
 
 

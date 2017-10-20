@@ -106,26 +106,26 @@ int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot) {
 	return trouve;
 }
 
-void analyseSyntaxePasseCommentaire(struct NoeudListe_s **elementListeLexeme_pp) {
-	if ((*elementListeLexeme_pp) && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature == L_COMMENTAIRE) {
-		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+void mef_commentaire(struct NoeudListe_s **noeud_lexeme_pp) {
+	if ((*noeud_lexeme_pp) && ((struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature == L_COMMENTAIRE) {
+		*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
 		DEBUG_MSG("Passe le commentaire");
 	}
 }
 
-void analyseSyntaxeIgonreResteLigne(struct NoeudListe_s **elementListeLexeme_pp) {
+void mef_erreur(struct NoeudListe_s **noeud_lexeme_pp) {
 	struct Lexeme_s *lexeme_p;
-	while ((*elementListeLexeme_pp) && (lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+	while ((*noeud_lexeme_pp) && (lexeme_p=(struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 		DEBUG_MSG("Ignore le lexème (%s|%s)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data);
-		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+		*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
 	}
 }
 
-void analyseSyntaxeSection(struct NoeudListe_s **elementListeLexeme_pp, enum Section_e *section_p) {
+void mef_directive_section(struct NoeudListe_s **noeud_lexeme_pp, enum Section_e *section_p) {
 	enum Section_e i;
 
-	if (*elementListeLexeme_pp && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
-		struct Lexeme_s *lexeme_p=(struct Lexeme_s *)(*elementListeLexeme_pp)->donnee_p;
+	if (*noeud_lexeme_pp && ((struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+		struct Lexeme_s *lexeme_p=(struct Lexeme_s *)(*noeud_lexeme_pp)->donnee_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
 			lexeme_p->data=strlwr(lexeme_p->data);
 
@@ -134,8 +134,8 @@ void analyseSyntaxeSection(struct NoeudListe_s **elementListeLexeme_pp, enum Sec
 					*section_p=i;
 					DEBUG_MSG("La directive \"%s\" a été reconnue. Changement de nature de section pour %d : %s",
 							lexeme_p->data, *section_p, NOMS_SECTIONS[*section_p]);
-					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
-					analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
+					*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
+					mef_commentaire(noeud_lexeme_pp);
 					break;
 				}
 			}
@@ -143,18 +143,18 @@ void analyseSyntaxeSection(struct NoeudListe_s **elementListeLexeme_pp, enum Sec
 	}
 }
 
-int suiteEstDataWord(struct NoeudListe_s *elementListeLexeme_p) {
+int suite_est_directive_word(struct NoeudListe_s *noeud_lexeme_p) {
 	int resultat=FALSE;
 	struct Lexeme_s *lexeme_p;
 
-	while (elementListeLexeme_p) {
-		lexeme_p=(struct Lexeme_s *)elementListeLexeme_p->donnee_p;
+	while (noeud_lexeme_p) {
+		lexeme_p=(struct Lexeme_s *)noeud_lexeme_p->donnee_p;
 
 		if ((lexeme_p->nature == L_COMMENTAIRE) ||
 			(lexeme_p->nature == L_FIN_LIGNE) ||
 			(lexeme_p->nature == L_ETIQUETTE))
 
-			elementListeLexeme_p=elementListeLexeme_p->suivant_p;
+			noeud_lexeme_p=noeud_lexeme_p->suivant_p;
 
 		else if ((lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".word"))) {
 			resultat=TRUE;
@@ -166,8 +166,8 @@ int suiteEstDataWord(struct NoeudListe_s *elementListeLexeme_p) {
 	return resultat;
 }
 
-void analyseSyntaxeEtiquette(
-		struct NoeudListe_s **elementListeLexeme_pp,
+void mef_etiquette(
+		struct NoeudListe_s **noeud_lexeme_pp,
 		enum Section_e section,
 		uint32_t *decalage_p,
 		struct Table_s *tableEtiquettes_p) {
@@ -176,11 +176,11 @@ void analyseSyntaxeEtiquette(
 
 	struct Lexeme_s *lexeme_p;
 
-	while (*elementListeLexeme_pp && (lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature == L_ETIQUETTE) {
+	while (*noeud_lexeme_pp && (lexeme_p=(struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature == L_ETIQUETTE) {
 		struct Etiquette_s *etiquetteCourante_p=malloc(sizeof(*etiquetteCourante_p));
 		if (!etiquetteCourante_p) ERROR_MSG("Impossible de créer une nouvelle étiquette");
 
-		if ((*decalage_p & masqueAlignement) && (section == S_DATA) && (suiteEstDataWord((*elementListeLexeme_pp)->suivant_p))) {
+		if ((*decalage_p & masqueAlignement) && (section == S_DATA) && (suite_est_directive_word((*noeud_lexeme_pp)->suivant_p))) {
 			*decalage_p=(*decalage_p + masqueAlignement) & ~masqueAlignement;
 		}
 		etiquetteCourante_p->nom_p=lexeme_p;
@@ -196,28 +196,28 @@ void analyseSyntaxeEtiquette(
 			free(etiquetteCourante_p);
 		}
 
-		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* On passe au lexème suivant */
+		*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p; /* On passe au lexème suivant */
 	}
 }
 
-void analyseSyntaxeInit(
-		struct NoeudListe_s **elementListeLexeme_pp,
+void mef_section_init(
+		struct NoeudListe_s **noeud_lexeme_pp,
 		enum Section_e *section_p) {
 
-	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+	mef_directive_section(noeud_lexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
-		struct Lexeme_s *lexeme_p=(struct Lexeme_s *)(*elementListeLexeme_pp)->donnee_p;
+	if (*noeud_lexeme_pp && ((struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+		struct Lexeme_s *lexeme_p=(struct Lexeme_s *)(*noeud_lexeme_pp)->donnee_p;
 		if (lexeme_p->nature==L_DIRECTIVE) {
 			lexeme_p->data=strlwr(lexeme_p->data);
 			if (strcmp(lexeme_p->data, ".set")==0) {
 				DEBUG_MSG("La directive \".set\" a été reconnue dans la section initiale");
-				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
-				lexeme_p=(struct Lexeme_s *)(*elementListeLexeme_pp)->donnee_p;
+				*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
+				lexeme_p=(struct Lexeme_s *)(*noeud_lexeme_pp)->donnee_p;
 				if (lexeme_p->nature==L_SYMBOLE) {
 					if (strcmp(strlwr(lexeme_p->data), "noreorder")==0) {
 						DEBUG_MSG("le symbole \"noreoder\" est bien présent");
-						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+						*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
 					}
 					else { /* Le symbole n'est pas "noreorder" */
 						DEBUG_MSG("Symbole inconnu après la directive \".set\" dans la section initiale");
@@ -228,27 +228,27 @@ void analyseSyntaxeInit(
 				}
 			}
 		}
-		analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
+		mef_commentaire(noeud_lexeme_pp);
 	}
 }
 
-void analyseSyntaxeText(
-		struct NoeudListe_s **elementListeLexeme_pp,
+void mef_section_text(
+		struct NoeudListe_s **noeud_lexeme_pp,
 		enum Section_e *section_p,
 		uint32_t *decalage_p,
 		struct Liste_s *liste_p,
 		struct Table_s *tableEtiquettes_p,
 		struct Dictionnaire_s *dictionnaireInstructions_p) {
 
-	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+	mef_directive_section(noeud_lexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && ((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+	if (*noeud_lexeme_pp && ((struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 
 	}
 }
 
-void analyseSyntaxeDataBss(
-		struct NoeudListe_s **elementListeLexeme_pp,
+void mef_section_data_bss(
+		struct NoeudListe_s **noeud_lexeme_pp,
 		enum Section_e *section_p,
 		uint32_t *decalage_p,
 		struct Liste_s *liste_p,
@@ -261,10 +261,10 @@ void analyseSyntaxeDataBss(
 	long int nombre;
 
 
-	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
+	mef_directive_section(noeud_lexeme_pp, section_p);
 
-	if (*elementListeLexeme_pp && (lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
-		analyseSyntaxeEtiquette(elementListeLexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
+	if (*noeud_lexeme_pp && (lexeme_p=(struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
+		mef_etiquette(noeud_lexeme_pp, *section_p, decalage_p, tableEtiquettes_p);
 
 		if (lexeme_p->nature == L_DIRECTIVE) {
 			typeDonnee=D_UNDEF;
@@ -278,9 +278,9 @@ void analyseSyntaxeDataBss(
 				typeDonnee=D_SPACE;
 
 			if (typeDonnee != D_UNDEF) {
-				*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
+				*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
 
-				while (	(nature=(lexeme_p=(struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature) &&
+				while (	((lexeme_p=(struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p)) && ((nature=lexeme_p->nature) || TRUE)) &&
 						((((typeDonnee==D_SPACE) || ((*section_p==S_DATA) && (typeDonnee==D_BYTE))) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) ||	(nature==L_NOMBRE_OCTAL))) ||
 						 ((*section_p==S_DATA) && (typeDonnee==D_WORD) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) || (nature==L_NOMBRE_OCTAL) || (nature==L_SYMBOLE))) ||
 						 ((*section_p==S_DATA) && ((typeDonnee==D_ASCIIZ)) && ((nature==L_CHAINE))
@@ -301,65 +301,55 @@ void analyseSyntaxeDataBss(
 							if (errno) {
 								DEBUG_MSG("Erreur de conversion numérique");
 								free(donnee_p);
-							}
-							else {
+							} else {
 								if ((typeDonnee==D_BYTE) && (nombre>=0) && (nombre<=UINT8_MAX)) {
 									donnee_p->valeur.octetNS=(uint8_t)nombre;
 									DEBUG_MSG("Ajout d'un byte non signé (%s=%ld) de valeur %" SCNu8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octetNS, *decalage_p);
 									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)++;
-								}
-								else if ((typeDonnee==D_BYTE) && (nombre<0) && (nombre>=INT8_MIN)) {
+								} else if ((typeDonnee==D_BYTE) && (nombre<0) && (nombre>=INT8_MIN)) {
 									donnee_p->valeur.octet=(int8_t)nombre;
 									DEBUG_MSG("Ajout d'un byte signé (%s=%ld) de valeur %" SCNi8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octet, *decalage_p);
 									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)++;
-								}
-								else if ((typeDonnee==D_WORD) && (nombre>=0) && (nombre<=UINT32_MAX)) {
+								} else if ((typeDonnee==D_WORD) && (nombre>=0) && (nombre<=UINT32_MAX)) {
 									donnee_p->valeur.motNS=(uint32_t)nombre;
 									DEBUG_MSG("Ajout d'un mot non signé (%s=%ld) de valeur %" SCNu32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.motNS, *decalage_p);
 									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)+=4;
-								}
-								else if ((typeDonnee==D_WORD) && (nombre<0) && (nombre>=INT32_MIN)) {
+								} else if ((typeDonnee==D_WORD) && (nombre<0) && (nombre>=INT32_MIN)) {
 									donnee_p->valeur.mot=(int32_t)nombre;
 									DEBUG_MSG("Ajout d'un mot signé (%s=%ld) de valeur %" SCNi32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.mot, *decalage_p);
 									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)+=4;
-								}
-								else if ((typeDonnee==D_SPACE) && (nombre>=0) && (nombre+*decalage_p<=UINT32_MAX)) {
+								} else if ((typeDonnee==D_SPACE) && (nombre>=0) && (nombre+*decalage_p<=UINT32_MAX)) {
 									donnee_p->valeur.nbOctets=(uint32_t)nombre;
 									DEBUG_MSG("Ajout d'un espace de (%s=%ld) %" SCNu32 " octets au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.nbOctets, *decalage_p);
 									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)+=donnee_p->valeur.nbOctets;
-								}
-								else {
-									DEBUG_MSG("Format numérique hors limites du byte (errno=%d)", errno); /* XXX A compléter*/
+								} else {
+									DEBUG_MSG("Format numérique hors limites (errno=%d)", errno); /* XXX A compléter*/
 									free(donnee_p);
 								}
 							}
-						}
-						else { /* On est sur une chaine ascii */
+						} else { /* On est sur une chaine ascii */
 
 						}
-					}
-					else { /* C'est un symbole, on ne peut pas encore calculer sa valeur mais on met quand même dans la liste*/
-						DEBUG_MSG("Ajout d'un mot symbole (%s=%ld) au décalage %" SCNu32, lexeme_p->data, nombre, *decalage_p);
+					} else { /* C'est un symbole, on ne peut pas encore calculer sa valeur mais on met quand même dans la liste*/
+						DEBUG_MSG("Ajout d'un mot symbole %s au décalage %" SCNu32, lexeme_p->data, *decalage_p);
 						ajouter_fin_liste(liste_p, donnee_p);
 						(*decalage_p)+=4;
-						free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 					}
 
-					*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
-					if (((struct Lexeme_s *)((*elementListeLexeme_pp)->donnee_p))->nature == L_VIRGULE)
-						*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
+					*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p; /* Passe au lexème suivant pour récupérer les arguments */
+					if (((struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature == L_VIRGULE)
+						*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
 					else
 						break;
 				}
 
-				analyseSyntaxePasseCommentaire(elementListeLexeme_pp);
-			}
-			else {
+				mef_commentaire(noeud_lexeme_pp);
+			} else {
 
 			}
 		}
@@ -379,42 +369,42 @@ void analyse_syntaxe(
 	uint32_t decalageData=0;
 	uint32_t decalageBss=0;
 
-	struct NoeudListe_s *elementListeLexeme_p=NULL;
+	struct NoeudListe_s *noeud_lexeme_p=NULL;
 
 	enum Section_e section=S_INIT;
 
 	if (lignesLexemes_p) {
-		elementListeLexeme_p=lignesLexemes_p->debut_liste_p;
-		while (elementListeLexeme_p) { /* Boucle sur la liste des lexèmes */
+		noeud_lexeme_p=lignesLexemes_p->debut_liste_p;
+		while (noeud_lexeme_p) { /* Boucle sur la liste des lexèmes */
 
 			/* On va analyser la syntaxe en fonction de la section dans lequelle on se trouve */
 			switch(section) {
 			case S_INIT:
-				analyseSyntaxeInit(&elementListeLexeme_p, &section);
+				mef_section_init(&noeud_lexeme_p, &section);
 				break;
 
 			case S_TEXT:
-				analyseSyntaxeText(&elementListeLexeme_p, &section, &decalageText, listeText_p, tableEtiquettes_p, dictionnaireInstructions_p);
+				mef_section_text(&noeud_lexeme_p, &section, &decalageText, listeText_p, tableEtiquettes_p, dictionnaireInstructions_p);
 				break;
 
 			case S_DATA:
-				analyseSyntaxeDataBss(&elementListeLexeme_p, &section, &decalageData, listeData_p, tableEtiquettes_p);
+				mef_section_data_bss(&noeud_lexeme_p, &section, &decalageData, listeData_p, tableEtiquettes_p);
 				break;
 
 			case S_BSS:
-				analyseSyntaxeDataBss(&elementListeLexeme_p, &section, &decalageBss, listeBss_p, tableEtiquettes_p);
+				mef_section_data_bss(&noeud_lexeme_p, &section, &decalageBss, listeBss_p, tableEtiquettes_p);
 				break;
 
 			default: ERROR_MSG("Cas non prévu, section inconnue");
 			}
 
-			if (((struct Lexeme_s *)(elementListeLexeme_p->donnee_p))->nature != L_FIN_LIGNE) {
+			if (((struct Lexeme_s *)(noeud_lexeme_p->donnee_p))->nature != L_FIN_LIGNE) {
 				DEBUG_MSG("Ignore les lexèmes suivants non traités");
-				analyseSyntaxeIgonreResteLigne(&elementListeLexeme_p); /* On s'assure de bien être en fin de ligne */
+				mef_erreur(&noeud_lexeme_p); /* On s'assure de bien être en fin de ligne */
 			}
 
 			DEBUG_MSG("Passage à la ligne suivante");
-			elementListeLexeme_p=elementListeLexeme_p->suivant_p; /* puis on passe à la nouvelle */
+			noeud_lexeme_p=noeud_lexeme_p->suivant_p; /* puis on passe à la nouvelle */
 		}
 	}
 }
