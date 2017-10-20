@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <strings.h>
 
 #include <global.h>
 #include <notify.h>

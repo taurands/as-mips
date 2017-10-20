@@ -24,15 +24,18 @@ const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
 const char NATURE_INSTRUCTION[]= {'P', 'R', 'D', 'I', 'r', 'a'};
 const char *NOMS_DATA[] = {".space", ".byte", ".word", ".asciiz"};
 
-char *clefDefinitionInstruction(void *donnee_p) {
+char *clefDefinitionInstruction(void *donnee_p)
+{
 	return (donnee_p ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL);
 }
 
-char *clefEtiquette(void *donnee_p) {
+char *clefEtiquette(void *donnee_p)
+{
 	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->nom_p->data : NULL);
 }
 
-struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire) {
+struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire)
+{
 	char *nomInstruction=calloc(128, sizeof(char));
 	/* char carNature; */
 	int nombreOperandes=0;
@@ -72,7 +75,8 @@ struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire) {
 	return dictionnaireLu_p;
 }
 
-void effaceContenuDictionnaire(struct Dictionnaire_s *unDictionnaire_p) {
+void effaceContenuDictionnaire(struct Dictionnaire_s *unDictionnaire_p)
+{
 	int i;
 	for (i=0;i<unDictionnaire_p->nbMots; i++)
 		free((*unDictionnaire_p->mots)[i].nom);
@@ -81,7 +85,8 @@ void effaceContenuDictionnaire(struct Dictionnaire_s *unDictionnaire_p) {
 	unDictionnaire_p->nbMots=0;
 }
 
-int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot) {
+int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot)
+{
 	/* fonction de recherche dichotomique qui renvoie l'indice où se trouve unMot dans unDictionnaire_p */
 	/* si elle est absente, renvoie -1 */
 
@@ -106,14 +111,16 @@ int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot) {
 	return trouve;
 }
 
-void mef_commentaire(struct NoeudListe_s **noeud_lexeme_pp) {
+void mef_commentaire(struct NoeudListe_s **noeud_lexeme_pp)
+{
 	if ((*noeud_lexeme_pp) && ((struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature == L_COMMENTAIRE) {
 		*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
 		DEBUG_MSG("Passe le commentaire");
 	}
 }
 
-void mef_erreur(struct NoeudListe_s **noeud_lexeme_pp) {
+void mef_erreur(struct NoeudListe_s **noeud_lexeme_pp)
+{
 	struct Lexeme_s *lexeme_p;
 	while ((*noeud_lexeme_pp) && (lexeme_p=(struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 		DEBUG_MSG("Ignore le lexème (%s|%s)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data);
@@ -121,7 +128,8 @@ void mef_erreur(struct NoeudListe_s **noeud_lexeme_pp) {
 	}
 }
 
-void mef_directive_section(struct NoeudListe_s **noeud_lexeme_pp, enum Section_e *section_p) {
+void mef_directive_section(struct NoeudListe_s **noeud_lexeme_pp, enum Section_e *section_p)
+{
 	enum Section_e i;
 
 	if (*noeud_lexeme_pp && ((struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
@@ -143,7 +151,8 @@ void mef_directive_section(struct NoeudListe_s **noeud_lexeme_pp, enum Section_e
 	}
 }
 
-int suite_est_directive_word(struct NoeudListe_s *noeud_lexeme_p) {
+int suite_est_directive_word(struct NoeudListe_s *noeud_lexeme_p)
+{
 	int resultat=FALSE;
 	struct Lexeme_s *lexeme_p;
 
@@ -170,7 +179,8 @@ void mef_etiquette(
 		struct NoeudListe_s **noeud_lexeme_pp,
 		enum Section_e section,
 		uint32_t *decalage_p,
-		struct Table_s *tableEtiquettes_p) {
+		struct Table_s *tableEtiquettes_p)
+{
 
 	const uint32_t masqueAlignement = 0x00000003; /* Les deux derniers bits doivent être à zéro pour avoir un aligement par mot de 32 bits */
 
@@ -202,7 +212,8 @@ void mef_etiquette(
 
 void mef_section_init(
 		struct NoeudListe_s **noeud_lexeme_pp,
-		enum Section_e *section_p) {
+		enum Section_e *section_p)
+{
 
 	mef_directive_section(noeud_lexeme_pp, section_p);
 
@@ -238,7 +249,8 @@ void mef_section_text(
 		uint32_t *decalage_p,
 		struct Liste_s *liste_p,
 		struct Table_s *tableEtiquettes_p,
-		struct Dictionnaire_s *dictionnaireInstructions_p) {
+		struct Dictionnaire_s *dictionnaireInstructions_p)
+{
 
 	mef_directive_section(noeud_lexeme_pp, section_p);
 
@@ -252,7 +264,8 @@ void mef_section_data_bss(
 		enum Section_e *section_p,
 		uint32_t *decalage_p,
 		struct Liste_s *liste_p,
-		struct Table_s *tableEtiquettes_p) {
+		struct Table_s *tableEtiquettes_p)
+{
 
 	struct Lexeme_s *lexeme_p=NULL;
 	struct Donnee_s *donnee_p;

@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <string.h>
 
-
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
@@ -23,12 +22,10 @@
  * @brief Print usage.
  *
  */
-void print_usage( char *exec ) {
-    fprintf(stderr, "Usage: %s file.s\n",
-            exec);
+void print_usage( char *exec )
+{
+    fprintf(stderr, "Usage: %s file.s\n", exec);
 }
-
-
 
 /**
  * @param argc Number of arguments on the command line.
@@ -37,7 +34,8 @@ void print_usage( char *exec ) {
  * @brief Main entry point for MIPS assembler.
  *
  */
-int main ( int argc, char *argv[] ) {
+int main(int argc, char *argv[])
+{
 
     unsigned int nbLignes 	= 0;
     unsigned int nbEtiquettes = 0;
@@ -53,18 +51,14 @@ int main ( int argc, char *argv[] ) {
     struct Liste_s *listeData_p=NULL;
     struct Liste_s *listeBss_p=NULL;
 
-    if ( argc != 2 ) {
+    if (argc != 2) {
         print_usage(argv[0]);
-        exit( EXIT_FAILURE );
+        exit(EXIT_FAILURE);
     }
-
-
-    file  	= argv[argc-1];
-
-
-    if ( NULL == file ) {
-        fprintf( stderr, "Pas de nom pour le fichier assembleur. Abandon du traitement.\n" );
-        exit( EXIT_FAILURE );
+    file = argv[argc-1];
+    if (NULL == file) {
+        fprintf(stderr, "Pas de nom pour le fichier assembleur. Abandon du traitement.\n" );
+        exit(EXIT_FAILURE);
     }
 
     listeLexemes_p=creer_liste((fonctionDestructeur *)detruitLexeme);
@@ -81,7 +75,6 @@ int main ( int argc, char *argv[] ) {
     DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nbLignes, nbEtiquettes, nbInstructions);
 	visualisationListeLexemes(listeLexemes_p);
 
-
 	tableEtiquettes_p=creeTable(nbEtiquettes, clefEtiquette, NULL);
 
 	analyse_syntaxe(listeLexemes_p, mon_dictionnaire_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
@@ -90,14 +83,6 @@ int main ( int argc, char *argv[] ) {
 	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
     tableDefinitionInstructions_p=detruitTable(tableDefinitionInstructions_p);
     tableDefinitionRegistres_p=detruitTable(tableDefinitionRegistres_p);
-
-	/*
-	DEBUG_MSG("index de ADD: %d",indexDictionnaire(mon_dictionnaire_p, "ADD"));
-	DEBUG_MSG("index de XOR: %d",indexDictionnaire(mon_dictionnaire_p, "XOR"));
-	DEBUG_MSG("index de TOTO: %d",indexDictionnaire(mon_dictionnaire_p, "TOTO"));
-	DEBUG_MSG("index de 0: %d",indexDictionnaire(mon_dictionnaire_p, "0"));
-	DEBUG_MSG("index de Z: %d",indexDictionnaire(mon_dictionnaire_p, "Z"));
-	*/
 
     /* ---------------- Free memory and terminate -------------------*/
 
@@ -109,19 +94,6 @@ int main ( int argc, char *argv[] ) {
     listeBss_p=detruire_liste(listeBss_p);
 	listeLexemes_p=detruire_liste(listeLexemes_p);
 
-    /*
-    printf("Hachage B null : %x\n", hashBernstein(NULL));
-    printf("Hachage B vide : %x\n", hashBernstein(""));
-    printf("Hachage B t : %x\n", hashBernstein("t"));
-    printf("Hachage B to : %x\n", hashBernstein("to"));
-
-    printf("Hachage KR2 null : %x\n", hashKR2(NULL));
-    printf("Hachage KR2 vide : %x\n", hashKR2(""));
-    printf("Hachage KR2 t : %x\n", hashKR2("t"));
-    printf("Hachage KR2 to : %x\n", hashKR2("to"));
-    */
-
-    /* test_hachage(); */
-    exit( EXIT_SUCCESS );
+	exit( EXIT_SUCCESS );
 }
 
