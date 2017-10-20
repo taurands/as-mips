@@ -45,13 +45,13 @@ int main ( int argc, char *argv[] ) {
 
     char         *file 	= NULL;
     
-    TableHachage_t *tableDefinitionInstructions_p=NULL;
-    TableHachage_t *tableDefinitionRegistres_p=NULL;
-    TableHachage_t *tableEtiquettes_p=NULL;
-    Liste_t *listeLexemes_p=NULL;
-    Liste_t *listeText_p=NULL;
-    Liste_t *listeData_p=NULL;
-    Liste_t *listeBss_p=NULL;
+    struct Table_s *tableDefinitionInstructions_p=NULL;
+    struct Table_s *tableDefinitionRegistres_p=NULL;
+    struct Table_s *tableEtiquettes_p=NULL;
+    struct Liste_s *listeLexemes_p=NULL;
+    struct Liste_s *listeText_p=NULL;
+    struct Liste_s *listeData_p=NULL;
+    struct Liste_s *listeBss_p=NULL;
 
     if ( argc != 2 ) {
         print_usage(argv[0]);
@@ -67,12 +67,12 @@ int main ( int argc, char *argv[] ) {
         exit( EXIT_FAILURE );
     }
 
-    listeLexemes_p=creeListe((fonctionDestructeur *)detruitLexeme);
-    listeText_p=creeListe(NULL);
-    listeData_p=creeListe(NULL);
-    listeBss_p=creeListe(NULL);
+    listeLexemes_p=creer_liste((fonctionDestructeur *)detruitLexeme);
+    listeText_p=creer_liste(NULL);
+    listeData_p=creer_liste(NULL);
+    listeBss_p=creer_liste(NULL);
 
-	Dictionnaire_t* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
+	struct Dictionnaire_s* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
 
     /* ---------------- do the lexical analysis -------------------*/
     lex_load_file(file, listeLexemes_p, &nbLignes, &nbEtiquettes, &nbInstructions);
@@ -84,7 +84,8 @@ int main ( int argc, char *argv[] ) {
 
 	tableEtiquettes_p=creeTable(nbEtiquettes, clefEtiquette, NULL);
 
-	analyseSyntaxe(listeLexemes_p, mon_dictionnaire_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
+	analyse_syntaxe(listeLexemes_p, mon_dictionnaire_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
+	afficher_table(tableEtiquettes_p);
 
 	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
     tableDefinitionInstructions_p=detruitTable(tableDefinitionInstructions_p);
@@ -103,10 +104,10 @@ int main ( int argc, char *argv[] ) {
 	effaceContenuDictionnaire(mon_dictionnaire_p);
 	free(mon_dictionnaire_p);
 
-	listeText_p=detruitListe(listeText_p);
-    listeData_p=detruitListe(listeData_p);
-    listeBss_p=detruitListe(listeBss_p);
-	listeLexemes_p=detruitListe(listeLexemes_p);
+	listeText_p=detruire_liste(listeText_p);
+    listeData_p=detruire_liste(listeData_p);
+    listeBss_p=detruire_liste(listeBss_p);
+	listeLexemes_p=detruire_liste(listeLexemes_p);
 
     /*
     printf("Hachage B null : %x\n", hashBernstein(NULL));

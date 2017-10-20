@@ -1,6 +1,6 @@
 /**
  * @file syn.h
- * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
+ * @author BERTRAND Antoine TAURAND Sébastien
  * @brief Definition de type et de prototypes de fonctions liées au traitement syntaxique du fichier
  */
 
@@ -9,8 +9,8 @@
 
 #include <stdint.h>
 
-#include "liste.h"
-#include "table.h"
+#include <liste.h>
+#include <table.h>
 
 /**
  * @enum Section_e
@@ -39,7 +39,7 @@ enum Instruction_e {
 };
 
 /**
- * @enum Nature_Donnee_t
+ * @enum Nature_struct Donnee_s
  * @brief Constantes de nature des données
  */
 enum Donnee_e {
@@ -50,81 +50,77 @@ enum Donnee_e {
  	D_ASCIIZ=3				/**<  */
 };
 
-
 /**
  * @struct DefinitionInstruction_s
  * @brief Structure permettant de stocker la définition d'une instruction
  */
-typedef struct DefinitionInstruction_s {
+struct DefinitionInstruction_s {
 	char* nom;						/**< nom de l'instruction */
 	enum Instruction_e nature;		/**< nature de l'instruction */
 	unsigned int nbOperandes;		/**< nombre d'arguments de l'instruction */
-} DefinitionInstruction_t;
+};
 
 /**
  * @struct DefinitionRegistre_s
  * @brief Structure permettant de stocker la correspondance entre le nom du registre et sa valeur
  */
-typedef struct DefinitionRegistre_s {
+struct DefinitionRegistre_s {
 	char* nom;						/**< nom du registre */
 	uint8_t valeur;					/**< nombre d'arguments de l'instruction */
-} DefinitionRegistre_t;
+};
 
-typedef DefinitionInstruction_t Mots_Dictionnaire_t[];
+typedef struct DefinitionInstruction_s Mots_Dictionnaire_t[];
 
 /**
- * @struct Dictionnaire_t
+ * @struct Dictionnaire_s
  * @brief Structure permettant de stocker l'ensemble des définitions d'instruction
  */
-typedef struct Dictionnaire_t {
+struct Dictionnaire_s {
 	int nbMots;							/**< Nombre de mots dans le dictionnaire */
 	Mots_Dictionnaire_t *mots;			/**< Tableau contenant la définition de l'ensemble des instructions */
-} Dictionnaire_t;
+};
 
 /**
  * @struct Instruction_s
  * @brief Elément définissant une instruction machine
  */
 typedef struct Instruction_s {
-	unsigned int ligneSource;				/**< Numéro de ligne source associé à la ligne de lexème traitée */
-	uint32_t decalage;						/**< Décalage de l'instruction */
-	uint32_t opCode;						/**< Code opération de l'instruction */
-	DefinitionInstruction_t *definition_p;	/**< Nom de l'instruction */
-	Lexeme_t *operande1_p;					/**< Lexème de l'opérande 1 */
-	Lexeme_t *operande2_p;					/**< Lexème de l'opérande 2 */
-	Lexeme_t *operande3_p;					/**< Lexème de l'opérande 3 */
+	struct DefinitionInstruction_s *definition_p;	/**< Définition de l'instruction */
+	unsigned int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	uint32_t decalage;								/**< Décalage de l'instruction */
+	Lexeme_t *operande1_p;							/**< Lexème de l'opérande 1 */
+	Lexeme_t *operande2_p;							/**< Lexème de l'opérande 2 */
+	Lexeme_t *operande3_p;							/**< Lexème de l'opérande 3 */
 } Instruction_t;
-
 
 /**
  * @struct Etiquette_s
  * @brief Elément définissant une étiquette
  */
-typedef struct Etiquette_s {
+struct Etiquette_s {
 	Lexeme_t *nom_p;					/**< pointeur vers le Lexème contenant le nom de l'étiquette */
 	unsigned int ligneSource;			/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Section_e section;				/**< Section où se trouve l'étiquette */
 	uint32_t decalage;					/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
-} Etiquette_t;
-
+};
 
 /**
  * @struct Directive_s
  * @brief Elément définissant une directive
  */
-typedef struct Directive_s {
+struct Directive_s {
 	Lexeme_t *nom_directive; 					/**< nom de la directive */
 	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	int nb_operande;						/**< Nombre d'opérande de la directive */
 	uint32_t decalage_operande;				/**< décalage de l'adresse de la directive par rapport à l'étiquette de la section */
 	Lexeme_t *operande;						/**< Opérande suivant la directive */
-} Directive_t;
+};
 
 /**
  * @struct Donnee_s
  * @brief Elément définissant un élément que l'on peut retrouver dans les sections .data ou .bss
  */
-typedef struct Donnee_s {
+struct Donnee_s {
 	Lexeme_t *nom_p;				/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
 	unsigned int ligneSource;		/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Donnee_e type;				/**< Type de la donnée à stocker */
@@ -138,28 +134,16 @@ typedef struct Donnee_s {
 		uint32_t	motNS;
 		uint32_t	nbOctets;
 	} valeur;
-} Donnee_t;
+};
 
-/**
- * @struct Element_databss_t
- * @brief Elément définissant un élément que l'on peut retrouver dans les sections .sata ou .bss
- */
-typedef struct Element_databss_s {
-	Nature_lexeme_t identifiant;			/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
-	union {
-		Etiquette_t etiquette;
-		Directive_t directive;
-	} union_databss;
-} Element_databss_t;
-
-Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire);
-void effaceContenuDictionnaire(Dictionnaire_t *unDictionnaire_p);
-int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot);
+struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire);
+void effaceContenuDictionnaire(struct Dictionnaire_s *unDictionnaire_p);
+int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot);
 
 char *clefDefinitionInstruction(void *donnee_p);
 char *clefEtiquette(void *donnee_p);
 
-void analyseSyntaxe(Liste_t *lignesLexemes_p, Dictionnaire_t *monDictionnaire_p, TableHachage_t *tableEtiquettes_p,
-					Liste_t *listeText_p, Liste_t *listeData_p, Liste_t *listeBss_p);
+void analyse_syntaxe(struct Liste_s *lignesLexemes_p, struct Dictionnaire_s *monDictionnaire_p, struct Table_s *tableEtiquettes_p,
+					struct Liste_s *listeText_p, struct Liste_s *listeData_p, struct Liste_s *listeBss_p);
 
 #endif /* _SYN_H_ */

@@ -68,85 +68,108 @@ void *copiePointeur(void *original_p, size_t taille) {
 /*
  * Function to Initialize Table
  */
-TableHachage_t *creeTable(size_t nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
-	TableHachage_t *htable = calloc(1, sizeof(*htable));
+struct Table_s *creeTable(size_t nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
+	struct Table_s *table_p = calloc(1, sizeof(*table_p));
 
-    if (!htable) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la structure de la table de hachage");
+    if (!table_p) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la structure de la table de hachage");
 
-    htable->nbElementsMax = nbElementsMax;
-    htable->nbElements=0;
-    htable->fnClef_p=fnClef_p;
-    htable->fnDestruction_p=fnDestruction_p;
+    table_p->nbEltsMax = nbElementsMax;
+    table_p->nbElts=0;
+    table_p->fnClef_p=fnClef_p;
+    table_p->fnDestruction_p=fnDestruction_p;
 
-    htable->table = calloc(htable->nbElementsMax, sizeof(*htable->table));
-    if (!htable->table) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la table de hachage");
+    table_p->table = calloc(table_p->nbEltsMax, sizeof(*table_p->table));
+    if (!table_p->table) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la table de hachage");
 
-    return htable;
+    return table_p;
 }
 
 /*
  * Function to Release Table
  */
-TableHachage_t *detruitTable(TableHachage_t *htable) {
+struct Table_s *detruitTable(struct Table_s *table_p) {
 	size_t i;
 
-	if (htable) {
-		for (i=0; i<htable->nbElementsMax; i++)
-			if (htable->table[i]) {
-				if (htable->fnDestruction_p)
-					htable->fnDestruction_p(htable->table[i]);
+	if (table_p) {
+		for (i=0; i<table_p->nbEltsMax; i++)
+			if (table_p->table[i]) {
+				if (table_p->fnDestruction_p)
+					table_p->fnDestruction_p(table_p->table[i]);
 				else
-					free(htable->table[i]);
+					free(table_p->table[i]);
 			}
 
-		free(htable->table);
-		free(htable);
+		free(table_p->table);
+		free(table_p);
 	}
 	return NULL;
 }
 
 /*
+ *
+ */
+void afficher_table(struct Table_s *table_p)
+{
+	size_t i, j;
+	char *clef_p;
+
+	if (table_p) {
+		j=0;
+		for (i=0; i<table_p->nbEltsMax; i++)
+			if (table_p->table[i]) {
+				j++;
+				clef_p = table_p->fnClef_p ? table_p->fnClef_p(table_p->table[i]) : (char *)table_p->table[i];
+				printf("%zu : [%zu] = %s\n", j, i, clef_p);
+			}
+	}
+}
+
+/*
  * Function to Find Element from the table
  */
-size_t indexTable(TableHachage_t *htable_p, char *clef) {
-	size_t hachage = hashKR2(clef) % htable_p->nbElementsMax;
-	size_t pasCyclique = (hashBernstein(clef) % (htable_p->nbElementsMax - 1)) + 1;
+size_t indexTable(struct Table_s *table_p, char *clef)
+{
+	size_t hachage = hashKR2(clef) % table_p->nbEltsMax;
+	size_t pasCyclique = (hashBernstein(clef) % (table_p->nbEltsMax - 1)) + 1;
     /* la clef existe dans la table si le pointeur n'est pas null et que la clef pointée est identique (pour pour gérer les collisions) */
-    while ((htable_p->table[hachage]) &&
-    		(strcmp(clef, (htable_p->fnClef_p ? htable_p->fnClef_p(htable_p->table[hachage]) : (char *)htable_p->table[hachage])))) {
-        hachage = (hachage + pasCyclique) % htable_p->nbElementsMax;
+    while ((table_p->table[hachage]) &&
+    		(strcmp(clef, (table_p->fnClef_p ? table_p->fnClef_p(table_p->table[hachage]) : (char *)table_p->table[hachage])))) {
+        hachage = (hachage + pasCyclique) % table_p->nbEltsMax;
     }
     return hachage;
 }
 
-void *donneeTable(TableHachage_t *htable_p, char *clef) {
-    size_t position = indexTable(htable_p, clef);
-    return htable_p->table[position];
+void *donneeTable(struct Table_s *table_p, char *clef)
+{
+    size_t position = indexTable(table_p, clef);
+    return table_p->table[position];
 }
 
 /*
  * Function to Insert Element into the table - L'élément donnee_p n'est pas recopié et devra rester permanent
  */
-int insereElementTable(TableHachage_t *htable_p, void *donnee_p) {
-	char *clef = (htable_p->fnClef_p ? htable_p->fnClef_p(donnee_p) : donnee_p);
-    size_t position = indexTable(htable_p, clef);
+int insereElementTable(struct Table_s *table_p, void *donnee_p)
+{
+	char *clef = (table_p->fnClef_p ? table_p->fnClef_p(donnee_p) : donnee_p);
+    size_t position = indexTable(table_p, clef);
 
-    if (!htable_p->table[position]) {
-    	htable_p->table[position] = donnee_p;
-    	htable_p->nbElements++;
+    if (!table_p->table[position]) {
+    	table_p->table[position] = donnee_p;
+    	table_p->nbElts++;
     	return TRUE;
     }
     else
     	return FALSE;
 }
 
-int supprimeElementTable(TableHachage_t *htable_p, char *clef) {
-    size_t position = indexTable(htable_p, clef);
+int supprimeElementTable(struct Table_s *table_p, char *clef)
+{
+    size_t position = indexTable(table_p, clef);
 
-    if (htable_p->table[position] && htable_p->fnDestruction_p) {
-    	htable_p->fnDestruction_p(htable_p->table[position]);
-    	htable_p->table[position] = NULL;
-    	htable_p->nbElements--;
+    if (table_p->table[position] && table_p->fnDestruction_p) {
+    	table_p->fnDestruction_p(table_p->table[position]);
+    	table_p->table[position] = NULL;
+    	table_p->nbElts--;
     	return 1;
     }
     else
@@ -157,92 +180,16 @@ int supprimeElementTable(TableHachage_t *htable_p, char *clef) {
  * Function to redimensionneTable the table
  */
 /*
-HashTable_t *redimensionneTable(HashTable_t *htable_p, int newSize) {
+HashTable_t *redimensionneTable(HashTable_t *table_p, size_t newSize) {
 	int i;
-    int size = htable_p->nbElementsMax;
-    void **table = htable_p->table;
-    htable_p = initializeTable(newSize, htable_p->fnClef_p, htable_p->fnDestruction_p);
+    int size = table_p->nbElementsMax;
+    void **table = table_p->table;
+    table_p = initializeTable(newSize, table_p->fnClef_p, table_p->fnDestruction_p);
     for (i = 0; i < size; i++) {
         if (table[i])
-            Insert(htable_p, table[i]);
+            Insert(table_p, table[i]);
     }
     free(table);
-    return htable_p;
+    return table_p;
 }
 */
-
-/*
- * Function to Retrieve the table
- */
-void afficheTableHachage(TableHachage_t *htable_p) {
-	int i;
-    for (i = 0; i < htable_p->nbElementsMax; i++) {
-        char *value = htable_p->fnClef_p(htable_p->table[i]);
-        printf("Position: %d Element: %s\n", (i + 1), value);
-    }
-}
-/*
- * test du fonctionnement
- */
-int test_hachage() {
-    char *value = calloc(1,128);
-
-	int size, i = 1;
-    int choice;
-    TableHachage_t *htable_p;
-
-    /*
-    printf("premier >10 = %u\n", nombrePremierGET(10));
-    printf("premier >11 = %u\n", nombrePremierGET(11));
-    printf("premier >1000 = %u\n", nombrePremierGET(1000));
-    printf("premier >10000 = %u\n", nombrePremierGET(10000));
-    printf("premier >100000 = %u\n", nombrePremierGET(100000));
-    printf("premier >26 = %u\n", nombrePremierGET(26));
-    */
-    while (1) {
-        printf("\n----------------------\n");
-        printf("Operations on Double Hashing\n");
-        printf("\n----------------------\n");
-        printf("1.Initialize size of the table\n");
-        printf("2.Insert element into the table\n");
-        printf("3.Display Hash Table\n");
-        printf("4.redimensionneTable The Table\n");
-        printf("5.Exit\n");
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
-        switch (choice) {
-        case 1:
-            printf("Enter nbElementsMax of the Hash Table: ");
-            scanf("%d", &size);
-            htable_p = creeTable(tailleTableHachageRecommandee(size), NULL, NULL);
-            break;
-        case 2:
-            if (i > htable_p->nbElementsMax) {
-                printf("Table is Full, redimensionneTable the table\n");
-                continue;
-            }
-            printf("Enter element to be inserted: ");
-            scanf("%s", value);
-            insereElementTable(htable_p, strdup(value));
-            i++;
-            break;
-        case 3:
-            afficheTableHachage(htable_p);
-            break;
-        case 4:
-            printf("Enter new nbElementsMax of the Hash Table: ");
-            scanf("%d", &size);
-            /*
-            htable_p = redimensionneTable(htable_p, size);
-            */
-            break;
-        case 5:
-            exit(0);
-        default:
-            printf("\nEnter correct option\n");
-        }
-    }
-
-    free(value);
-    return 0;
-}

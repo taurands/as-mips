@@ -14,29 +14,31 @@
 
 #include <global.h>
 #include <notify.h>
+#include <str_utils.h>
+#include <liste.h>
+#include <table.h>
 #include <lex.h>
 #include <syn.h>
-#include <str_utils.h>
 
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
 const char NATURE_INSTRUCTION[]= {'P', 'R', 'D', 'I', 'r', 'a'};
 const char *NOMS_DATA[] = {".space", ".byte", ".word", ".asciiz"};
 
 char *clefDefinitionInstruction(void *donnee_p) {
-	return (donnee_p ? ((DefinitionInstruction_t *)donnee_p)->nom : NULL);
+	return (donnee_p ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL);
 }
 
 char *clefEtiquette(void *donnee_p) {
-	return (donnee_p ? ((Etiquette_t *)donnee_p)->nom_p->data : NULL);
+	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->nom_p->data : NULL);
 }
 
-Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
+struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire) {
 	char *nomInstruction=calloc(128, sizeof(char));
 	/* char carNature; */
 	int nombreOperandes=0;
 	int i=0;
 
-	Dictionnaire_t* dictionnaireLu_p=calloc(1,sizeof(*dictionnaireLu_p));
+	struct Dictionnaire_s* dictionnaireLu_p=calloc(1,sizeof(*dictionnaireLu_p));
 	if (!dictionnaireLu_p) ERROR_MSG("Plus assez de mémoire pour créer un dictionnaire");
 
 	FILE* f_p=fopen(nomFichierDictionnaire,"r"); /* Ouverture du dictionnaire d'instruction */
@@ -44,7 +46,7 @@ Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 
 	if (1!=fscanf(f_p,"%d",&(dictionnaireLu_p->nbMots))) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
 
-	dictionnaireLu_p->mots=calloc(dictionnaireLu_p->nbMots,sizeof(DefinitionInstruction_t));
+	dictionnaireLu_p->mots=calloc(dictionnaireLu_p->nbMots,sizeof(struct DefinitionInstruction_s));
 	if (!dictionnaireLu_p->mots) ERROR_MSG("Plus assez de mémoire pour créer un dictionnaire");
 
 	while (f_p && (i<dictionnaireLu_p->nbMots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
@@ -70,7 +72,7 @@ Dictionnaire_t *chargeDictionnaire(char *nomFichierDictionnaire) {
 	return dictionnaireLu_p;
 }
 
-void effaceContenuDictionnaire(Dictionnaire_t *unDictionnaire_p) {
+void effaceContenuDictionnaire(struct Dictionnaire_s *unDictionnaire_p) {
 	int i;
 	for (i=0;i<unDictionnaire_p->nbMots; i++)
 		free((*unDictionnaire_p->mots)[i].nom);
@@ -79,7 +81,7 @@ void effaceContenuDictionnaire(Dictionnaire_t *unDictionnaire_p) {
 	unDictionnaire_p->nbMots=0;
 }
 
-int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot) {
+int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot) {
 	/* fonction de recherche dichotomique qui renvoie l'indice où se trouve unMot dans unDictionnaire_p */
 	/* si elle est absente, renvoie -1 */
 
@@ -104,14 +106,14 @@ int indexDictionnaire(Dictionnaire_t *unDictionnaire_p, char *unMot) {
 	return trouve;
 }
 
-void analyseSyntaxePasseCommentaire(ElementListe_t **elementListeLexeme_pp) {
+void analyseSyntaxePasseCommentaire(struct NoeudListe_s **elementListeLexeme_pp) {
 	if ((*elementListeLexeme_pp) && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_COMMENTAIRE) {
 		*elementListeLexeme_pp=(*elementListeLexeme_pp)->suivant_p;
 		DEBUG_MSG("Passe le commentaire");
 	}
 }
 
-void analyseSyntaxeIgonreResteLigne(ElementListe_t **elementListeLexeme_pp) {
+void analyseSyntaxeIgonreResteLigne(struct NoeudListe_s **elementListeLexeme_pp) {
 	Lexeme_t *lexeme_p;
 	while ((*elementListeLexeme_pp) && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
 		DEBUG_MSG("Ignore le lexème (%s|%s)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data);
@@ -119,7 +121,7 @@ void analyseSyntaxeIgonreResteLigne(ElementListe_t **elementListeLexeme_pp) {
 	}
 }
 
-void analyseSyntaxeSection(ElementListe_t **elementListeLexeme_pp, enum Section_e *section_p) {
+void analyseSyntaxeSection(struct NoeudListe_s **elementListeLexeme_pp, enum Section_e *section_p) {
 	enum Section_e i;
 
 	if (*elementListeLexeme_pp && ((Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature != L_FIN_LIGNE) {
@@ -141,7 +143,7 @@ void analyseSyntaxeSection(ElementListe_t **elementListeLexeme_pp, enum Section_
 	}
 }
 
-int suiteEstDataWord(ElementListe_t *elementListeLexeme_p) {
+int suiteEstDataWord(struct NoeudListe_s *elementListeLexeme_p) {
 	int resultat=FALSE;
 	Lexeme_t *lexeme_p;
 
@@ -165,17 +167,17 @@ int suiteEstDataWord(ElementListe_t *elementListeLexeme_p) {
 }
 
 void analyseSyntaxeEtiquette(
-		ElementListe_t **elementListeLexeme_pp,
+		struct NoeudListe_s **elementListeLexeme_pp,
 		enum Section_e section,
 		uint32_t *decalage_p,
-		TableHachage_t *tableEtiquettes_p) {
+		struct Table_s *tableEtiquettes_p) {
 
 	const uint32_t masqueAlignement = 0x00000003; /* Les deux derniers bits doivent être à zéro pour avoir un aligement par mot de 32 bits */
 
 	Lexeme_t *lexeme_p;
 
 	while (*elementListeLexeme_pp && (lexeme_p=(Lexeme_t *)((*elementListeLexeme_pp)->donnee_p))->nature == L_ETIQUETTE) {
-		Etiquette_t *etiquetteCourante_p=malloc(sizeof(*etiquetteCourante_p));
+		struct Etiquette_s *etiquetteCourante_p=malloc(sizeof(*etiquetteCourante_p));
 		if (!etiquetteCourante_p) ERROR_MSG("Impossible de créer une nouvelle étiquette");
 
 		if ((*decalage_p & masqueAlignement) && (section == S_DATA) && (suiteEstDataWord((*elementListeLexeme_pp)->suivant_p))) {
@@ -187,7 +189,7 @@ void analyseSyntaxeEtiquette(
 		etiquetteCourante_p->ligneSource=lexeme_p->ligne;
 
 		if (insereElementTable(tableEtiquettes_p, etiquetteCourante_p)) {
-			DEBUG_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElements, lexeme_p->data, *decalage_p);
+			DEBUG_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElts, lexeme_p->data, *decalage_p);
 		}
 		else {
 			DEBUG_MSG("Erreur, l'étiquette %s était déjà présente", lexeme_p->data);
@@ -199,7 +201,7 @@ void analyseSyntaxeEtiquette(
 }
 
 void analyseSyntaxeInit(
-		ElementListe_t **elementListeLexeme_pp,
+		struct NoeudListe_s **elementListeLexeme_pp,
 		enum Section_e *section_p) {
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
@@ -231,12 +233,12 @@ void analyseSyntaxeInit(
 }
 
 void analyseSyntaxeText(
-		ElementListe_t **elementListeLexeme_pp,
+		struct NoeudListe_s **elementListeLexeme_pp,
 		enum Section_e *section_p,
 		uint32_t *decalage_p,
-		Liste_t *liste_p,
-		TableHachage_t *tableEtiquettes_p,
-		Dictionnaire_t *dictionnaireInstructions_p) {
+		struct Liste_s *liste_p,
+		struct Table_s *tableEtiquettes_p,
+		struct Dictionnaire_s *dictionnaireInstructions_p) {
 
 	analyseSyntaxeSection(elementListeLexeme_pp, section_p);
 
@@ -246,14 +248,14 @@ void analyseSyntaxeText(
 }
 
 void analyseSyntaxeDataBss(
-		ElementListe_t **elementListeLexeme_pp,
+		struct NoeudListe_s **elementListeLexeme_pp,
 		enum Section_e *section_p,
 		uint32_t *decalage_p,
-		Liste_t *liste_p,
-		TableHachage_t *tableEtiquettes_p) {
+		struct Liste_s *liste_p,
+		struct Table_s *tableEtiquettes_p) {
 
 	Lexeme_t *lexeme_p=NULL;
-	Donnee_t *donnee_p;
+	struct Donnee_s *donnee_p;
 	enum Nature_lexeme_e nature;
 	enum Donnee_e typeDonnee;
 	long int nombre;
@@ -304,31 +306,31 @@ void analyseSyntaxeDataBss(
 								if ((typeDonnee==D_BYTE) && (nombre>=0) && (nombre<=UINT8_MAX)) {
 									donnee_p->valeur.octetNS=(uint8_t)nombre;
 									DEBUG_MSG("Ajout d'un byte non signé (%s=%ld) de valeur %" SCNu8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octetNS, *decalage_p);
-									listeAjouteFin(liste_p, donnee_p);
+									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)++;
 								}
 								else if ((typeDonnee==D_BYTE) && (nombre<0) && (nombre>=INT8_MIN)) {
 									donnee_p->valeur.octet=(int8_t)nombre;
 									DEBUG_MSG("Ajout d'un byte signé (%s=%ld) de valeur %" SCNi8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octet, *decalage_p);
-									listeAjouteFin(liste_p, donnee_p);
+									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)++;
 								}
 								else if ((typeDonnee==D_WORD) && (nombre>=0) && (nombre<=UINT32_MAX)) {
 									donnee_p->valeur.motNS=(uint32_t)nombre;
 									DEBUG_MSG("Ajout d'un mot non signé (%s=%ld) de valeur %" SCNu32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.motNS, *decalage_p);
-									listeAjouteFin(liste_p, donnee_p);
+									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)+=4;
 								}
 								else if ((typeDonnee==D_WORD) && (nombre<0) && (nombre>=INT32_MIN)) {
 									donnee_p->valeur.mot=(int32_t)nombre;
 									DEBUG_MSG("Ajout d'un mot signé (%s=%ld) de valeur %" SCNi32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.mot, *decalage_p);
-									listeAjouteFin(liste_p, donnee_p);
+									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)+=4;
 								}
 								else if ((typeDonnee==D_SPACE) && (nombre>=0) && (nombre+*decalage_p<=UINT32_MAX)) {
 									donnee_p->valeur.nbOctets=(uint32_t)nombre;
 									DEBUG_MSG("Ajout d'un espace de (%s=%ld) %" SCNu32 " octets au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.nbOctets, *decalage_p);
-									listeAjouteFin(liste_p, donnee_p);
+									ajouter_fin_liste(liste_p, donnee_p);
 									(*decalage_p)+=donnee_p->valeur.nbOctets;
 								}
 								else {
@@ -343,7 +345,7 @@ void analyseSyntaxeDataBss(
 					}
 					else { /* C'est un symbole, on ne peut pas encore calculer sa valeur mais on met quand même dans la liste*/
 						DEBUG_MSG("Ajout d'un mot symbole (%s=%ld) au décalage %" SCNu32, lexeme_p->data, nombre, *decalage_p);
-						listeAjouteFin(liste_p, donnee_p);
+						ajouter_fin_liste(liste_p, donnee_p);
 						(*decalage_p)+=4;
 						free(donnee_p); /* XXX A supprimer dès que liste modifiée */
 					}
@@ -364,19 +366,20 @@ void analyseSyntaxeDataBss(
 	}
 }
 
-void analyseSyntaxe(
-		Liste_t *lignesLexemes_p,
-		Dictionnaire_t *dictionnaireInstructions_p,
-		TableHachage_t *tableEtiquettes_p,
-		Liste_t *listeText_p,
-		Liste_t *listeData_p,
-		Liste_t *listeBss_p) {
+void analyse_syntaxe(
+		struct Liste_s *lignesLexemes_p,
+		struct Dictionnaire_s *dictionnaireInstructions_p,
+		struct Table_s *tableEtiquettes_p,
+		struct Liste_s *listeText_p,
+		struct Liste_s *listeData_p,
+		struct Liste_s *listeBss_p)
+{
 
 	uint32_t decalageText=0;
-	uint32_t decalageData=2;
+	uint32_t decalageData=0;
 	uint32_t decalageBss=0;
 
-	ElementListe_t *elementListeLexeme_p=NULL;
+	struct NoeudListe_s *elementListeLexeme_p=NULL;
 
 	enum Section_e section=S_INIT;
 

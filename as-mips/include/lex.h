@@ -91,12 +91,12 @@ typedef struct Lexeme_t {
 	int ligne;						/**< Ligne source du lexème */
 } Lexeme_t;
 
-void lex_read_line( char *, Liste_t *listeLexemes_p, unsigned int, unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
-void lex_load_file( char *, Liste_t *listeLexemes_p, unsigned int * ,unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
+void lex_read_line( char *, struct Liste_s *listeLexemes_p, unsigned int, unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
+void lex_load_file( char *, struct Liste_s *listeLexemes_p, unsigned int * ,unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
 void lex_standardise( char*, char*  );
 
 void visualisationLexeme(Lexeme_t * lexeme_p);
-void visualisationListeLexemes(Liste_t * liste_p);
+void visualisationListeLexemes(struct Liste_s * liste_p);
 
 void detruitLexeme(void *Lexeme_p);
 char * etat_lex_to_str(Etat_lex_t etat);

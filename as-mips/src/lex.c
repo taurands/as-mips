@@ -17,6 +17,7 @@
 #include <global.h>
 #include <notify.h>
 #include <lex.h>
+#include <liste.h>
 #include <table.h>
 
 /**
@@ -223,7 +224,7 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  * @brief This function performs lexical analysis of one standardized line.
  *
  */
-void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
+void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nline, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
 
     Lexeme_t lexemeCourant;
 
@@ -254,7 +255,7 @@ void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, un
     		strcpy(lexemeCourant.data, diese_p);
          	lexemeCourant.nature=COMMENTAIRE;
          	lexemeCourant.ligne=nline;
-         	listeAjouteFin(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
+         	ajouter_fin_liste(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
          	break;
         }
         else {
@@ -299,13 +300,13 @@ void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, un
     		strcpy(lexemeCourant.data, token);
          	lexemeCourant.nature=etat;
          	lexemeCourant.ligne=nline;
-         	listeAjouteFin(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
+         	ajouter_fin_liste(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
     	}
     }
     lexemeCourant.data=NULL;
     lexemeCourant.nature=FIN_LIGNE;
     lexemeCourant.ligne=nline;
-    listeAjouteFin(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
+    ajouter_fin_liste(listeLexemes_p, copiePointeur(&lexemeCourant, sizeof(lexemeCourant)));
 }
 
 /**
@@ -315,7 +316,7 @@ void lex_read_line( char * line, Liste_t *listeLexemes_p, unsigned int nline, un
  * @brief This function loads an assembly code from a file into memory.
  *
  */
-void lex_load_file( char *file, Liste_t *listeLexemes_p, unsigned int *nbLignes, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
+void lex_load_file( char *file, struct Liste_s *listeLexemes_p, unsigned int *nbLignes, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
 
     FILE        *fp   = NULL;
     char         line[STRLEN]; /* original source line */
@@ -420,8 +421,8 @@ void visualisationLexeme(Lexeme_t * lexeme_p) {
  * @brief Cette fonction permet de visualiser le contenu d'une liste de lexeme
  *
  */
-void visualisationListeLexemes(Liste_t * liste_p) {
-	ElementListe_t * lexemeCourant_p=liste_p->debut_liste_p;
+void visualisationListeLexemes(struct Liste_s * liste_p) {
+	struct NoeudListe_s * lexemeCourant_p=liste_p->debut_liste_p;
 
 	while (lexemeCourant_p) {
 		visualisationLexeme((Lexeme_t *)lexemeCourant_p->donnee_p);

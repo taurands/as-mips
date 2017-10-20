@@ -25,20 +25,20 @@ void list_with_ints()
   printf("Generating list with the first %d positive numbers...\n", numbers);
  
   int i;
-  Liste_t list;
+  struct Liste_s list;
   initialiseListe(&list, sizeof(int), NULL);
  
   for(i = 1; i <= numbers; i++) {
     listeAjouteFin(&list, &i);
   }
 
-  ElementListe_t *elementCourant_p = list.debut_liste_p;
+  struct NoeudListe_s *elementCourant_p = list.debut_liste_p;
   while (elementCourant_p) {
 	  printf("%d\n",*(int *)elementCourant_p->donnee_p);
 	  elementCourant_p = elementCourant_p->suivant_p;
   }
  
-  detruitListe(&list);
+  detruire_liste(&list);
   printf("Successfully freed %d numbers...\n", numbers);
 }
  
@@ -48,7 +48,7 @@ void list_with_strings()
   const char *names[] = { "David", "Kevin", "Michael", "Craig", "Jimi" };
  
   int i;
-  Liste_t list;
+  struct Liste_s list;
   initialiseListe(&list, sizeof(char *), free_string);
  
   char *name;
@@ -58,13 +58,13 @@ void list_with_strings()
     listeAjouteFin(&list, &name);
   }
  
-  ElementListe_t *elementCourant_p = list.debut_liste_p;
+  struct NoeudListe_s *elementCourant_p = list.debut_liste_p;
   while (elementCourant_p) {
 	  printf("%s\n",*(char **)elementCourant_p->donnee_p);
 	  elementCourant_p = elementCourant_p->suivant_p;
   }
  
-  detruitListe(&list);
+  detruire_liste(&list);
   printf("Successfully freed %d strings...\n", numNames);
 }
  
