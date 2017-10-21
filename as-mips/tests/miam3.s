@@ -1,4 +1,9 @@
 # allons au ru
+
+etiquette_non_autorisee_dans_section_init:
+.set
+NOP
+.byte 12
 .set noreorder
 .text
     Lw $t0 , lunchtime
@@ -13,6 +18,7 @@ boucle:
 byebye:
     JAL viteviteauru
 .data
+titi:
 titi:
 	.byte 255, +4, 077, -066, 0xAA, -0xFF # un petit commentaire pour voir
 .SPACE 512
