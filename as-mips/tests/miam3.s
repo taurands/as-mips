@@ -15,7 +15,7 @@ byebye:
 .data
 titi:
 	.byte 255, +4, 077, -066, 0xAA, -0xFF # un petit commentaire pour voir
-.space 512
+.SPACE 512
 
 lunchtime :toto:toto:.word 12
 .word 9,byebye

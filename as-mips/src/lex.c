@@ -14,6 +14,7 @@
 
 #include <global.h>
 #include <notify.h>
+#include <str_utils.h>
 #include <lex.h>
 #include <liste.h>
 #include <table.h>
@@ -288,9 +289,13 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
         		token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
         		(*nbEtiquettes_p)++;
         	}
-        	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
+        	if (etat==DIRECTIVE) {
+        		token=strlwr(token);
+        	}
+         	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
         		if (debutLigne && etat==SYMBOLE) {
         			etat=L_INSTRUCTION;
+        			token=strupr(token);
         			(*nbInstructions_p)++;
         		}
         		debutLigne=0;

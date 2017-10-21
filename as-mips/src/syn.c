@@ -57,7 +57,6 @@ struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire)
 		if (1 != fscanf(f_p,"%s", nomInstruction)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		if (1 != fscanf(f_p,"%d", &nombreOperandes)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		/* if (1 != fscanf(f_p,"%c", &carNature)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours"); */
-		nomInstruction=strupr(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].nom=strdup(nomInstruction);
 		(*dictionnaireLu_p->mots)[i].nbOperandes=nombreOperandes;
 		if (i) if (strcmp((*dictionnaireLu_p->mots)[i-1].nom, (*dictionnaireLu_p->mots)[i].nom)>=0) ERROR_MSG("Le fichier dictionnaire d'instructions n'est par rangé par ordre alphabétique");
@@ -149,7 +148,6 @@ void mef_directive_section(
 
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp)) {
 		if ((*lexeme_pp)->nature==L_DIRECTIVE) {
-			(*lexeme_pp)->data=strlwr((*lexeme_pp)->data);
 
 			for (i=S_TEXT; i<=S_BSS; i++) { /* on regarde si la directive correspond à un nom de section valide */
 				if (strcmp((*lexeme_pp)->data, NOMS_SECTIONS[i])==0) {
@@ -232,7 +230,6 @@ void mef_section_init(
 {
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp)) {
 		if ((*lexeme_pp)->nature == L_DIRECTIVE) {
-			(*lexeme_pp)->data=strlwr((*lexeme_pp)->data);
 			if (strcmp((*lexeme_pp)->data, ".set")==0) {
 				DEBUG_MSG("La directive \".set\" a été reconnue dans la section initiale");
 				mef_suivant(noeud_lexeme_pp, lexeme_pp);
@@ -258,8 +255,23 @@ void mef_section_text(
 		struct Table_s *tableEtiquettes_p,
 		struct Dictionnaire_s *dictionnaireInstructions_p)
 {
+	int i;
+	struct DefinitionInstruction_s *def_p;
+
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp)) {
 		mef_etiquette(noeud_lexeme_pp, lexeme_pp, S_TEXT, decalage_p, tableEtiquettes_p);
+		if ((*lexeme_pp)->nature == L_INSTRUCTION) {
+			i = indexDictionnaire(dictionnaireInstructions_p, (*lexeme_pp)->data);
+			if (i < 0) {
+				WARNING_MSG("ligne %d, l'instruction %s est inconnue", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+			} else {
+				def_p = &(*dictionnaireInstructions_p->mots)[i];
+				DEBUG_MSG("Prise en compte de l'instruction %s à %d opérandes", def_p->nom, def_p->nbOperandes);
+				mef_suivant(noeud_lexeme_pp, lexeme_pp);
+
+				/* Vérification du nombre d'opérande */
+			}
+		}
 
 		mef_commentaire(noeud_lexeme_pp, lexeme_pp);
 	}
