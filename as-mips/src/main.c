@@ -66,8 +66,6 @@ int main(int argc, char *argv[])
     listeData_p=creer_liste(NULL);
     listeBss_p=creer_liste(NULL);
 
-	struct Dictionnaire_s* mon_dictionnaire_p=chargeDictionnaire("src/dictionnaire_instruction.txt");
-
     /* ---------------- effectue l'analyse lexicale  -------------------*/
     lex_load_file(file, listeLexemes_p, &nbLignes, &nbEtiquettes, &nbInstructions);
 
@@ -77,9 +75,11 @@ int main(int argc, char *argv[])
 
 	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
 	tableEtiquettes_p=creeTable(nbEtiquettes, clefEtiquette, NULL);
+	charge_def_instruction(&tableDefinitionInstructions_p, "src/dictionnaire_instruction.txt");
+	afficher_table(tableDefinitionInstructions_p);
 
 	/* effectue l'analyse syntaxique */
-	analyse_syntaxe(listeLexemes_p, mon_dictionnaire_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
+	analyse_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
 
 	/* affiche les résultats de l'analyse syntaxique */
 	afficher_table(tableEtiquettes_p);
@@ -89,9 +89,6 @@ int main(int argc, char *argv[])
 	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
     tableDefinitionInstructions_p=detruitTable(tableDefinitionInstructions_p);
     tableDefinitionRegistres_p=detruitTable(tableDefinitionRegistres_p);
-
-    effaceContenuDictionnaire(mon_dictionnaire_p);
-	free(mon_dictionnaire_p);
 
 	listeText_p=detruire_liste(listeText_p);
     listeData_p=detruire_liste(listeData_p);

@@ -29,37 +29,46 @@ char *clefDefinitionInstruction(void *donnee_p)
 	return (donnee_p ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL);
 }
 
+void destruction_def_instruction(void *donnee_p)
+{
+	if (donnee_p) {
+		free(((struct DefinitionInstruction_s *)donnee_p)->nom);
+		free(donnee_p);
+	}
+}
+
 char *clefEtiquette(void *donnee_p)
 {
 	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->nom_p->data : NULL);
 }
 
-struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire)
+int charge_def_instruction(struct Table_s **tableDefinitionInstructions_pp, char *nomFichierDictionnaire)
 {
 	char *nomInstruction=calloc(128, sizeof(char));
 	/* char carNature; */
 	int nombreOperandes=0;
 	int i=0;
+	int nb_mots;
 
-	struct Dictionnaire_s* dictionnaireLu_p=calloc(1,sizeof(*dictionnaireLu_p));
-	if (!dictionnaireLu_p) ERROR_MSG("Plus assez de mémoire pour créer un dictionnaire");
+	struct DefinitionInstruction_s *def_instruction_p=NULL;
 
 	FILE* f_p=fopen(nomFichierDictionnaire,"r"); /* Ouverture du dictionnaire d'instruction */
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
-	if (1!=fscanf(f_p,"%d",&(dictionnaireLu_p->nbMots))) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
+	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
+	*tableDefinitionInstructions_pp=creeTable(tailleTableHachageRecommandee(nb_mots), clefDefinitionInstruction, destruction_def_instruction);
 
-	dictionnaireLu_p->mots=calloc(dictionnaireLu_p->nbMots,sizeof(struct DefinitionInstruction_s));
-	if (!dictionnaireLu_p->mots) ERROR_MSG("Plus assez de mémoire pour créer un dictionnaire");
-
-	while (f_p && (i<dictionnaireLu_p->nbMots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
+	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
 		if (1 != fscanf(f_p,"%s", nomInstruction)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		if (1 != fscanf(f_p,"%d", &nombreOperandes)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		/* if (1 != fscanf(f_p,"%c", &carNature)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours"); */
-		(*dictionnaireLu_p->mots)[i].nom=strdup(nomInstruction);
-		(*dictionnaireLu_p->mots)[i].nbOperandes=nombreOperandes;
-		if (i) if (strcmp((*dictionnaireLu_p->mots)[i-1].nom, (*dictionnaireLu_p->mots)[i].nom)>=0) ERROR_MSG("Le fichier dictionnaire d'instructions n'est par rangé par ordre alphabétique");
+
+		def_instruction_p=malloc(sizeof(*def_instruction_p));
+		def_instruction_p->nom=strdup(nomInstruction);
+		def_instruction_p->nbOperandes=nombreOperandes;
+		def_instruction_p->nature=I_PSEUDO;  /* XXX Penser à prendre en compte la nature de l'instruction */
+		insereElementTable(*tableDefinitionInstructions_pp, def_instruction_p);
 		i++;
 	}
 	fclose(f_p);
@@ -71,43 +80,7 @@ struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire)
 	/*  - les données doivent être dans l'ordre alphabétique pour permettre une recherche rapide dichotomique */
 
 	free(nomInstruction);
-	return dictionnaireLu_p;
-}
-
-void effaceContenuDictionnaire(struct Dictionnaire_s *unDictionnaire_p)
-{
-	int i;
-	for (i=0;i<unDictionnaire_p->nbMots; i++)
-		free((*unDictionnaire_p->mots)[i].nom);
-	free(unDictionnaire_p->mots);
-	unDictionnaire_p->mots=NULL;
-	unDictionnaire_p->nbMots=0;
-}
-
-int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot)
-{
-	/* fonction de recherche dichotomique qui renvoie l'indice où se trouve unMot dans unDictionnaire_p */
-	/* si elle est absente, renvoie -1 */
-
-	/* initialisation de ces variables avant la boucle de recherche */
-	int trouve=-1;							/* vaut -1 tant que la valeur n'aura pas été trouvée */
-	int debut=0;  							/* indice de début */
-	int fin=unDictionnaire_p->nbMots-1;  	/* indice de fin */
-
-	int milieu;  							/* indice de "milieu" */
-	int comp; 								/* résultat de la comparaison */
-
-	while((trouve==-1) && (fin>=debut)) {
-		milieu = (debut + fin)/2;  /* on détermine l'indice de milieu */
-		comp=strcmp((*unDictionnaire_p->mots)[milieu].nom,unMot);
-		if (comp>0)
-			fin=milieu-1;
-		else if (comp<0)
-			debut=milieu+1;
-		else
-			trouve=milieu;
-	}
-	return trouve;
+	return SUCCESS;
 }
 
 void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
@@ -253,19 +226,17 @@ void mef_section_text(
 		uint32_t *decalage_p,
 		struct Liste_s *liste_p,
 		struct Table_s *tableEtiquettes_p,
-		struct Dictionnaire_s *dictionnaireInstructions_p)
+		struct Table_s *tableDefinitionInstructions_p)
 {
-	int i;
 	struct DefinitionInstruction_s *def_p;
 
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp)) {
 		mef_etiquette(noeud_lexeme_pp, lexeme_pp, S_TEXT, decalage_p, tableEtiquettes_p);
 		if ((*lexeme_pp)->nature == L_INSTRUCTION) {
-			i = indexDictionnaire(dictionnaireInstructions_p, (*lexeme_pp)->data);
-			if (i < 0) {
+			def_p=(struct DefinitionInstruction_s *)donneeTable(tableDefinitionInstructions_p, (*lexeme_pp)->data);
+			if ((!def_p) || (strcmp(def_p->nom, (*lexeme_pp)->data))) {
 				WARNING_MSG("ligne %d, l'instruction %s est inconnue", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
 			} else {
-				def_p = &(*dictionnaireInstructions_p->mots)[i];
 				DEBUG_MSG("Prise en compte de l'instruction %s à %d opérandes", def_p->nom, def_p->nbOperandes);
 				mef_suivant(noeud_lexeme_pp, lexeme_pp);
 
@@ -381,7 +352,6 @@ void mef_section_data_bss(
 
 void analyse_syntaxe(
 		struct Liste_s *lignesLexemes_p,
-		struct Dictionnaire_s *dictionnaireInstructions_p,
 		struct Table_s *tableDefinitionInstructions_p,
 		struct Table_s *tableDefinitionRegistres_p,
 		struct Table_s *tableEtiquettes_p,
@@ -417,7 +387,7 @@ void analyse_syntaxe(
 				break;
 
 			case S_TEXT:
-				mef_section_text(&noeud_lexeme_p, &lexeme_p, &decalageText, listeText_p, tableEtiquettes_p, dictionnaireInstructions_p);
+				mef_section_text(&noeud_lexeme_p, &lexeme_p, &decalageText, listeText_p, tableEtiquettes_p, tableDefinitionInstructions_p);
 				break;
 
 			case S_DATA:

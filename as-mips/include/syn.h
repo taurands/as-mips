@@ -69,17 +69,6 @@ struct DefinitionRegistre_s {
 	uint8_t valeur;					/**< nombre d'arguments de l'instruction */
 };
 
-typedef struct DefinitionInstruction_s Mots_Dictionnaire_t[];
-
-/**
- * @struct Dictionnaire_s
- * @brief Structure permettant de stocker l'ensemble des définitions d'instruction
- */
-struct Dictionnaire_s {
-	int nbMots;							/**< Nombre de mots dans le dictionnaire */
-	Mots_Dictionnaire_t *mots;			/**< Tableau contenant la définition de l'ensemble des instructions */
-};
-
 /**
  * @struct Instruction_s
  * @brief Elément définissant une instruction machine
@@ -135,15 +124,12 @@ struct Donnee_s {
 		char		*chaine;
 	} valeur;
 };
-
-struct Dictionnaire_s *chargeDictionnaire(char *nomFichierDictionnaire);
-void effaceContenuDictionnaire(struct Dictionnaire_s *unDictionnaire_p);
-int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot);
+int charge_def_instruction(struct Table_s **tableDefinitionInstructions_pp, char *nomFichierDictionnaire);
 
 char *clefDefinitionInstruction(void *donnee_p);
 char *clefEtiquette(void *donnee_p);
 
-void analyse_syntaxe(struct Liste_s *lignesLexemes_p, struct Dictionnaire_s *monDictionnaire_p,
+void analyse_syntaxe(struct Liste_s *lignesLexemes_p,
 		struct Table_s *tableDefinitionInstructions_p, struct Table_s *tableDefinitionRegistres_p, struct Table_s *tableEtiquettes_p,
 		struct Liste_s *listeText_p, struct Liste_s *listeData_p, struct Liste_s *listeBss_p);
 
