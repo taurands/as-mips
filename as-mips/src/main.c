@@ -14,6 +14,7 @@
 #include <lex.h>
 #include <str_utils.h>
 #include <syn.h>
+#include <dico.h>
 #include <table.h>
 
 /**

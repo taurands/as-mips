@@ -24,21 +24,6 @@ enum Section_e {
 };
 
 /**
- * @enum Instruction_e
- * @brief Constantes de nature des instructions du programme assembleur
- *
- * Cela servira à savoir la nature des opérandes ainsi que la façon d'intégrer ces opérandes dans le code opération
- */
-enum Instruction_e {
- 	I_PSEUDO=0,				/**< Pseudo instruction comme NOP */
- 	I_REGISTRE=1,			/**<  */
- 	I_DIRECT=2,				/**<  */
- 	I_BASE_DEPLACEMENT=3,	/**<  */
-	I_ABSOLU=4,				/**<  */
-	I_RELATIF=5				/**<  */
-};
-
-/**
  * @enum Nature_struct Donnee_s
  * @brief Constantes de nature des données
  */
@@ -48,25 +33,6 @@ enum Donnee_e {
  	D_BYTE=1,				/**<  */
  	D_WORD=2,				/**<  */
  	D_ASCIIZ=3				/**<  */
-};
-
-/**
- * @struct DefinitionInstruction_s
- * @brief Structure permettant de stocker la définition d'une instruction
- */
-struct DefinitionInstruction_s {
-	char* nom;						/**< nom de l'instruction */
-	enum Instruction_e nature;		/**< nature de l'instruction */
-	unsigned int nbOperandes;		/**< nombre d'arguments de l'instruction */
-};
-
-/**
- * @struct DefinitionRegistre_s
- * @brief Structure permettant de stocker la correspondance entre le nom du registre et sa valeur
- */
-struct DefinitionRegistre_s {
-	char* nom;						/**< nom du registre */
-	uint8_t valeur;					/**< nombre d'arguments de l'instruction */
 };
 
 /**
@@ -125,10 +91,6 @@ struct Donnee_s {
 	} valeur;
 };
 
-int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier);
-int charge_def_registre(struct Table_s **tableDefinition_pp, char *nomFichier);
-
-char *clefDefinitionInstruction(void *donnee_p);
 char *clefEtiquette(void *donnee_p);
 
 void analyse_syntaxe(struct Liste_s *lignesLexemes_p,
