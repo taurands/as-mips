@@ -259,6 +259,20 @@ void mef_section_text(
 	}
 }
 
+void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
+{
+	if (noeud_lexeme_pp) {
+		if (*noeud_lexeme_pp) {
+			*noeud_lexeme_pp=(struct NoeudListe_s *)(*noeud_lexeme_pp)->suivant_p;
+			if (lexeme_pp)
+				*lexeme_pp=(struct Lexeme_s *)((struct NoeudListe_s *)(*noeud_lexeme_pp)->donnee_p);
+		} else { /* pas de noeud, donc pas de lexeme */
+			if (lexeme_pp)
+				*lexeme_pp=NULL;
+		}
+	}
+}
+
 void mef_section_data_bss(
 		struct NoeudListe_s **noeud_lexeme_pp,
 		enum Section_e *section_p,
@@ -315,41 +329,39 @@ void mef_section_data_bss(
 								DEBUG_MSG("Erreur de conversion numérique");
 								free(donnee_p);
 							} else {
-								if ((typeDonnee==D_BYTE) && (nombre>=0) && (nombre<=UINT8_MAX)) {
-									donnee_p->valeur.octetNS=(uint8_t)nombre;
-									DEBUG_MSG("Ajout d'un byte non signé (%s=%ld) de valeur %" SCNu8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octetNS, *decalage_p);
-									ajouter_fin_liste(liste_p, donnee_p);
-									(*decalage_p)++;
-								} else if ((typeDonnee==D_BYTE) && (nombre<0) && (nombre>=INT8_MIN)) {
-									donnee_p->valeur.octet=(int8_t)nombre;
-									DEBUG_MSG("Ajout d'un byte signé (%s=%ld) de valeur %" SCNi8 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.octet, *decalage_p);
-									ajouter_fin_liste(liste_p, donnee_p);
-									(*decalage_p)++;
-								} else if ((typeDonnee==D_WORD) && (nombre>=0) && (nombre<=UINT32_MAX)) {
-									donnee_p->valeur.motNS=(uint32_t)nombre;
-									DEBUG_MSG("Ajout d'un mot non signé (%s=%ld) de valeur %" SCNu32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.motNS, *decalage_p);
-									ajouter_fin_liste(liste_p, donnee_p);
-									(*decalage_p)+=4;
-								} else if ((typeDonnee==D_WORD) && (nombre<0) && (nombre>=INT32_MIN)) {
-									donnee_p->valeur.mot=(int32_t)nombre;
-									DEBUG_MSG("Ajout d'un mot signé (%s=%ld) de valeur %" SCNi32 " au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.mot, *decalage_p);
-									ajouter_fin_liste(liste_p, donnee_p);
-									(*decalage_p)+=4;
-								} else if ((typeDonnee==D_SPACE) && (nombre>=0) && (nombre+*decalage_p<=UINT32_MAX)) {
-									donnee_p->valeur.nbOctets=(uint32_t)nombre;
-									DEBUG_MSG("Ajout d'un espace de (%s=%ld) %" SCNu32 " octets au décalage %" SCNu32, lexeme_p->data, nombre, donnee_p->valeur.nbOctets, *decalage_p);
-									ajouter_fin_liste(liste_p, donnee_p);
-									(*decalage_p)+=donnee_p->valeur.nbOctets;
-								} else {
-									DEBUG_MSG("Format numérique hors limites (errno=%d)", errno); /* XXX A compléter*/
+								if (((typeDonnee==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
+									((typeDonnee==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
+									((typeDonnee==D_SPACE) && (nombre<=0) && (nombre+*decalage_p>=UINT32_MAX))) {
+
+									DEBUG_MSG("Format numérique hors limites");
 									free(donnee_p);
+								} else {
+									if (typeDonnee==D_BYTE) {
+										if (nombre>=0)
+											donnee_p->valeur.octetNS=(uint8_t)nombre;
+										else
+											donnee_p->valeur.octet=(int8_t)nombre;
+										(*decalage_p)++;
+									} else if (typeDonnee==D_WORD) {
+										if (nombre>=0)
+											donnee_p->valeur.motNS=(uint32_t)nombre;
+										else
+											donnee_p->valeur.mot=(int32_t)nombre;
+										(*decalage_p)+=4;
+									} else { /* typeDonnee==D_SPACE */
+										donnee_p->valeur.nbOctets=(uint32_t)nombre;
+										(*decalage_p)+=donnee_p->valeur.nbOctets;
+									}
+									ajouter_fin_liste(liste_p, donnee_p);
 								}
 							}
 						} else { /* On est sur une chaine ascii */
-
+							/* XXX tester si la chaine n'est pas trop longue ... */
+							donnee_p->valeur.chaine=NULL; /* XXX Ajouter le traitement des chaines de caractère. Nécessite une modification du parser lexical */
+							(*decalage_p)+=1+strlen(donnee_p->valeur.chaine);
 						}
-					} else { /* C'est un symbole, on ne peut pas encore calculer sa valeur mais on met quand même dans la liste*/
-						DEBUG_MSG("Ajout d'un mot symbole %s au décalage %" SCNu32, lexeme_p->data, *decalage_p);
+					} else { /* C'est un symbole (possible inuquement sous .word, on ne peut pas encore calculer sa valeur mais on met quand même dans la liste*/
+						DEBUG_MSG("Ajout d'un mot symbole \"%s\" au décalage %" SCNu32, lexeme_p->data, *decalage_p);
 						ajouter_fin_liste(liste_p, donnee_p);
 						(*decalage_p)+=4;
 					}
