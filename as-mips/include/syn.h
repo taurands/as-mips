@@ -124,7 +124,9 @@ struct Donnee_s {
 		char		*chaine;
 	} valeur;
 };
-int charge_def_instruction(struct Table_s **tableDefinitionInstructions_pp, char *nomFichierDictionnaire);
+
+int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier);
+int charge_def_registre(struct Table_s **tableDefinition_pp, char *nomFichier);
 
 char *clefDefinitionInstruction(void *donnee_p);
 char *clefEtiquette(void *donnee_p);

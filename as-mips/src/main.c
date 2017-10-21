@@ -77,6 +77,8 @@ int main(int argc, char *argv[])
 	tableEtiquettes_p=creeTable(nbEtiquettes, clefEtiquette, NULL);
 	charge_def_instruction(&tableDefinitionInstructions_p, "src/dictionnaire_instruction.txt");
 	afficher_table(tableDefinitionInstructions_p);
+	charge_def_instruction(&tableDefinitionRegistres_p, "src/dictionnaire_registre.txt");
+	afficher_table(tableDefinitionRegistres_p);
 
 	/* effectue l'analyse syntaxique */
 	analyse_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
