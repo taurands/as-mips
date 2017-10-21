@@ -17,7 +17,7 @@ titi:
 	.byte 255, +4, 077, -066, 0xAA, -0xFF # un petit commentaire pour voir
 .SPACE 512
 
-lunchtime :toto:toto:.word 12
+lunchtime :toto:tutu:.word 12
 .word 9,byebye
             .asciiz "", "\"\"", "a a a"
             .asciiz toto

@@ -13,6 +13,8 @@
 #include <table.h>
 #include <dico.h>
 
+const char NATURE_INSTRUCTION[]= {'P', 'R', 'D', 'I', 'r', 'a'};
+
 char *clef_def_instruction(void *donnee_p)
 {
 	return donnee_p ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL;
@@ -53,7 +55,7 @@ int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
 	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
-	*tableDefinition_pp=creeTable(tailleTableHachageRecommandee(nb_mots), clef_def_instruction, destruction_def_instruction);
+	*tableDefinition_pp=creeTable(nb_mots, clef_def_instruction, destruction_def_instruction);
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
@@ -93,13 +95,12 @@ int charge_def_registre(struct Table_s **tableDefinition_pp, char *nomFichier)
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
 	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
-	*tableDefinition_pp=creeTable(tailleTableHachageRecommandee(nb_mots), clef_def_instruction, destruction_def_instruction);
+	*tableDefinition_pp=creeTable(nb_mots, clef_def_registre, destruction_def_registre);
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
 		if (1 != fscanf(f_p,"%s", nom_reg)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		if (1 != fscanf(f_p,"%d", &valeur)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
-		/* if (1 != fscanf(f_p,"%c", &carNature)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours"); */
 
 		def_registre_p=malloc(sizeof(*def_registre_p));
 		def_registre_p->nom=strdup(nom_reg);

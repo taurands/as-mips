@@ -30,6 +30,7 @@ char * etat_lex_to_str(enum Etat_lex_e etat) {
 		case INIT:					return "INIT";
 		case POINT:					return "POINT";
 		case VIRGULE:				return "VIRGULE";
+		case NOMBRE:				return "NOMBRE";
 		case DECIMAL:				return "DECIMAL";
 		case HEXADECIMAL:			return "HEXADECIMAL";
 		case OCTAL:					return "OCTAL";
@@ -289,15 +290,18 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
         		token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
         		(*nbEtiquettes_p)++;
         	}
-        	if (etat==DIRECTIVE) {
-        		token=strlwr(token);
-        	}
          	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
         		if (debutLigne && etat==SYMBOLE) {
         			etat=L_INSTRUCTION;
         			token=strupr(token);
         			(*nbInstructions_p)++;
         		}
+            	if (etat==DIRECTIVE) {
+            		token=strlwr(token);
+            	}
+            	if ((etat==DECIMAL) || (etat==OCTAL) || (etat==HEXADECIMAL)) {
+            		etat=NOMBRE;
+            	}
         		debutLigne=0;
         	}
         	lexeme_p = malloc(sizeof(*lexeme_p));

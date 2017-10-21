@@ -59,12 +59,12 @@ size_t hashBernstein(char *chaine) {
 /*
  * Function to Initialize Table
  */
-struct Table_s *creeTable(size_t nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
+struct Table_s *creeTable(size_t nbElts, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
 	struct Table_s *table_p = calloc(1, sizeof(*table_p));
 
     if (!table_p) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la structure de la table de hachage");
 
-    table_p->nbEltsMax = nbElementsMax;
+    table_p->nbEltsMax = tailleTableHachageRecommandee(nbElts);
     table_p->nbElts=0;
     table_p->fnClef_p=fnClef_p;
     table_p->fnDestruction_p=fnDestruction_p;

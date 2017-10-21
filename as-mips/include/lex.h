@@ -32,6 +32,7 @@ enum Nature_lexeme_e {
  	L_PARENTHESE_OUVRANTE,	/**< '(' utilisé pour adressage indirect. */
  	L_PARENTHESE_FERMANTE,	/**< ')' utilisé pour finir adressage indirect. */
 
+	L_NOMBRE,				/**< Nombre */
 	L_NOMBRE_DECIMAL,		/**< Nombre décimal. */
  	L_NOMBRE_OCTAL,			/**< Nombre octal. */
  	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
@@ -60,6 +61,7 @@ enum Etat_lex_e {
 	PARENTHESE_OUVRANTE=L_PARENTHESE_OUVRANTE,
 	PARENTHESE_FERMANTE=L_PARENTHESE_FERMANTE,
 
+	NOMBRE=L_NOMBRE,
 	DECIMAL=L_NOMBRE_DECIMAL,
 	OCTAL=L_NOMBRE_OCTAL,
 	HEXADECIMAL=L_NOMBRE_HEXADECIMAL,

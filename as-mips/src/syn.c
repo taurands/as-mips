@@ -22,7 +22,6 @@
 #include <syn.h>
 
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
-const char NATURE_INSTRUCTION[]= {'P', 'R', 'D', 'I', 'r', 'a'};
 const char *NOMS_DATA[] = {".space", ".byte", ".word", ".asciiz"};
 
 char *clefEtiquette(void *donnee_p)
@@ -176,22 +175,65 @@ void mef_section_text(
 		struct Table_s *tableDefinitionInstructions_p)
 {
 	struct DefinitionInstruction_s *def_p;
+	struct Instruction_s *instruction_p;
+	int op_a_lire;
 
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp)) {
 		mef_etiquette(noeud_lexeme_pp, lexeme_pp, S_TEXT, decalage_p, tableEtiquettes_p);
 		if ((*lexeme_pp)->nature == L_INSTRUCTION) {
 			def_p=(struct DefinitionInstruction_s *)donneeTable(tableDefinitionInstructions_p, (*lexeme_pp)->data);
 			if ((!def_p) || (strcmp(def_p->nom, (*lexeme_pp)->data))) {
-				WARNING_MSG("ligne %d, l'instruction %s est inconnue", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+				fprintf(stderr, "Erreur syntaxique ligne %d, l'instruction \"%s\" est inconnue.\n", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
 			} else {
-				DEBUG_MSG("Prise en compte de l'instruction %s à %d opérandes", def_p->nom, def_p->nbOperandes);
+				DEBUG_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nbOperandes, *decalage_p);
+
+				instruction_p=calloc(1,sizeof(*instruction_p));
+				instruction_p->definition_p=def_p;
+				instruction_p->ligne=(*lexeme_pp)->ligne;
+				instruction_p->decalage=*decalage_p;
+
+				op_a_lire=def_p->nbOperandes;
 				mef_suivant(noeud_lexeme_pp, lexeme_pp);
 
 				/* Vérification du nombre d'opérande */
+				while (mef_valide(noeud_lexeme_pp, lexeme_pp) && (op_a_lire > 0)) {
+					if (((*lexeme_pp)->nature != L_REGISTRE) && ((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE)) {
+						/* XXX il faudra traiter le cas du commentaire */
+						fprintf(stderr, "Erreur syntaxique ligne %d, l'opérande %s n'est pas de type attendu.\n", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+						free(instruction_p);
+						instruction_p=NULL;
+						break;
+					} else {
+						instruction_p->operandes[instruction_p->definition_p->nbOperandes-(op_a_lire--)]=*lexeme_pp;
+						mef_suivant(noeud_lexeme_pp, lexeme_pp);
+
+						if (mef_valide(noeud_lexeme_pp, lexeme_pp) && (op_a_lire > 0) && ((*lexeme_pp)->nature != L_VIRGULE)) {
+							fprintf(stderr, "Erreur syntaxique ligne %d, \"%s\" n'est pas la virgule attendue.\n", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else if (mef_valide(noeud_lexeme_pp, lexeme_pp)) {
+							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+						}
+					}
+				}
+				if (instruction_p && op_a_lire) {
+					fprintf(stderr, "Erreur syntaxique ligne %d, il manque au moins un opérande.\n", instruction_p->ligne);
+					free(instruction_p);
+					instruction_p=NULL;
+				} else if (instruction_p && (((*lexeme_pp)->nature != L_COMMENTAIRE) || ((*lexeme_pp)->nature != L_FIN_LIGNE))) {
+					DEBUG_MSG("Ajout de l'instruction à la liste");
+					ajouter_fin_liste(liste_p, instruction_p); /* XXX tester */
+					(*decalage_p)+=4;
+					mef_commentaire(noeud_lexeme_pp, lexeme_pp);
+				} else if (instruction_p) {
+					fprintf(stderr, "Erreur syntaxique ligne %d, l'opérande %s n'est pas de type attendu.\n", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+					free(instruction_p);
+					instruction_p=NULL;
+				}
+
 			}
 		}
-
-		mef_commentaire(noeud_lexeme_pp, lexeme_pp);
 	}
 }
 
@@ -227,8 +269,8 @@ void mef_section_data_bss(
 				mef_suivant(noeud_lexeme_pp, lexeme_pp); /* Passe au lexème suivant pour récupérer les arguments */
 
 				while (	((*lexeme_pp) && ((nature=(*lexeme_pp)->nature) || TRUE)) &&
-						((((typeDonnee==D_SPACE) || ((section==S_DATA) && (typeDonnee==D_BYTE))) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) ||	(nature==L_NOMBRE_OCTAL))) ||
-						 ((section==S_DATA) && (typeDonnee==D_WORD) && ((nature==L_NOMBRE_DECIMAL) || (nature==L_NOMBRE_HEXADECIMAL) || (nature==L_NOMBRE_OCTAL) || (nature==L_SYMBOLE))) ||
+						((((typeDonnee==D_SPACE) || ((section==S_DATA) && (typeDonnee==D_BYTE))) && (nature==L_NOMBRE)) ||
+						 ((section==S_DATA) && (typeDonnee==D_WORD) && ((nature==L_NOMBRE) || (nature==L_SYMBOLE))) ||
 						 ((section==S_DATA) && ((typeDonnee==D_ASCIIZ)) && ((nature==L_CHAINE))
 						)
 						)) {

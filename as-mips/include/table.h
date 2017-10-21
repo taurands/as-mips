@@ -30,7 +30,7 @@ size_t tailleTableHachageRecommandee(size_t nbElementsPrevus);
 size_t hashBernstein(char *chaine);
 size_t hashKR2(char *chaine);
 
-struct Table_s *creeTable(size_t nbElementsMax, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
+struct Table_s *creeTable(size_t nbElts, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p);
 struct Table_s *detruitTable(struct Table_s *table_p);
 
 size_t indexTable(struct Table_s *table_p, char *clef);

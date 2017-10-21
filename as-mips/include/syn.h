@@ -41,11 +41,9 @@ enum Donnee_e {
  */
 struct Instruction_s {
 	struct DefinitionInstruction_s *definition_p;	/**< Définition de l'instruction */
-	unsigned int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	unsigned int ligne;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	uint32_t decalage;								/**< Décalage de l'instruction */
-	struct Lexeme_s *operande1_p;							/**< Lexème de l'opérande 1 */
-	struct Lexeme_s *operande2_p;							/**< Lexème de l'opérande 2 */
-	struct Lexeme_s *operande3_p;							/**< Lexème de l'opérande 3 */
+	struct Lexeme_s *operandes[3];							/**< Lexème de l'opérande 1 */
 };
 
 /**
