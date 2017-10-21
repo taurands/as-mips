@@ -84,26 +84,27 @@ struct Dictionnaire_s {
  * @struct Instruction_s
  * @brief Elément définissant une instruction machine
  */
-typedef struct Instruction_s {
+struct Instruction_s {
 	struct DefinitionInstruction_s *definition_p;	/**< Définition de l'instruction */
 	unsigned int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	uint32_t decalage;								/**< Décalage de l'instruction */
 	struct Lexeme_s *operande1_p;							/**< Lexème de l'opérande 1 */
 	struct Lexeme_s *operande2_p;							/**< Lexème de l'opérande 2 */
 	struct Lexeme_s *operande3_p;							/**< Lexème de l'opérande 3 */
-} Instruction_t;
+};
 
 /**
  * @struct Etiquette_s
  * @brief Elément définissant une étiquette
  */
 struct Etiquette_s {
-	struct Lexeme_s *nom_p;					/**< pointeur vers le Lexème contenant le nom de l'étiquette */
+	struct Lexeme_s *nom_p;				/**< pointeur vers le Lexème contenant le nom de l'étiquette */
 	unsigned int ligneSource;			/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Section_e section;				/**< Section où se trouve l'étiquette */
 	uint32_t decalage;					/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
 };
 
+/* XXX A-t-on vraiment besoin de Directive_s ? */
 /**
  * @struct Directive_s
  * @brief Elément définissant une directive
@@ -121,18 +122,17 @@ struct Directive_s {
  * @brief Elément définissant un élément que l'on peut retrouver dans les sections .data ou .bss
  */
 struct Donnee_s {
-	struct Lexeme_s *nom_p;				/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
+	struct Lexeme_s *nom_p;			/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
 	unsigned int ligneSource;		/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Donnee_e type;				/**< Type de la donnée à stocker */
 	uint32_t decalage;				/**< décalage de l'adresse de la donnée par rapport à l'étiquette de la section */
 	union {
 		int8_t		octet;
 		uint8_t		octetNS;
-		char		car;
-		char		*chaine;
 		int32_t		mot;
 		uint32_t	motNS;
 		uint32_t	nbOctets;
+		char		*chaine;
 	} valeur;
 };
 
@@ -143,7 +143,8 @@ int indexDictionnaire(struct Dictionnaire_s *unDictionnaire_p, char *unMot);
 char *clefDefinitionInstruction(void *donnee_p);
 char *clefEtiquette(void *donnee_p);
 
-void analyse_syntaxe(struct Liste_s *lignesLexemes_p, struct Dictionnaire_s *monDictionnaire_p, struct Table_s *tableEtiquettes_p,
-					struct Liste_s *listeText_p, struct Liste_s *listeData_p, struct Liste_s *listeBss_p);
+void analyse_syntaxe(struct Liste_s *lignesLexemes_p, struct Dictionnaire_s *monDictionnaire_p,
+		struct Table_s *tableDefinitionInstructions_p, struct Table_s *tableDefinitionRegistres_p, struct Table_s *tableEtiquettes_p,
+		struct Liste_s *listeText_p, struct Liste_s *listeData_p, struct Liste_s *listeBss_p);
 
 #endif /* _SYN_H_ */
