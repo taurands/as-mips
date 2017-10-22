@@ -13,13 +13,25 @@
 #include <table.h>
 #include <dico.h>
 
-const char TYPE_OPS[]= {'R', 'N', 'B'};
+const char TYPE_OPS[]= {'R', 'N', 'B'}; /* lettres associés à enum Operandes_e à la définition des type syntaxiques des instructions */
 
+/**
+ * @param donnee_p pointeur sur une structure de définition d'instruction
+ * @return chaine de caractère représentant le clef d'identification
+ * @brief Fourni le nom de l'instruction comme clef d'identification (fonction clef pour la table générique)
+ *
+ */
 char *clef_def_instruction(void *donnee_p)
 {
 	return (donnee_p && (struct DefinitionInstruction_s *)donnee_p) ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL;
 }
 
+/**
+ * @param donnee_p pointeur sur une structure de définition d'instruction
+ * @return rien
+ * @brief Détruit et libère la structure pointée (fonction de destruction pour la table générique)
+ *
+ */
 void destruction_def_instruction(void *donnee_p)
 {
 	if (donnee_p) {
@@ -28,11 +40,23 @@ void destruction_def_instruction(void *donnee_p)
 	}
 }
 
+/**
+ * @param donnee_p pointeur sur une structure de définition de registre
+ * @return chaine de caractère représentant le clef d'identification
+ * @brief Fourni le nom du registre comme clef d'identification (fonction clef pour la table générique)
+ *
+ */
 char *clef_def_registre(void *donnee_p)
 {
 	return (donnee_p && (struct DefinitionRegistre_s *)donnee_p) ? ((struct DefinitionRegistre_s *)donnee_p)->nom : NULL;
 }
 
+/**
+ * @param donnee_p pointeur sur une structure de définition de registre
+ * @return rien
+ * @brief Détruit et libère la structure pointée (fonction de destruction pour la table générique)
+ *
+ */
 void destruction_def_registre(void *donnee_p)
 {
 	if (donnee_p) {
@@ -41,6 +65,13 @@ void destruction_def_registre(void *donnee_p)
 	}
 }
 
+/**
+ * @param table_definition_pp Pointeur sur un pointeur de table de hachage générique
+ * @param nom_fichier chaine contenant le nom du fichier à charger
+ * @return SUCCESS si la table de definition des instructions a pu être chargée correctement
+ * @brief Fonction de chargement de la définition des instructions
+ *
+ */
 int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichier)
 {
 	char *nom_instruction=calloc(STRLEN, sizeof(char));
@@ -61,7 +92,7 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 
 		if (1 != fscanf(f_p,"%s", nom_instruction)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
 		if (1 != fscanf(f_p,"%d", &nb_operandes)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nombre d'arguments de l'instruction en cours");
-		if (1 != fscanf(f_p,"%c", &car_nature)) ERROR_MSG("Pas de caractère de type sytaxique pour %s", nom_instruction);
+		if (1 != fscanf(f_p,"%c", &car_nature)) ERROR_MSG("Pas de caractère de type syntaxique pour %s", nom_instruction);
 
 		def_instruction_p=malloc(sizeof(*def_instruction_p));
 		def_instruction_p->nom=strdup(nom_instruction);
@@ -85,6 +116,13 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 	return SUCCESS;
 }
 
+/**
+ * @param table_definition_pp Pointeur sur un pointeur de table de hachage générique
+ * @param nom_fichier chaine contenant le nom du fichier à charger
+ * @return SUCCESS si la table de definition des registres a pu être chargée correctement
+ * @brief Fonction de chargement de la définition des registres
+ *
+ */
 int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 {
 	char *nom_reg=calloc(STRLEN, sizeof(char));

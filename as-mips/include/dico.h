@@ -29,7 +29,7 @@ enum Operandes_e {
 struct DefinitionInstruction_s {
 	char* nom;						/**< nom de l'instruction */
 	enum Operandes_e type_ops;		/**< nature de l'instruction */
-	unsigned int nb_ops;		/**< nombre d'arguments de l'instruction */
+	unsigned int nb_ops;			/**< nombre d'opérandes de l'instruction */
 };
 
 /**
@@ -38,7 +38,7 @@ struct DefinitionInstruction_s {
  */
 struct DefinitionRegistre_s {
 	char* nom;						/**< nom du registre */
-	uint8_t valeur;					/**< nombre d'arguments de l'instruction */
+	uint8_t valeur;					/**< valeur du registren */
 };
 
 char *clef_def_instruction(void *donnee_p);
