@@ -232,7 +232,7 @@ void mef_section_text(
 							instruction_p=NULL;
 							break;
 						} else {
-							instruction_p->operandes[0]=*lexeme_pp;
+							instruction_p->operandes[1]=*lexeme_pp;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
 						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_OUVRANTE)) { /* ( */
@@ -249,7 +249,7 @@ void mef_section_text(
 							instruction_p=NULL;
 							break;
 						} else {
-							instruction_p->operandes[0]=*lexeme_pp;
+							instruction_p->operandes[2]=*lexeme_pp;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
 						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_FERMANTE)) { /* ) */
