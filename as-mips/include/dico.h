@@ -1,7 +1,7 @@
 /**
  * @file dico.h
- * @author BERTRAND Antoine TAURAND Sébastien
- * @brief Definition des dictionnaires et des fonctions liées aux dictionnaires
+ * @author BERTRAND Antoine, TAURAND Sébastien
+ * @brief Definition des types et des prototypes de fonctions liées aux dictionnaires d'instructions et de registres
  */
 
 #ifndef _DICO_H_
@@ -20,21 +20,6 @@ enum Operandes_e {
  	I_OP_N=1,		/**< Pour cette instruction, les opérandes sont des registres séparés par des virgules
  							sauf le dernier qui est un nombre ou un symbole */
  	I_OP_B=2,		/**< Pour cette instruction, on attend "registre" "," "nombre" "(" "registre" ")" */
-};
-
-/**
- * @enum Instruction_e
- * @brief Constantes de nature des instructions du programme assembleur
- *
- * Cela servira à savoir la nature des opérandes ainsi que la façon d'intégrer ces opérandes dans le code opération
- */
-enum Instruction_e {
- 	I_PSEUDO=0,				/**< Pseudo instruction comme NOP */
- 	I_REGISTRE=1,			/**<  */
- 	I_DIRECT=2,				/**<  */
- 	I_BASE_DEPLACEMENT=3,	/**<  */
-	I_ABSOLU=4,				/**<  */
-	I_RELATIF=5				/**<  */
 };
 
 /**
@@ -62,7 +47,7 @@ void destruction_def_instruction(void *donnee_p);
 char *clef_def_registre(void *donnee_p);
 void destruction_def_registre(void *donnee_p);
 
-int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier);
-int charge_def_registre(struct Table_s **tableDefinition_pp, char *nomFichier);
+int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichier);
+int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier);
 
 #endif /* _DICO_H_ */
