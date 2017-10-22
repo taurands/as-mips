@@ -1,4 +1,4 @@
-26  
+27  
 ADD	3
 ADDI	3
 AND	3
@@ -17,6 +17,7 @@ MFLO	1
 MULT	2
 NOP	0
 OR	3
+MOVE	2
 ROTR	3
 SLL	3
 SLT	3
