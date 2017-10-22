@@ -209,58 +209,82 @@ void mef_section_text(
 					/* cas où on ne peut pas avoir un registre */
 					if (instruction_p->definition_p->type_ops==I_OP_B) { /* base offset */
 						/* ici, on va verifier la syntaxe correcte pas lexeme de façon "brute" */
-						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_REGISTRE)) { /* Registre */
-							sprintf(msg_err, "l'opérande %s n'est pas un registre", (*lexeme_pp)->data);
+						op_a_lire=6;
+						if (!mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_REGISTRE)) { /* Registre */
+							if ((*lexeme_pp)->nature == L_FIN_LIGNE)
+								sprintf(msg_err, "il manque un opérande de type registre");
+							else
+								sprintf(msg_err, "l'opérande %s n'est pas un registre", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
 						} else {
 							instruction_p->operandes[0]=*lexeme_pp;
+							op_a_lire--;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
-						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_VIRGULE)) { /* Virgule */
-							sprintf(msg_err, "\"%s\" à la place d'une virgule", (*lexeme_pp)->data);
+						if (!mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_VIRGULE)) { /* Virgule */
+							if ((*lexeme_pp)->nature == L_FIN_LIGNE)
+								sprintf(msg_err, "il manque une virgule");
+							else
+								sprintf(msg_err, "\"%s\" à la place d'une virgule", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
 						} else {
+							op_a_lire--;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
-						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE))) { /* Nombre ou Symbole */
-							sprintf(msg_err, "l'opérande %s n'est pas un nombre ou un symbole", (*lexeme_pp)->data);
+						if (!mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE))) { /* Nombre ou Symbole */
+							if ((*lexeme_pp)->nature == L_FIN_LIGNE)
+								sprintf(msg_err, "il manque un opérande de type nombre ou symbole");
+							else
+								sprintf(msg_err, "l'opérande %s n'est pas un nombre ou un symbole", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
 						} else {
 							instruction_p->operandes[1]=*lexeme_pp;
+							op_a_lire--;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
-						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_OUVRANTE)) { /* ( */
-							sprintf(msg_err, "\"%s\" à la place d'une \"(\"", (*lexeme_pp)->data);
+						if (!mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_OUVRANTE)) { /* ( */
+							if ((*lexeme_pp)->nature == L_FIN_LIGNE)
+								sprintf(msg_err, "il manque une parenthèse ouvrante");
+							else
+								sprintf(msg_err, "\"%s\" à la place d'une \"(\"", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
 						} else {
+							op_a_lire--;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
-						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_REGISTRE)) { /* Registre */
-							sprintf(msg_err, "l'opérande %s n'est pas un registre", (*lexeme_pp)->data);
+						if (!mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_REGISTRE)) { /* Registre */
+							if ((*lexeme_pp)->nature == L_FIN_LIGNE)
+								sprintf(msg_err, "il manque un opérande de type registre");
+							else
+								sprintf(msg_err, "l'opérande %s n'est pas un registre", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
 						} else {
 							instruction_p->operandes[2]=*lexeme_pp;
+							op_a_lire--;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
-						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_FERMANTE)) { /* ) */
-							sprintf(msg_err, "\"%s\" à la place d'une \")\"", (*lexeme_pp)->data);
+						if (!mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_FERMANTE)) { /* ) */
+							if ((*lexeme_pp)->nature == L_FIN_LIGNE)
+								sprintf(msg_err, "il manque une parenthèse fermante");
+							else
+								sprintf(msg_err, "\"%s\" à la place d'une \")\"", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
 						} else {
+							op_a_lire--;
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
 						}
-						op_a_lire=0;
 					} else { /* Instructions de type registre ou immediat */
 						if ((instruction_p->definition_p->type_ops==I_OP_N) && (op_a_lire==1) && (((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE))) {
 							sprintf(msg_err, "l'opérande %s n'est ni un nombre, ni un symbole", (*lexeme_pp)->data);
@@ -402,11 +426,20 @@ void mef_section_data_bss(
 					mef_suivant(noeud_lexeme_pp, lexeme_pp);
 					if ((*lexeme_pp)->nature == L_VIRGULE)
 						mef_suivant(noeud_lexeme_pp, lexeme_pp);
-					else
+					else if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_COMMENTAIRE)) {
+						sprintf(msg_err, "Il manque une virgule avant %s", (*lexeme_pp)->data);
 						break;
+					}
 				} /* fin du while des opérandes valides */
 				mef_commentaire(noeud_lexeme_pp, lexeme_pp, msg_err);
+			} else { /* Directive inconnue */
+				if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err)) {
+					sprintf(msg_err, "le terme %s est incorrect", (*lexeme_pp)->data);
+				}
 			}
+		} /* Pas une directive */
+		if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err)) {
+			sprintf(msg_err, "le terme \"%s\" est incorrect ici", (*lexeme_pp)->data);
 		}
 	}
 }

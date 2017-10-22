@@ -25,8 +25,10 @@ titi:
 
 lunchtime :toto:tutu:.word 12
 .word 9,byebye
-            .asciiz "", "\"\"", "a a a"
+            .asciiz 7, "", "\"\"", "a a a"
             .asciiz toto
             .byte 209,-127
 .bss
-    .space 12,6,7
+    .space 12,6, # commentaire
+    .space 12 13 titi
+    .space 12,
