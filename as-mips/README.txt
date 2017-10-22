@@ -6,6 +6,7 @@ Le répertoire est organisé ainsi :
 │   ├── vide.s
 │   ├── espaces.s
 │   ├── toutes_instructions_valides.s
+│   ├── toutes_instructions_erreurs.s
 │   ├── miam2.s
 │   ├── miam1.s
 │   └── miam.s 
@@ -20,7 +21,7 @@ Le répertoire est organisé ainsi :
 │   ├── dictionnaire_registres.txt
 │   └── dictionnaire_instructions.txt
 ├── include
-│   ├── syn.y
+│   ├── syn.h
 │   ├── lex.h
 │   ├── dico.h
 │   ├── table.h
