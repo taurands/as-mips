@@ -444,19 +444,24 @@ void mef_section_data_bss(
 	}
 }
 
+/**
+ * @return Rien, si ce n'est les données mises à jour par les pointeurs paramètres associés
+ * @brief effectue l'analyse syntaxique de premier niveau d'une liste de lexemes
+ *
+ */
 void analyse_syntaxe(
-		struct Liste_s *lignesLexemes_p,
-		struct Table_s *tableDefinitionInstructions_p,
-		struct Table_s *tableDefinitionRegistres_p,
-		struct Table_s *tableEtiquettes_p,
-		struct Liste_s *listeText_p,
-		struct Liste_s *listeData_p,
-		struct Liste_s *listeBss_p)
+		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
+		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
+		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
+		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
+		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
+		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
+		struct Liste_s *liste_bss_p)				/**< Pointeur sur la liste des réservations des .space de la section .bss */
 {
 
-	uint32_t decalageText=0;
-	uint32_t decalageData=0;
-	uint32_t decalageBss=0;
+	uint32_t decalage_text=0;
+	uint32_t decalage_data=0;
+	uint32_t decalage_bss=0;
 
 	char msg_err[2*STRLEN];
 
@@ -465,9 +470,9 @@ void analyse_syntaxe(
 
 	enum Section_e section=S_INIT;
 
-	if (lignesLexemes_p) {
+	if (lignes_lexemes_p) {
 		msg_err[0]='\0';
-		noeud_lexeme_p=lignesLexemes_p->debut_liste_p;
+		noeud_lexeme_p=lignes_lexemes_p->debut_liste_p;
 		if (noeud_lexeme_p)
 			lexeme_p=(struct Lexeme_s *)noeud_lexeme_p->donnee_p;
 		else
@@ -484,15 +489,15 @@ void analyse_syntaxe(
 				break;
 
 			case S_TEXT:
-				mef_section_text(&noeud_lexeme_p, &lexeme_p, &decalageText, listeText_p, tableEtiquettes_p, tableDefinitionInstructions_p, msg_err);
+				mef_section_text(&noeud_lexeme_p, &lexeme_p, &decalage_text, liste_text_p, table_etiquettes_p, table_def_instructions_p, msg_err);
 				break;
 
 			case S_DATA:
-				mef_section_data_bss(&noeud_lexeme_p, &lexeme_p, section, &decalageData, listeData_p, tableEtiquettes_p, msg_err);
+				mef_section_data_bss(&noeud_lexeme_p, &lexeme_p, section, &decalage_data, liste_data_p, table_etiquettes_p, msg_err);
 				break;
 
 			case S_BSS:
-				mef_section_data_bss(&noeud_lexeme_p, &lexeme_p, section, &decalageBss, listeBss_p, tableEtiquettes_p, msg_err);
+				mef_section_data_bss(&noeud_lexeme_p, &lexeme_p, section, &decalage_bss, liste_bss_p, table_etiquettes_p, msg_err);
 				break;
 
 			default: ERROR_MSG("Cas non prévu, section inconnue");

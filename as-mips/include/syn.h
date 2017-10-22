@@ -41,9 +41,9 @@ enum Donnee_e {
  */
 struct Instruction_s {
 	struct DefinitionInstruction_s *definition_p;	/**< Définition de l'instruction */
-	unsigned int ligne;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	unsigned int ligne;								/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	uint32_t decalage;								/**< Décalage de l'instruction */
-	struct Lexeme_s *operandes[3];							/**< Lexème de l'opérande 1 */
+	struct Lexeme_s *operandes[3];					/**< Lexème de l'opérande 1 */
 };
 
 /**
@@ -55,19 +55,6 @@ struct Etiquette_s {
 	unsigned int ligne;			/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Section_e section;				/**< Section où se trouve l'étiquette */
 	uint32_t decalage;					/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
-};
-
-/* XXX A-t-on vraiment besoin de Directive_s ? */
-/**
- * @struct Directive_s
- * @brief Elément définissant une directive
- */
-struct Directive_s {
-	struct Lexeme_s *nom_directive; 					/**< nom de la directive */
-	int ligneSource;						/**< Numéro de ligne source associé à la ligne de lexème traitée */
-	int nb_operande;						/**< Nombre d'opérande de la directive */
-	uint32_t decalage_operande;				/**< décalage de l'adresse de la directive par rapport à l'étiquette de la section */
-	struct Lexeme_s *operande;						/**< Opérande suivant la directive */
 };
 
 /**
@@ -91,8 +78,8 @@ struct Donnee_s {
 
 char *clefEtiquette(void *donnee_p);
 
-void analyse_syntaxe(struct Liste_s *lignesLexemes_p,
-		struct Table_s *tableDefinitionInstructions_p, struct Table_s *tableDefinitionRegistres_p, struct Table_s *tableEtiquettes_p,
-		struct Liste_s *listeText_p, struct Liste_s *listeData_p, struct Liste_s *listeBss_p);
+void analyse_syntaxe(struct Liste_s *lignes_lexemes_p,
+		struct Table_s *table_def_instructions_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,
+		struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p);
 
 #endif /* _SYN_H_ */

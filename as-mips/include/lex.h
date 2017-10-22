@@ -79,9 +79,8 @@ enum Etat_lex_e {
 	POINT					/**< On a lu un point */
 };
 
-
 /**
- * @struct Lexeme_e
+ * @struct Lexeme_s
  * @brief Type de l'objet Lexeme
  * 
  * La nature des lexème ainsi que leur éventuelle valeur seront ensuite utilisées dans l'analyse syntaxique
