@@ -6,6 +6,16 @@ NOP
 .byte 12
 .set noreorder
 .text
+add $0, $0, $0, $0
+add $0, $0, $0, # eee
+add $0, $0, #
+add $0, $0, 12
+add $0, $0, toto
+add $0, $0,
+add $0, $0
+add $0,
+add $0
+add # pour voir
     Lw $t0 , lunchtime
     LW $6, -0x200($7)
     ADDI $t1,$zero,8

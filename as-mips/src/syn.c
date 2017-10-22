@@ -317,7 +317,7 @@ void mef_section_text(
 					sprintf(msg_err, "il manque %d opérande(s)", op_a_lire);
 					free(instruction_p);
 					instruction_p=NULL;
-				} else if (instruction_p && (((*lexeme_pp)->nature != L_COMMENTAIRE) || ((*lexeme_pp)->nature != L_FIN_LIGNE))) {
+				} else if (instruction_p && (((*lexeme_pp)->nature == L_COMMENTAIRE) || ((*lexeme_pp)->nature == L_FIN_LIGNE))) {
 					char str[STRLEN];
 					str_instruction(instruction_p, str);
 					DEBUG_MSG("%s", str);
