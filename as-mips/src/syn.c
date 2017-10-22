@@ -29,6 +29,17 @@ char *clefEtiquette(void *donnee_p)
 	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->lexeme_p->data : NULL);
 }
 
+void str_instruction(struct Instruction_s * instruction_p, char *str)
+{
+	sprintf(str, "%5d 0x%08x %s %s, %s, %s",
+			instruction_p->ligne,
+			instruction_p->decalage,
+			instruction_p->definition_p->nom,
+			instruction_p->operandes[0] ? instruction_p->operandes[0]->data : "NULL",
+			instruction_p->operandes[1] ? instruction_p->operandes[1]->data : "NULL",
+			instruction_p->operandes[2] ? instruction_p->operandes[2]->data : "NULL");
+}
+
 void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
 {
 	if (noeud_lexeme_pp) {
@@ -45,7 +56,7 @@ int mef_valide(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_p
 void mef_commentaire(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp, char *msg_err)
 {
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature == L_COMMENTAIRE)) {
-		DEBUG_MSG("Passe le commentaire \"%s\"", (*lexeme_pp)->data);
+		INFO_MSG("Passe le commentaire \"%s\"", (*lexeme_pp)->data);
 		mef_suivant(noeud_lexeme_pp, lexeme_pp);
 	}
 }
@@ -123,7 +134,7 @@ void mef_etiquette(
 			DEBUG_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElts, (*lexeme_pp)->data, *decalage_p);
 		}
 		else {
-			sprintf(msg_err, "Erreur de syntaxe ligne %d, l'étiquette %s est déjà présente ligne %d", (*lexeme_pp)->ligne, (*lexeme_pp)->data,
+			sprintf(msg_err, "l'étiquette %s est déjà présente ligne %d", (*lexeme_pp)->data,
 					((struct Etiquette_s *)donneeTable(tableEtiquettes_p, etiquetteCourante_p->lexeme_p->data))->ligne);
 			free(etiquetteCourante_p);
 			etiquetteCourante_p=NULL;
@@ -150,12 +161,12 @@ void mef_section_init(
 				mef_suivant(noeud_lexeme_pp, lexeme_pp);
 				mef_commentaire(noeud_lexeme_pp, lexeme_pp, msg_err);
 			} else if ((*lexeme_pp)->nature==L_SYMBOLE) {
-				sprintf(msg_err, "Erreur de syntaxe ligne %d, \"%s\" n'est pas valide, seule l'option \"noreorder\" est acceptée", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+				sprintf(msg_err, "\"%s\" n'est pas valide, seule l'option \"noreorder\" est acceptée", (*lexeme_pp)->data);
 			} else {
-				sprintf(msg_err, "Erreur de syntaxe ligne %d, il manque l'option \"noreorder\" après le \".set\"",(*lexeme_pp)->ligne);
+				sprintf(msg_err, "il manque l'option \"noreorder\" après le \".set\"");
 			}
 		} else {
-			sprintf(msg_err, "Erreur de syntaxe ligne %d, \"%s\" n'est pas valide, seule la directive \".set\" est autorisée dans cette section", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+			sprintf(msg_err, "\"%s\" n'est pas valide, seule la directive \".set\" est autorisée dans cette section", (*lexeme_pp)->data);
 		}
 	}
 }
@@ -179,9 +190,9 @@ void mef_section_text(
 		if ((*lexeme_pp)->nature == L_INSTRUCTION) {
 			def_p=(struct DefinitionInstruction_s *)donneeTable(tableDefinitionInstructions_p, (*lexeme_pp)->data);
 			if ((!def_p) || (strcmp(def_p->nom, (*lexeme_pp)->data))) {
-				sprintf(msg_err, "Erreur de syntaxe ligne %d, l'instruction \"%s\" est inconnue", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+				sprintf(msg_err, "l'instruction \"%s\" est inconnue", (*lexeme_pp)->data);
 			} else {
-				DEBUG_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nbOperandes, *decalage_p);
+				INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nbOperandes, *decalage_p);
 
 				instruction_p=calloc(1,sizeof(*instruction_p));
 				instruction_p->definition_p=def_p;
@@ -195,7 +206,7 @@ void mef_section_text(
 				while (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (op_a_lire > 0)) {
 					if (((*lexeme_pp)->nature != L_REGISTRE) && ((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE)) {
 						/* XXX il faudra traiter le cas du commentaire */
-						sprintf(msg_err, "Erreur de syntaxe ligne %d, l'opérande %s n'est pas de type attendu", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+						sprintf(msg_err, "l'opérande %s n'est pas de type attendu", (*lexeme_pp)->data);
 						free(instruction_p);
 						instruction_p=NULL;
 						break;
@@ -204,7 +215,7 @@ void mef_section_text(
 						mef_suivant(noeud_lexeme_pp, lexeme_pp);
 
 						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (op_a_lire > 0) && ((*lexeme_pp)->nature != L_VIRGULE)) {
-							sprintf(msg_err, "Erreur de syntaxe ligne %d, \"%s\" à la place d'une virgule", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+							sprintf(msg_err, "\"%s\" à la place d'une virgule", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
@@ -214,16 +225,18 @@ void mef_section_text(
 					}
 				}
 				if (instruction_p && op_a_lire) {
-					sprintf(msg_err, "Erreur de syntaxe ligne %d, il manque au moins un opérande", instruction_p->ligne);
+					sprintf(msg_err, "il manque au moins un opérande");
 					free(instruction_p);
 					instruction_p=NULL;
 				} else if (instruction_p && (((*lexeme_pp)->nature != L_COMMENTAIRE) || ((*lexeme_pp)->nature != L_FIN_LIGNE))) {
-					DEBUG_MSG("Ajout de l'instruction à la liste");
+					char str[STRLEN];
+					str_instruction(instruction_p, str);
+					DEBUG_MSG("%s", str);
 					ajouter_fin_liste(liste_p, instruction_p); /* XXX tester */
 					(*decalage_p)+=4;
 					mef_commentaire(noeud_lexeme_pp, lexeme_pp, msg_err);
 				} else if (instruction_p) {
-					sprintf(msg_err, "Erreur de syntaxe ligne %d, l'opérande %s n'est pas de type attendu", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+					sprintf(msg_err, "l'opérande %s n'est pas de type attendu", (*lexeme_pp)->data);
 					free(instruction_p);
 					instruction_p=NULL;
 				}
@@ -281,14 +294,14 @@ void mef_section_data_bss(
 							errno=0; /* remet le code d'erreur à 0 */
 							nombre=strtol((*lexeme_pp)->data, NULL, 0); /* Convertit la chaine en nombre, avec base automatique */
 							if (errno) {
-								sprintf(msg_err, "Erreur de syntaxe ligne %d, conversion numérique de %s non valide", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+								sprintf(msg_err, "conversion numérique de %s non valide", (*lexeme_pp)->data);
 								free(donnee_p);
 							} else {
 								if (((typeDonnee==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
 									((typeDonnee==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
 									((typeDonnee==D_SPACE) && (nombre<=0) && (nombre+*decalage_p>=UINT32_MAX))) {
 
-									sprintf(msg_err, "Erreur de syntaxe ligne %d, le nombre %s est au delà des valeurs permises", (*lexeme_pp)->ligne, (*lexeme_pp)->data);
+									sprintf(msg_err, "le nombre %s est au delà des valeurs permises", (*lexeme_pp)->data);
 									free(donnee_p);
 								} else {
 									if (typeDonnee==D_BYTE) {
@@ -388,15 +401,15 @@ void analyse_syntaxe(
 			}
 
 			if ('\0' != msg_err[0]) {
-				fprintf(stderr, "%s.\n", msg_err);
+				fprintf(stderr, "Erreur de syntaxe ligne %d, %s.\n", lexeme_p->ligne, msg_err);
 				msg_err[0]='\0';
 			} else if (mef_valide(&noeud_lexeme_p, &lexeme_p, msg_err)) {
-				WARNING_MSG("Erreur de syntaxe ligne %d, la condition d'erreur relative au lexème (%s|%s) est mal traitée", (lexeme_p)->ligne, etat_lex_to_str((lexeme_p)->nature), (lexeme_p)->data);
+				WARNING_MSG("Erreur de syntaxe ligne %d, il manque un message d'erreur de syntaxe relatif au lexème (%s|%s)", (lexeme_p)->ligne, etat_lex_to_str((lexeme_p)->nature), (lexeme_p)->data);
 			}
-			while (mef_valide(&noeud_lexeme_p, &lexeme_p, msg_err))
+			while (mef_valide(&noeud_lexeme_p, &lexeme_p, msg_err)) /* va jusqu'en fin de ligne */
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 
-			DEBUG_MSG("Fin de la ligne %d", lexeme_p->ligne);
+			INFO_MSG("Fin de la ligne %d", lexeme_p->ligne);
 			mef_suivant(&noeud_lexeme_p, &lexeme_p); /* puis on passe à la nouvelle ligne */
 		}
 	}
