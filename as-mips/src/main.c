@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
 
 	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
 	tableEtiquettes_p=creer_table(nbEtiquettes, clefEtiquette, NULL);
-	charge_def_instruction(&tableDefinitionInstructions_p, "src/dictionnaire_instruction.txt");
-	charge_def_registre(&tableDefinitionRegistres_p, "src/dictionnaire_registre.txt");
+	charge_def_instruction(&tableDefinitionInstructions_p, "src/dictionnaire_instructions.txt");
+	charge_def_registre(&tableDefinitionRegistres_p, "src/dictionnaire_registres.txt");
 
 	/* effectue l'analyse syntaxique */
 	analyse_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);

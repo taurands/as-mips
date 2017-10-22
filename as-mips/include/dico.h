@@ -10,7 +10,7 @@
 #include <table.h>
 
 /**
- * @enum Instruction_e
+ * @enum Operandes_e
  * @brief Constantes de nature des instructions du programme assembleur
  *
  * Cela servira à savoir la nature des opérandes ainsi que la façon d'intégrer ces opérandes dans le code opération
