@@ -1,5 +1,5 @@
 /**
- * @file syn.c
+ * @file dico.c
  * @author BERTRAND Antoine, TAURAND Sébastien
  * @brief Definition des fonctions liées aux dictionnaires d'instructions et de registres
  */
