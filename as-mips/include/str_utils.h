@@ -1,7 +1,7 @@
 /**
  * @file str_utils.h
- * @Author Sébastien TAURAND
- * @Brief prototype de fonctions utilitaires sur les strings
+ * @author Sébastien TAURAND
+ * @brief prototype de fonctions utilitaires sur les strings
  */
 
 #ifndef _STR_UTILS_H_

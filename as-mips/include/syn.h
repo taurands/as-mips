@@ -24,15 +24,15 @@ enum Section_e {
 };
 
 /**
- * @enum Nature_struct Donnee_s
+ * @enum Donnee_e
  * @brief Constantes de nature des données
  */
 enum Donnee_e {
-	D_UNDEF=-1,
- 	D_SPACE=0,				/**<  */
- 	D_BYTE=1,				/**<  */
- 	D_WORD=2,				/**<  */
- 	D_ASCIIZ=3				/**<  */
+	D_UNDEF=-1,				/**< Nature indéfinie */
+ 	D_SPACE=0,				/**< Réservace d'espace */
+ 	D_BYTE=1,				/**< Octet */
+ 	D_WORD=2,				/**< Mot de 32 bits */
+ 	D_ASCIIZ=3				/**< Chaine de caractère avec '\0` à la fin */
 };
 
 /**

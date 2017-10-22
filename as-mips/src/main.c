@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    listeLexemes_p=creer_liste((fonctionDestructeur *)detruitLexeme);
+    listeLexemes_p=creer_liste((fonctionDestructeur *)detruit_lexeme);
     listeText_p=creer_liste(NULL);
     listeData_p=creer_liste(NULL);
     listeBss_p=creer_liste(NULL);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
     /* ---------------- print the lexical analysis -------------------*/
     DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nbLignes, nbEtiquettes, nbInstructions);
-	visualisationListeLexemes(listeLexemes_p);
+	visualisation_liste_lexemes(listeLexemes_p);
 
 	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
 	tableEtiquettes_p=creer_table(nbEtiquettes, clefEtiquette, NULL);

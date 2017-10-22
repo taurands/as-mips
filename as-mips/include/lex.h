@@ -92,15 +92,15 @@ struct Lexeme_s {
 	int ligne;						/**< Ligne source du lexème */
 };
 
-void lex_read_line( char *, struct Liste_s *listeLexemes_p, unsigned int, unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
-void lex_load_file( char *, struct Liste_s *listeLexemes_p, unsigned int * ,unsigned int *nbEtiquettes, unsigned int *nbInstructions_p);
-void lex_standardise( char*, char*  );
+void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p);
+void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p);
+void lex_standardise(char* in, char* out);
 
-void visualisationLexeme(struct Lexeme_s * lexeme_p);
-void visualisationListeLexemes(struct Liste_s * liste_p);
+void visualisation_lexeme(struct Lexeme_s * lexeme_p);
+void visualisation_liste_lexemes(struct Liste_s * liste_p);
 
-void detruitLexeme(void *Lexeme_p);
-char * etat_lex_to_str(enum Etat_lex_e etat);
+void detruit_lexeme(void *lexeme_p);
+char *etat_lex_to_str(enum Etat_lex_e etat);
 
 #endif /* _LEX_H_ */
 

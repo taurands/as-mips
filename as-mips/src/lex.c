@@ -25,7 +25,8 @@
  * @brief Cette fonction permet de donne le mon correspondant à un état
  *
  */	
-char * etat_lex_to_str(enum Etat_lex_e etat) {
+char *etat_lex_to_str(enum Etat_lex_e etat)
+{
 	switch(etat) {
 		case INIT:					return "INIT";
 		case POINT:					return "POINT";
@@ -61,7 +62,8 @@ char * etat_lex_to_str(enum Etat_lex_e etat) {
  * @brief Cette fonction catégorise un lexème en analysant le(s) caractère(s) le composant.
  *
  */
-enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c) {
+enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
+{
 
 /**	@dot
  *	digraph Machine_Etat_Lex {
@@ -217,14 +219,16 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c) {
 }
 
 /**
- * @param line String of the line of source code to be analysed.
- * @param nline the line number in the source code.
- * @return should return the collection of lexemes that represent the input line of source code.
- * @brief This function performs lexical analysis of one standardized line.
- *
+ * @param ligne chaine contenant la ligne du fichier source assembleur à analyser
+ * @param liste_lexemes_p pointeur sur la liste de lexèmes servant à stoquer les lexèmes qui seront extraits dans l'analyses
+ * @param num_ligne le numéro de la ligne dans le fichier source
+ * @param nb_etiquettes_p un pointeur sur le nombre d'étiquette que l'on trouvera dans l'analyse
+ * @param nb_instructions_p un pointeur sur le nombre d'instructions que l'on trouvera à priori dans l'analyse
+ * @return Rien, si ce n'est la liste de lexème mise à jour ainsi les nombres d'étiquettes et d'instructions
+ * @brief Cette fonction fait l'analyse lexicale d'un ligne ayant subi une "standardisation" (pre-processing)
  */
-void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nline, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
-
+void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
+{
     struct Lexeme_s *lexeme_p;
 
 	enum Etat_lex_e etat;
@@ -237,7 +241,7 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
     char save[2*STRLEN];
 
     /* copy the input line so that we can do anything with it without impacting outside world*/
-    memcpy( save, line, 2*STRLEN );
+    memcpy( save, ligne, 2*STRLEN );
 
     /* get each token*/
     for( token = strtok( save, seps ); NULL != token; token = strtok( NULL, seps )) {
@@ -249,14 +253,14 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
         }
         
         if (etat==COMMENTAIRE) {
-         	char * diese_p=strchr(line,'#');
+         	char * diese_p=strchr(ligne,'#');
 
          	lexeme_p = malloc(sizeof(*lexeme_p));
          	if (!(lexeme_p->data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
     		strcpy(lexeme_p->data, diese_p);
          	lexeme_p->nature=COMMENTAIRE;
-         	lexeme_p->ligne=nline;
-         	ajouter_fin_liste(listeLexemes_p, lexeme_p);
+         	lexeme_p->ligne=num_ligne;
+         	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
          	break;
         }
         else {
@@ -288,13 +292,13 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
         	}
         	if (etat==ETIQUETTE) {
         		token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
-        		(*nbEtiquettes_p)++;
+        		(*nb_etiquettes_p)++;
         	}
          	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
         		if (debutLigne && etat==SYMBOLE) {
         			etat=L_INSTRUCTION;
         			token=strupr(token);
-        			(*nbInstructions_p)++;
+        			(*nb_instructions_p)++;
         		}
             	if (etat==DIRECTIVE) {
             		token=strlwr(token);
@@ -309,8 +313,8 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
          	if (!(lexeme_p->data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
     		strcpy(lexeme_p->data, token);
          	lexeme_p->nature=etat;
-         	lexeme_p->ligne=nline;
-         	ajouter_fin_liste(listeLexemes_p, lexeme_p);
+         	lexeme_p->ligne=num_ligne;
+         	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
     	}
     }
 
@@ -319,45 +323,49 @@ void lex_read_line( char * line, struct Liste_s *listeLexemes_p, unsigned int nl
 
     lexeme_p->data=NULL;
     lexeme_p->nature=FIN_LIGNE;
-    lexeme_p->ligne=nline;
-    ajouter_fin_liste(listeLexemes_p, lexeme_p);
+    lexeme_p->ligne=num_ligne;
+    ajouter_fin_liste(liste_lexemes_p, lexeme_p);
 }
 
 /**
- * @param file Assembly source code file name.
- * @param nbLignes Pointer to the number of lines in the file.
- * @return should return the collection of lexemes
- * @brief This function loads an assembly code from a file into memory.
+ * @param nom_fichier Le nom du fichier source asssembleur
+ * @param liste_lexemes_p Un pointeur sur une liste (générique) de lexèmes
+ * @param nb_lignes_p Le pointeur vers le compteur de nombre de lignes
+ * @param nb_etiquettes_p Le pointeur vers le compteur de nombre d'étiquettes
+ * @param nb_instructions_p Le pointeur vers le compteur de nombre d'instructions
+ * @return Rien. Si ce n'est la liste générique de lexèmes ainsi que les nombres de lignes, d'instructions et d'étiquettes
+ * @brief Cette fonction charge le fichier assembleur et effectue sont analyse lexicale
  *
  */
-void lex_load_file( char *file, struct Liste_s *listeLexemes_p, unsigned int *nbLignes, unsigned int *nbEtiquettes_p, unsigned int *nbInstructions_p) {
+void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
+{
 
     FILE        *fp   = NULL;
     char         line[STRLEN]; /* original source line */
     char         res[2*STRLEN]; /* standardised source line, can be longeur due to some possible added spaces*/
     
-    fp = fopen( file, "r" );
+    fp = fopen( nom_fichier, "r" );
     if ( NULL == fp ) {
         /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
-        ERROR_MSG("Impossible d'ouvrir le fichier \"%s\". Abandon du traitement",file);
+        ERROR_MSG("Impossible d'ouvrir le fichier \"%s\". Abandon du traitement",nom_fichier);
     }
-    *nbLignes = 0;
+    *nb_lignes_p = 0;
 
     while(!feof(fp)) {
         /*read source code line-by-line */
         if ( NULL != fgets( line, STRLEN-1, fp ) ) {
             if (strlen(line)) if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';  /* remove final '\n' */
-            (*nbLignes)++;
+            (*nb_lignes_p)++;
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
-                lex_read_line( res, listeLexemes_p, *nbLignes, nbEtiquettes_p, nbInstructions_p );
+                lex_read_line( res, liste_lexemes_p, *nb_lignes_p, nb_etiquettes_p, nb_instructions_p );
             }
         }       
     }
 
     fclose(fp);
-    if (!*nbLignes) WARNING_MSG("Attention, le fichier \"%s\" est vide",file);
+    if (!*nb_lignes_p) WARNING_MSG("Attention, le fichier \"%s\" est vide", nom_fichier);
 }
 
 /**
@@ -365,11 +373,11 @@ void lex_load_file( char *file, struct Liste_s *listeLexemes_p, unsigned int *nb
  * @param out Line of source code in a suitable form for further analysis.
  * @return nothing
  * @brief This function will prepare a line of source code for further analysis.
+ *
+ * Aucun changement de casse n'est effectué à ce niveau
  */
-
-/* note that MIPS assembly supports distinctions between lower and upper case*/
-void lex_standardise( char* in, char* out ) {
-
+void lex_standardise(char* in, char* out)
+{
     unsigned int i, j;
     const char * ESPACE_AVANT = "#$,-()+";
     const char * PAS_ESPACE_AVANT = ":";
@@ -413,33 +421,44 @@ void lex_standardise( char* in, char* out ) {
     DEBUG_MSG("out = \"%s\"", out);
 }
 
-void detruitLexeme(void *Lexeme_p) {
+/**
+ * @param lexeme_p pointeur sur un lexeme à détruire
+ * @return Rien
+ * @brief Cette fonction permet de détuire et libérer le contenu d'un lexème
+ *
+ * Cela inclut en particulier la chaine représentation le contenu du lexème.
+ * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
+ */
+void detruit_lexeme(void *lexeme_p)
+{
 	INFO_MSG("Lexeme: %p ... %s",Lexeme_p,((struct Lexeme_s *)Lexeme_p)->data);
-	free(((struct Lexeme_s *)Lexeme_p)->data);
-	free(Lexeme_p);
+	free(((struct Lexeme_s *)lexeme_p)->data);
+	free(lexeme_p);
 }
 
 /**
  * @param lexeme_p pointeur sur un lexeme
- * @return nothing
+ * @return Rien, si ce n'est l'affichage
  * @brief Cette fonction permet de visualiser le contenu d'un lexeme
  *
  */
-void visualisationLexeme(struct Lexeme_s * lexeme_p) {
+void visualisation_lexeme(struct Lexeme_s * lexeme_p)
+{
 	printf("(%s|%s|%d)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data, lexeme_p->ligne);
 }
 
 /**
- * @param debut_liste_p pointeur sur le début d'une liste de lexeme
- * @return nothing
+ * @param liste_p pointeur sur une liste de (générique) de lexèmes
+ * @return rien
  * @brief Cette fonction permet de visualiser le contenu d'une liste de lexeme
  *
  */
-void visualisationListeLexemes(struct Liste_s * liste_p) {
+void visualisation_liste_lexemes(struct Liste_s * liste_p)
+{
 	struct NoeudListe_s * lexemeCourant_p=liste_p->debut_liste_p;
 
 	while (lexemeCourant_p) {
-		visualisationLexeme((struct Lexeme_s *)lexemeCourant_p->donnee_p);
+		visualisation_lexeme((struct Lexeme_s *)lexemeCourant_p->donnee_p);
 		if (((struct Lexeme_s *)lexemeCourant_p->donnee_p)->nature == L_FIN_LIGNE)
 			printf("\n");
 		else

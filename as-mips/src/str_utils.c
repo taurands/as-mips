@@ -1,7 +1,7 @@
 /**
  * @file str_utils.c
- * @Author Sébastien TAURAND
- * @Brief définition de fonctions utilitaires sur les strings
+ * @author Sébastien TAURAND
+ * @brief définition de fonctions utilitaires sur les strings
  */
 
 #include <stdlib.h>

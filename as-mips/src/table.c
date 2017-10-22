@@ -84,21 +84,22 @@ size_t hashBernstein(char *chaine) {
 }
 
 /**
- * @param table_p pointeur sur une table de hachage générique
- * @param fnClef_p pointeur sur une fonction permettant de renvoyer la clef d'identification à partir du pointeur sur l'élément
- * @param fnDestruction_p p pointeur sur une fonction permettant de détruire les données liées aux éléments eux-mêmes
+ * @param nb_elts nombre d'élements minimal que la table devra pouvoir acceuillir
+ * @param fn_clef_p pointeur sur une fonction permettant de renvoyer la clef d'identification à partir du pointeur sur l'élément
+ * @param fn_destruction_p p pointeur sur une fonction permettant de détruire les données liées aux éléments eux-mêmes
  * @return pointeur sur la table de hachage générique créée
  * @brief Crée une table de hachage générique
  */
-struct Table_s *creer_table(size_t nbElts, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
+struct Table_s *creer_table(size_t nb_elts, fonctionClef *fn_clef_p, fonctionDestruction *fn_destruction_p)
+{
 	struct Table_s *table_p = calloc(1, sizeof(*table_p));
 
     if (!table_p) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la structure de la table de hachage");
 
-    table_p->nbEltsMax = tailleTableHachageRecommandee(nbElts);
+    table_p->nbEltsMax = tailleTableHachageRecommandee(nb_elts);
     table_p->nbElts=0;
-    table_p->fnClef_p=fnClef_p;
-    table_p->fnDestruction_p=fnDestruction_p;
+    table_p->fnClef_p=fn_clef_p;
+    table_p->fnDestruction_p=fn_destruction_p;
 
     table_p->table = calloc(table_p->nbEltsMax, sizeof(*table_p->table));
     if (!table_p->table) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la table de hachage");
