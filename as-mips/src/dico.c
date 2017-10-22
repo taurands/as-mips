@@ -17,7 +17,7 @@ const char NATURE_INSTRUCTION[]= {'P', 'R', 'D', 'I', 'r', 'a'};
 
 char *clef_def_instruction(void *donnee_p)
 {
-	return donnee_p ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL;
+	return (donnee_p && (struct DefinitionInstruction_s *)donnee_p) ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL;
 }
 
 void destruction_def_instruction(void *donnee_p)
@@ -30,7 +30,7 @@ void destruction_def_instruction(void *donnee_p)
 
 char *clef_def_registre(void *donnee_p)
 {
-	return donnee_p ? ((struct DefinitionRegistre_s *)donnee_p)->nom : NULL;
+	return (donnee_p && (struct DefinitionRegistre_s *)donnee_p) ? ((struct DefinitionRegistre_s *)donnee_p)->nom : NULL;
 }
 
 void destruction_def_registre(void *donnee_p)
@@ -44,7 +44,7 @@ void destruction_def_registre(void *donnee_p)
 int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier)
 {
 	char *nomInstruction=calloc(128, sizeof(char));
-	/* char carNature; */
+	char carNature;
 	int nombreOperandes=0;
 	int i=0;
 	int nb_mots;
@@ -61,7 +61,7 @@ int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier
 
 		if (1 != fscanf(f_p,"%s", nomInstruction)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
 		if (1 != fscanf(f_p,"%d", &nombreOperandes)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours");
-		/* if (1 != fscanf(f_p,"%c", &carNature)) ERROR_MSG("La ligne du dictionnaire ne comprennait pas le nom et/ou le nombre d'arguments de l'instruction en cours"); */
+		if (1 != fscanf(f_p,"%c", &carNature)) ERROR_MSG("Pas de caractère de type pour %s", nomInstruction);
 
 		def_instruction_p=malloc(sizeof(*def_instruction_p));
 		def_instruction_p->nom=strdup(nomInstruction);
