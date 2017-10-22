@@ -130,12 +130,12 @@ void mef_etiquette(
 		etiquetteCourante_p->decalage=*decalage_p;
 		etiquetteCourante_p->ligne=(*lexeme_pp)->ligne;
 
-		if (insereElementTable(tableEtiquettes_p, etiquetteCourante_p)) {
+		if (SUCCESS==ajouter_table(tableEtiquettes_p, etiquetteCourante_p)) {
 			DEBUG_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElts, (*lexeme_pp)->data, *decalage_p);
 		}
 		else {
 			sprintf(msg_err, "l'étiquette %s est déjà présente ligne %d", (*lexeme_pp)->data,
-					((struct Etiquette_s *)donneeTable(tableEtiquettes_p, etiquetteCourante_p->lexeme_p->data))->ligne);
+					((struct Etiquette_s *)donnee_table(tableEtiquettes_p, etiquetteCourante_p->lexeme_p->data))->ligne);
 			free(etiquetteCourante_p);
 			etiquetteCourante_p=NULL;
 		}
@@ -189,7 +189,7 @@ void mef_section_text(
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err)) {
 		mef_etiquette(noeud_lexeme_pp, lexeme_pp, S_TEXT, decalage_p, tableEtiquettes_p, msg_err);
 		if ((*lexeme_pp)->nature == L_INSTRUCTION) {
-			def_p=(struct DefinitionInstruction_s *)donneeTable(tableDefinitionInstructions_p, (*lexeme_pp)->data);
+			def_p=(struct DefinitionInstruction_s *)donnee_table(tableDefinitionInstructions_p, (*lexeme_pp)->data);
 			if ((!def_p) || (strcmp(def_p->nom, (*lexeme_pp)->data))) {
 				sprintf(msg_err, "l'instruction \"%s\" est inconnue", (*lexeme_pp)->data);
 			} else {

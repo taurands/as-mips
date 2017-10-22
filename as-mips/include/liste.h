@@ -30,8 +30,8 @@ struct Liste_s {
 	fonctionDestructeur *fnDestructeur_p;	/**< Pointeur sur la fonction de destruction d'un élément de liste. NULL s'il n'y a pas de destructeur associé */
 };
 
-struct Liste_s *creer_liste (fonctionDestructeur *freeFn);
-struct Liste_s *detruire_liste (struct Liste_s *liste_p);
+struct Liste_s *creer_liste(fonctionDestructeur *freeFn);
+struct Liste_s *detruire_liste(struct Liste_s *liste_p);
 
 void ajouter_debut_liste(struct Liste_s *liste_p, void *donnee_p);
 void ajouter_fin_liste(struct Liste_s *liste_p, void *donnee_p);

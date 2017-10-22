@@ -1,7 +1,9 @@
 /**
  * @file table.c
- * @author BERTRAND Antoine TAURAND Sébastien
- * @brief Definition de fonctions de dictionnaire par fonction de hachage
+ * @author BERTRAND Antoine, TAURAND Sébastien
+ * @brief Definition de fonctions pour les tables de hachage génériques
+ *
+ * L'implémentation utilise un double hachage afin d'éviter de gérer les collisions avec des listes chainées.
  */
 
 #include <stdint.h>
@@ -10,10 +12,17 @@
 #include <string.h>
 
 #include <global.h>
-#include <str_utils.h>
 #include <notify.h>
 #include <table.h>
 
+/**
+ * @param nombre
+ * @return le nombre premier recherché
+ * @brief Renvoie le plus petit nombre premier supérieur ou égal à nombre
+ *
+ * Algorithme basique mais utilisant quand même un crible d'Ératosthène sur les multiples de 2 ainsi que
+ * l'arrêt de la recherche des diviseurs au delà de la racine carrée du nombre (sans calculer la racine bien sûr).
+ */
 size_t nombrePremierGET(size_t nombre) {
 	size_t diviseur;
 	if (!(nombre%2)) nombre++; /* si pair, +1 le rend impair (les multiples de 2 ne sont pas premiers) */
@@ -27,13 +36,26 @@ size_t nombrePremierGET(size_t nombre) {
 	return nombre;
 }
 
+/**
+ * @param nbElementsPrevus nombre d'éléments prévus
+ * @return La taille recommandée
+ * @brief Donne le "bon" dimensionnement pour une table à double hachage
+ *
+ * le facteur de charge recommandé pour un double hachage est entre 50% et 80%.
+ * Le choix effectué ici le place à 2/3. La taille de la table est un nombre premier
+ * afin d'avoir un groupe cyclique pour la deuxième clef de hachage
+ */
 size_t tailleTableHachageRecommandee(size_t nbElementsPrevus) {
-	/* le facteur de charge recommandé pour un double hachage est entre 50% et 80% */
-	/* Le choix suivant le place à 2/3 (2/(2+1)). La taille de la table doit être un nombre premier */
-	/* afin d'avoir un groupe cyclique pour la deuxième clef de hachage */
 	return nombrePremierGET(nbElementsPrevus + (nbElementsPrevus >> 1));
 }
 
+/**
+ * @param chaine chaine de caractères contenant la clef à hacher
+ * @return valeur du hachage
+ * @brief Renvoie une valeur de hachage suivant la définition de la deuxième version du livre de K & R.
+ *
+ * Cette fonction est très similaire à la fonction de hachage de chaine de JAVA
+ */
 size_t hashKR2(char *chaine) {
 	size_t hachage = 0;
 	size_t caractere;
@@ -45,6 +67,11 @@ size_t hashKR2(char *chaine) {
     return hachage;
 }
 
+/**
+ * @param chaine chaine de caractères contenant la clef à hacher
+ * @return valeur du hachage
+ * @brief Renvoie une valeur de hachage suivant la définition de Bernstein.
+ */
 size_t hashBernstein(char *chaine) {
 	size_t hachage = 5381;
 	size_t caractere;
@@ -56,10 +83,14 @@ size_t hashBernstein(char *chaine) {
     return hachage;
 }
 
-/*
- * Function to Initialize Table
+/**
+ * @param table_p pointeur sur une table de hachage générique
+ * @param fnClef_p pointeur sur une fonction permettant de renvoyer la clef d'identification à partir du pointeur sur l'élément
+ * @param fnDestruction_p p pointeur sur une fonction permettant de détruire les données liées aux éléments eux-mêmes
+ * @return pointeur sur la table de hachage générique créée
+ * @brief Crée une table de hachage générique
  */
-struct Table_s *creeTable(size_t nbElts, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
+struct Table_s *creer_table(size_t nbElts, fonctionClef *fnClef_p, fonctionDestruction *fnDestruction_p) {
 	struct Table_s *table_p = calloc(1, sizeof(*table_p));
 
     if (!table_p) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la structure de la table de hachage");
@@ -75,10 +106,16 @@ struct Table_s *creeTable(size_t nbElts, fonctionClef *fnClef_p, fonctionDestruc
     return table_p;
 }
 
-/*
- * Function to Release Table
+/**
+ * @param table_p pointeur sur une table de hachage générique
+ * @return NULL
+ * @brief Supprime et libère la table de hachage et tout son contenu lié
+ *
+ * Si une fonction de destuction a été passée à la création de la table, elle sera utilisée pour libérer
+ * la mémoire occupée par les éléments et leurs dépendances éventuelles. Sinon, seul les éléments pointés seront
+ * enlevés de la table et libérés.
  */
-struct Table_s *detruitTable(struct Table_s *table_p) {
+struct Table_s *detruire_table(struct Table_s *table_p) {
 	size_t i;
 
 	if (table_p) {
@@ -96,10 +133,15 @@ struct Table_s *detruitTable(struct Table_s *table_p) {
 	return NULL;
 }
 
-/*
+/**
+ * @param table_p pointeur sur une table de hachage générique
+ * @return Rien
+ * @brief Affiche l'ensemble des clefs contenues dans la table
  *
+ * Le premier nombre indique simplement la nième clef
+ * Le nombre en [ ] indique l'index dans la table
  */
-void afficher_table(struct Table_s *table_p)
+void afficher_clefs_table(struct Table_s *table_p)
 {
 	size_t i, j;
 	char *clef_p;
@@ -110,15 +152,20 @@ void afficher_table(struct Table_s *table_p)
 			if (table_p->table[i]) {
 				j++;
 				clef_p = table_p->fnClef_p ? table_p->fnClef_p(table_p->table[i]) : (char *)table_p->table[i];
-				printf("%zu : [%zu] = %s\n", j, i, clef_p);
+				printf("%3zu->[%3zu] = %s\n", j, i, clef_p);
 			}
 	}
 }
 
-/*
- * Function to Find Element from the table
+/**
+ * @param table_p pointeur sur une table de hachage générique
+ * @param clef chaine de caractère représentant l'identifiant de l'élément dont on veut obtenir l'index
+ * @return l'index de la table dans lequel on a trouvé l'élément assoicé à la clé ou dans lequel il serait mis s'il n'y existe pas
+ * @brief Renvoie l'index de la table de hachage correspondant à la clef
+ *
+ * Attention, l'index peut correspondre à une case de la table qui pointe sur NULL s'il n'y a pas d'élément correspand dans la table
  */
-size_t indexTable(struct Table_s *table_p, char *clef)
+size_t index_table(struct Table_s *table_p, char *clef)
 {
 	size_t hachage = hashKR2(clef) % table_p->nbEltsMax;
 	size_t pasCyclique = (hashBernstein(clef) % (table_p->nbEltsMax - 1)) + 1;
@@ -130,57 +177,69 @@ size_t indexTable(struct Table_s *table_p, char *clef)
     return hachage;
 }
 
-void *donneeTable(struct Table_s *table_p, char *clef)
-{
-    size_t position = indexTable(table_p, clef);
-    return table_p->table[position];
-}
-
-/*
- * Function to Insert Element into the table - L'élément donnee_p n'est pas recopié et devra rester permanent
+/**
+ * @param table_p pointeur sur une table de hachage générique
+ * @param clef chaine de caractère représentant l'identifiant de l'élément recherché
+ * @return pointeur sur l'élément de la table correspondant à la clef s'il existe, NULL sinon
+ * @brief Renvoie un pointeur sur l'élément de la table identifié par la clef
  */
-int insereElementTable(struct Table_s *table_p, void *donnee_p)
+void *donnee_table(struct Table_s *table_p, char *clef)
 {
-	char *clef = (table_p->fnClef_p ? table_p->fnClef_p(donnee_p) : donnee_p);
-    size_t position = indexTable(table_p, clef);
-
-    if (!table_p->table[position]) {
-    	table_p->table[position] = donnee_p;
-    	table_p->nbElts++;
-    	return TRUE;
-    }
-    else
-    	return FALSE;
+	if (table_p && clef) {
+		size_t position = index_table(table_p, clef);
+		return table_p->table[position];
+	}
+	return NULL;
 }
 
-int supprimeElementTable(struct Table_s *table_p, char *clef)
+/**
+ * @param table_p pointeur sur une table de hachage générique
+ * @param donnee_p pointeur de la donnée à ajouter
+ * @return SUCCESS si on ajoute vraiment un nouvel élément, FAILURE sinon (en particulier si l'élément existe déjà)
+ * @brief Ajoute un élément à la table de hachage générique
+ *
+ * Si on a passé une fonction clé à la création, celle-ci sera utilisée pour extraire la clef qui lui sera associée,
+ * sinon, l'élément sera sa propre clef (cas d'une chaine par exemple).
+ */
+int ajouter_table(struct Table_s *table_p, void *donnee_p)
 {
-    size_t position = indexTable(table_p, clef);
+	char *clef = NULL;
+	if (table_p && donnee_p) {
+		clef = (table_p->fnClef_p ? table_p->fnClef_p(donnee_p) : donnee_p);
+		size_t position = index_table(table_p, clef);
 
-    if (table_p->table[position] && table_p->fnDestruction_p) {
+		if (!table_p->table[position]) {
+			table_p->table[position] = donnee_p;
+			table_p->nbElts++;
+			return SUCCESS;
+		}
+	}
+	return FAILURE;
+}
+
+/**
+ * @param table_p pointeur sur une table de hachage générique
+ * @param clef chaine de caractère contenant la clef de reconnaissance de la donnée à supprimer
+ * @return SUCCESS si on supprime vraiment un élément, FAILURE sinon
+ * @brief Supprime un élément d'une table de hachage générique
+ *
+ * Si une fonction de destuction a été passée à la création de la table, elle sera utilisée pour libérer
+ * la mémoire occupée par l'élément est ses dépendances éventuelles. Sinon, seul l'élément pointé sera
+ * enlevé de la table et libéré.
+ *
+ * Si une fonction de Clef a été passée à l'initialisation, elle sera utilisée pour identifier l'élément,
+ * sinon, l'élément sera la clef lui-même (cas d'une chaine de caractères).
+ */
+int supprimer_table(struct Table_s *table_p, char *clef)
+{
+    size_t position = index_table(table_p, clef);
+
+    if (table_p && table_p->table[position] && table_p->fnDestruction_p) {
     	table_p->fnDestruction_p(table_p->table[position]);
     	table_p->table[position] = NULL;
     	table_p->nbElts--;
-    	return 1;
+    	return SUCCESS;
     }
     else
-    	return 0;
+    	return FAILURE;
 }
-
-/*
- * Function to redimensionneTable the table
- */
-/*
-HashTable_t *redimensionneTable(HashTable_t *table_p, size_t newSize) {
-	int i;
-    int size = table_p->nbElementsMax;
-    void **table = table_p->table;
-    table_p = initializeTable(newSize, table_p->fnClef_p, table_p->fnDestruction_p);
-    for (i = 0; i < size; i++) {
-        if (table[i])
-            Insert(table_p, table[i]);
-    }
-    free(table);
-    return table_p;
-}
-*/

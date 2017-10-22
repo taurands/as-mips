@@ -56,7 +56,7 @@ int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
 	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
-	*tableDefinition_pp=creeTable(nb_mots, clef_def_instruction, destruction_def_instruction);
+	*tableDefinition_pp=creer_table(nb_mots, clef_def_instruction, destruction_def_instruction);
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
@@ -77,7 +77,7 @@ int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier
 		else
 			ERROR_MSG("Type d'opérande inconnu pour l'instruction %s (ligne %d)", nomInstruction, i+1);
 
-		insereElementTable(*tableDefinition_pp, def_instruction_p);
+		ajouter_table(*tableDefinition_pp, def_instruction_p);
 		i++;
 	}
 	fclose(f_p);
@@ -105,7 +105,7 @@ int charge_def_registre(struct Table_s **tableDefinition_pp, char *nomFichier)
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
 	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
-	*tableDefinition_pp=creeTable(nb_mots, clef_def_registre, destruction_def_registre);
+	*tableDefinition_pp=creer_table(nb_mots, clef_def_registre, destruction_def_registre);
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
@@ -115,7 +115,7 @@ int charge_def_registre(struct Table_s **tableDefinition_pp, char *nomFichier)
 		def_registre_p=malloc(sizeof(*def_registre_p));
 		def_registre_p->nom=strdup(nom_reg);
 		def_registre_p->valeur=valeur;
-		insereElementTable(*tableDefinition_pp, def_registre_p);
+		ajouter_table(*tableDefinition_pp, def_registre_p);
 		i++;
 	}
 	fclose(f_p);

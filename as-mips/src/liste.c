@@ -30,7 +30,7 @@ struct Liste_s *creer_liste(fonctionDestructeur *freeFn)
  * @param liste_p pointeur sur une liste générique simplement chaînée
  * @return Pointeur NULL
  * @brief Détruit l'ensemble des éléments de la liste en libérant la mémoire dynamique direct et indirecte associée
- * pour ce faire, on untilise l'éventuelle fonction de destruction passée à la création de liste.
+ * pour ce faire, on utilise l'éventuelle fonction de destruction passée à la création de liste.
  */
 struct Liste_s *detruire_liste(struct Liste_s *liste_p)
 {

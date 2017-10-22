@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	visualisationListeLexemes(listeLexemes_p);
 
 	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
-	tableEtiquettes_p=creeTable(nbEtiquettes, clefEtiquette, NULL);
+	tableEtiquettes_p=creer_table(nbEtiquettes, clefEtiquette, NULL);
 	charge_def_instruction(&tableDefinitionInstructions_p, "src/dictionnaire_instruction.txt");
 	charge_def_registre(&tableDefinitionRegistres_p, "src/dictionnaire_registre.txt");
 
@@ -83,13 +83,13 @@ int main(int argc, char *argv[])
 	analyse_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
 
 	/* affiche les résultats de l'analyse syntaxique */
-	afficher_table(tableEtiquettes_p);
+	afficher_clefs_table(tableEtiquettes_p);
 	/* XXX afficher les trois listes de text, data et bss */
 
     /* ---------------- Free memory and terminate -------------------*/
-	tableEtiquettes_p=detruitTable(tableEtiquettes_p);
-    tableDefinitionInstructions_p=detruitTable(tableDefinitionInstructions_p);
-    tableDefinitionRegistres_p=detruitTable(tableDefinitionRegistres_p);
+	tableEtiquettes_p=detruire_table(tableEtiquettes_p);
+    tableDefinitionInstructions_p=detruire_table(tableDefinitionInstructions_p);
+    tableDefinitionRegistres_p=detruire_table(tableDefinitionRegistres_p);
 
 	listeText_p=detruire_liste(listeText_p);
     listeData_p=detruire_liste(listeData_p);
