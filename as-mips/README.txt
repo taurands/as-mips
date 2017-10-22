@@ -31,6 +31,8 @@ Le répertoire est organisé ainsi :
 │   └── global.h
 ├── doc
 │   └── livrables
+│       ├── Livrable 2 - 2A SICOM - BERTRAND - TAURAND.pdf
+│       └── Livrable 1 - 2A SICOM - BERTRAND - TAURAND.pdf
 ├── README.txt
 ├── Makefile
 └── Doxyfile
