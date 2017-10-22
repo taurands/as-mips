@@ -184,6 +184,7 @@ void mef_section_text(
 	struct DefinitionInstruction_s *def_p;
 	struct Instruction_s *instruction_p;
 	int op_a_lire;
+	int index_op;
 
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err)) {
 		mef_etiquette(noeud_lexeme_pp, lexeme_pp, S_TEXT, decalage_p, tableEtiquettes_p, msg_err);
@@ -192,40 +193,104 @@ void mef_section_text(
 			if ((!def_p) || (strcmp(def_p->nom, (*lexeme_pp)->data))) {
 				sprintf(msg_err, "l'instruction \"%s\" est inconnue", (*lexeme_pp)->data);
 			} else {
-				INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nbOperandes, *decalage_p);
+				INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nb_ops, *decalage_p);
 
 				instruction_p=calloc(1,sizeof(*instruction_p));
 				instruction_p->definition_p=def_p;
 				instruction_p->ligne=(*lexeme_pp)->ligne;
 				instruction_p->decalage=*decalage_p;
 
-				op_a_lire=def_p->nbOperandes;
+				op_a_lire=def_p->nb_ops;
+				index_op=instruction_p->definition_p->nb_ops-op_a_lire;
 				mef_suivant(noeud_lexeme_pp, lexeme_pp);
 
 				/* Vérification du nombre d'opérande */
 				while (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (op_a_lire > 0)) {
-					if (((*lexeme_pp)->nature != L_REGISTRE) && ((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE)) {
-						/* XXX il faudra traiter le cas du commentaire */
-						sprintf(msg_err, "l'opérande %s n'est pas de type attendu", (*lexeme_pp)->data);
-						free(instruction_p);
-						instruction_p=NULL;
-						break;
-					} else {
-						instruction_p->operandes[instruction_p->definition_p->nbOperandes-(op_a_lire--)]=*lexeme_pp;
-						mef_suivant(noeud_lexeme_pp, lexeme_pp);
-
-						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (op_a_lire > 0) && ((*lexeme_pp)->nature != L_VIRGULE)) {
+					/* cas où on ne peut pas avoir un registre */
+					if (instruction_p->definition_p->type_ops==I_OP_B) { /* base offset */
+						/* ici, on va verifier la syntaxe correcte pas lexeme de façon "brute" */
+						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_REGISTRE)) { /* Registre */
+							sprintf(msg_err, "l'opérande %s n'est pas un registre", (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else {
+							instruction_p->operandes[0]=*lexeme_pp;
+							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+						}
+						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_VIRGULE)) { /* Virgule */
 							sprintf(msg_err, "\"%s\" à la place d'une virgule", (*lexeme_pp)->data);
 							free(instruction_p);
 							instruction_p=NULL;
 							break;
-						} else if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err)) {
+						} else {
 							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+						}
+						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE))) { /* Nombre ou Symbole */
+							sprintf(msg_err, "l'opérande %s n'est pas un nombre ou un symbole", (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else {
+							instruction_p->operandes[0]=*lexeme_pp;
+							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+						}
+						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_OUVRANTE)) { /* ( */
+							sprintf(msg_err, "\"%s\" à la place d'une \"(\"", (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else {
+							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+						}
+						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_REGISTRE)) { /* Registre */
+							sprintf(msg_err, "l'opérande %s n'est pas un registre", (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else {
+							instruction_p->operandes[0]=*lexeme_pp;
+							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+						}
+						if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature != L_PARENTHESE_FERMANTE)) { /* ) */
+							sprintf(msg_err, "\"%s\" à la place d'une \")\"", (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else {
+							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+						}
+						op_a_lire=0;
+					} else { /* Instructions de type registre ou immediat */
+						if ((instruction_p->definition_p->type_ops==I_OP_N) && (op_a_lire==1) && (((*lexeme_pp)->nature != L_NOMBRE) && ((*lexeme_pp)->nature != L_SYMBOLE))) {
+							sprintf(msg_err, "l'opérande %s n'est ni un nombre, ni un symbole", (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else if ((((instruction_p->definition_p->type_ops==I_OP_N) && (op_a_lire>1)) || (instruction_p->definition_p->type_ops==I_OP_R))  && ((*lexeme_pp)->nature != L_REGISTRE)) {
+							sprintf(msg_err, "l'opérande %s n'est pas un registre", (*lexeme_pp)->data);
+							free(instruction_p);
+							instruction_p=NULL;
+							break;
+						} else { /* l'opérande est donc correct */
+							instruction_p->operandes[index_op]=*lexeme_pp;
+							index_op++;
+							op_a_lire--;
+							mef_suivant(noeud_lexeme_pp, lexeme_pp);
+
+							if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && (op_a_lire > 0) && ((*lexeme_pp)->nature != L_VIRGULE)) {
+								sprintf(msg_err, "\"%s\" à la place d'une virgule", (*lexeme_pp)->data);
+								free(instruction_p);
+								instruction_p=NULL;
+								break;
+							} else if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err)) {
+								mef_suivant(noeud_lexeme_pp, lexeme_pp);
+							}
 						}
 					}
 				}
 				if (instruction_p && op_a_lire) {
-					sprintf(msg_err, "il manque au moins un opérande");
+					sprintf(msg_err, "il manque %d opérande(s)", op_a_lire);
 					free(instruction_p);
 					instruction_p=NULL;
 				} else if (instruction_p && (((*lexeme_pp)->nature != L_COMMENTAIRE) || ((*lexeme_pp)->nature != L_FIN_LIGNE))) {

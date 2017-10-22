@@ -14,6 +14,7 @@
 #include <dico.h>
 
 const char NATURE_INSTRUCTION[]= {'P', 'R', 'D', 'I', 'r', 'a'};
+const char TYPE_OPS[]= {'R', 'N', 'B'};
 
 char *clef_def_instruction(void *donnee_p)
 {
@@ -65,8 +66,17 @@ int charge_def_instruction(struct Table_s **tableDefinition_pp, char *nomFichier
 
 		def_instruction_p=malloc(sizeof(*def_instruction_p));
 		def_instruction_p->nom=strdup(nomInstruction);
-		def_instruction_p->nbOperandes=nombreOperandes;
-		def_instruction_p->nature=I_PSEUDO;  /* XXX Penser à prendre en compte la nature de l'instruction */
+		def_instruction_p->nb_ops=nombreOperandes;
+
+		if (carNature==TYPE_OPS[I_OP_R])
+			def_instruction_p->type_ops=I_OP_R;
+		else if (carNature==TYPE_OPS[I_OP_N])
+			def_instruction_p->type_ops=I_OP_N;
+		else if (carNature==TYPE_OPS[I_OP_B])
+			def_instruction_p->type_ops=I_OP_B;
+		else
+			ERROR_MSG("Type d'opérande inconnu pour l'instruction %s (ligne %d)", nomInstruction, i+1);
+
 		insereElementTable(*tableDefinition_pp, def_instruction_p);
 		i++;
 	}

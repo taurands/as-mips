@@ -15,6 +15,19 @@
  *
  * Cela servira à savoir la nature des opérandes ainsi que la façon d'intégrer ces opérandes dans le code opération
  */
+enum Operandes_e {
+ 	I_OP_R=0,		/**< Pour cette instruction, les opérandes sont des registres séparés par des virgules  */
+ 	I_OP_N=1,		/**< Pour cette instruction, les opérandes sont des registres séparés par des virgules
+ 							sauf le dernier qui est un nombre ou un symbole */
+ 	I_OP_B=2,		/**< Pour cette instruction, on attend "registre" "," "nombre" "(" "registre" ")" */
+};
+
+/**
+ * @enum Instruction_e
+ * @brief Constantes de nature des instructions du programme assembleur
+ *
+ * Cela servira à savoir la nature des opérandes ainsi que la façon d'intégrer ces opérandes dans le code opération
+ */
 enum Instruction_e {
  	I_PSEUDO=0,				/**< Pseudo instruction comme NOP */
  	I_REGISTRE=1,			/**<  */
@@ -30,8 +43,8 @@ enum Instruction_e {
  */
 struct DefinitionInstruction_s {
 	char* nom;						/**< nom de l'instruction */
-	enum Instruction_e nature;		/**< nature de l'instruction */
-	unsigned int nbOperandes;		/**< nombre d'arguments de l'instruction */
+	enum Operandes_e type_ops;		/**< nature de l'instruction */
+	unsigned int nb_ops;		/**< nombre d'arguments de l'instruction */
 };
 
 /**
