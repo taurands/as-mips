@@ -106,6 +106,39 @@ int suite_est_directive_word(struct NoeudListe_s *noeud_lexeme_p)
 	return resultat;
 }
 
+int enregistrer_etiquette(
+		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Lexeme_s **lexeme_pp,
+		enum Section_e section,
+		uint32_t *decalage_p,
+		struct Table_s *tableEtiquettes_p,
+		char *msg_err)
+{
+
+	const uint32_t masqueAlignement = 0x00000003; /* Les deux derniers bits doivent être à zéro pour avoir un aligement par mot de 32 bits */
+
+
+	struct Etiquette_s *etiquetteCourante_p=malloc(sizeof(*etiquetteCourante_p));
+	if (!etiquetteCourante_p) ERROR_MSG("Impossible de créer une nouvelle étiquette");
+
+	if ((*decalage_p & masqueAlignement) && (section == S_DATA) && (suite_est_directive_word((*noeud_lexeme_pp)->suivant_p)))
+		*decalage_p=(*decalage_p + masqueAlignement) & ~masqueAlignement;
+
+	etiquetteCourante_p->lexeme_p=*lexeme_pp;
+	etiquetteCourante_p->section=section;
+	etiquetteCourante_p->decalage=*decalage_p;
+	etiquetteCourante_p->ligne=(*lexeme_pp)->ligne;
+
+	if (SUCCESS==ajouter_table(tableEtiquettes_p, etiquetteCourante_p)) {
+		DEBUG_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElts, (*lexeme_pp)->data, *decalage_p);
+		return SUCCESS;
+	} else {
+		sprintf(msg_err, "est une étiquette déjà présente ligne %d", ((struct Etiquette_s *)donnee_table(tableEtiquettes_p, etiquetteCourante_p->lexeme_p->data))->ligne);
+		free(etiquetteCourante_p); etiquetteCourante_p=NULL;
+		return FAILURE;
+	}
+}
+
 void mef_etiquette(
 		struct NoeudListe_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
@@ -444,6 +477,165 @@ void mef_section_data_bss(
 	}
 }
 
+/**
+ * @return Rien, si ce n'est les données mises à jour par les pointeurs paramètres associés
+ * @brief effectue l'analyse syntaxique de premier niveau d'une liste de lexemes
+ *
+ */
+int analyser_syntaxe(
+		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
+		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
+		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
+		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
+		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
+		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
+		struct Liste_s *liste_bss_p)				/**< Pointeur sur la liste des réservations des .space de la section .bss */
+{
+	uint32_t decalage_text=0;
+	uint32_t decalage_data=0;
+	uint32_t decalage_bss=0;
+	uint32_t *decalage_p;
+
+	char msg_err[2*STRLEN];
+
+	struct NoeudListe_s *noeud_lexeme_p=NULL;
+	struct Lexeme_s *lexeme_p=NULL;
+
+	enum {
+		INIT,
+		FIN,
+		ERREUR,
+		EOL,
+		COMMENT,
+		SECTION,
+		OPTION,
+		ETIQUET,
+		DONNEE,
+		INSTRUC,
+	} etat;
+
+	enum Section_e section=S_INIT;
+	int resultat=SUCCESS;
+
+	struct DefinitionInstruction_s *def_p;
+	struct Instruction_s *instruction_p;
+	int op_a_lire;
+	int index_op;
+
+	struct Donnee_s *donnee_p;
+	enum Nature_lexeme_e nature;
+	enum Donnee_e type_donnee=D_UNDEF;
+	long int nombre;
+
+	if (lignes_lexemes_p) {
+		msg_err[0]='\0';
+		noeud_lexeme_p=lignes_lexemes_p->debut_liste_p;
+		if (noeud_lexeme_p)
+			lexeme_p=(struct Lexeme_s *)noeud_lexeme_p->donnee_p;
+		else
+			lexeme_p=NULL;
+		while ((lexeme_p) && (etat != FIN)) {
+			switch(etat) {
+			case INIT:
+				if (!lexeme_p) etat=FIN;
+				else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
+				else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
+				else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) ||
+					(!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])) || (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS]))))
+					etat=SECTION;
+				else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, "noreorder"))) etat=OPTION;
+				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) etat=ETIQUET;
+				else if ((((section=S_BSS) || (section=S_DATA)) && (lexeme_p->nature==L_DIRECTIVE) &&((!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE])))) ||
+						(((section=S_DATA) && (lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE])) ||
+						(!strcmp(lexeme_p->data, NOMS_DATA[D_WORD])) || (!strcmp(lexeme_p->data, NOMS_DATA[D_ASCIIZ]))))))
+					etat=DONNEE;
+				else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) etat=INSTRUC;
+				else {
+					etat=ERREUR;
+					strcpy(msg_err, "n'est pas valide ici");
+				}
+				break;
+			case EOL:
+				mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=FIN;
+				else { /* XXX a-t-on vraiment besoin des réinitialisations de variables ici ? */
+					etat=INIT;
+					index_op=0;
+					op_a_lire=0;
+					type_donnee=D_UNDEF;
+				}
+				break;
+			case COMMENT:
+				mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=FIN;
+				else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
+				else {
+					etat=ERREUR;
+					strcpy(msg_err, "ne devait pas se trouver après un commentaire");
+				}
+				break;
+			case SECTION:
+				if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) section = S_TEXT;
+				else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])) section = S_DATA;
+				else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS])) section = S_BSS;
+				else ERROR_MSG("erreur automate : nom de section");
+
+				mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=FIN;
+				else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
+				else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
+				else {
+					etat=ERREUR;
+					strcpy(msg_err, "ne devrait pas être après la directive de changement de section");
+				}
+				break;
+			case OPTION:
+
+				break;
+			case ETIQUET:
+				if (section==S_TEXT) decalage_p=&decalage_text;
+				if (section==S_DATA) decalage_p=&decalage_data;
+				if (section==S_BSS) decalage_p=&decalage_bss;
+				if (SUCCESS!=enregistrer_etiquette(&noeud_lexeme_p, &lexeme_p, section, decalage_p, table_etiquettes_p, msg_err))
+					etat=ERREUR;
+				else {
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+					if (!lexeme_p) etat=FIN;
+					else etat=INIT;
+				}
+				break;
+			case DONNEE:
+				break;
+			case INSTRUC:
+				break;
+			case ERREUR:
+				fprintf(stderr, "Erreur de syntaxe ligne %d, ", lexeme_p ? lexeme_p->ligne : 0);
+				fprintf(stderr, "\"%s\" ", !lexeme_p ? "pas de lexeme" : lexeme_p->data);
+				fprintf(stderr, "%s.\n", msg_err); msg_err[0]='\0';
+
+				free(instruction_p); instruction_p=NULL;
+				free(donnee_p);	donnee_p=NULL;
+				index_op=0;
+				op_a_lire=0;
+				type_donnee=D_UNDEF;
+
+				while ((lexeme_p) && (lexeme_p->nature!=L_FIN_LIGNE))
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=FIN;
+				else etat=EOL;
+
+				resultat=FAILURE;
+				break;
+			default:
+				etat=ERREUR;
+				sprintf(msg_err, "ne devrait pas être là");
+			}
+		}
+	} else
+		resultat=FAILURE;
+
+	return resultat;
+}
 /**
  * @return Rien, si ce n'est les données mises à jour par les pointeurs paramètres associés
  * @brief effectue l'analyse syntaxique de premier niveau d'une liste de lexemes
