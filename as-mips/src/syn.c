@@ -21,6 +21,31 @@
 #include <lex.h>
 #include <syn.h>
 
+enum Etat_Syn_e {
+		MES_INIT,
+		MES_FIN,
+		MES_ERREUR,
+		EOL,
+		COMMENT,
+		SECTION,
+		OPTION,
+		ETIQUET,
+		DONNEE,
+		INSTRUC,
+		I_RN_3OP,
+		I_RN_V32,
+		I_RN_2OP,
+		I_RN_V21,
+		I_R_1OP,
+		I_N_OP,
+		I_B_REG,
+		I_B_VIR,
+		I_B_OFFS,
+		I_B_PO,
+		I_B_BASE,
+		I_B_PF
+	};
+
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
 const char *NOMS_DATA[] = {".space", ".byte", ".word", ".asciiz"};
 
@@ -477,6 +502,25 @@ void mef_section_data_bss(
 	}
 }
 
+enum Etat_Syn_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *msg)
+{
+	enum Etat_Syn_e etat;
+	if (!lexeme_p) etat=MES_ERREUR;
+	else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
+	else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
+	else {
+		etat=MES_ERREUR;
+		strcpy(msg_err, msg);
+	}
+	return etat;
+}
+
+enum Etat_Syn_e etat_registre(enum Etat_Syn_e etat_normal_suiv, struct Lexeme_s *lexeme_p, char *msg_err, char *msg)
+{
+	enum Etat_Syn_e etat;
+	return etat;
+}
+
 /**
  * @return Rien, si ce n'est les données mises à jour par les pointeurs paramètres associés
  * @brief effectue l'analyse syntaxique de premier niveau d'une liste de lexemes
@@ -494,25 +538,14 @@ int analyser_syntaxe(
 	uint32_t decalage_text=0;
 	uint32_t decalage_data=0;
 	uint32_t decalage_bss=0;
-	uint32_t *decalage_p;
+	uint32_t *decalage_p=NULL;
 
 	char msg_err[2*STRLEN];
 
 	struct NoeudListe_s *noeud_lexeme_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
 
-	enum {
-		INIT,
-		FIN,
-		ERREUR,
-		EOL,
-		COMMENT,
-		SECTION,
-		OPTION,
-		ETIQUET,
-		DONNEE,
-		INSTRUC,
-	} etat;
+	enum Etat_Syn_e etat;
 
 	enum Section_e section=S_INIT;
 	int resultat=SUCCESS;
@@ -534,10 +567,10 @@ int analyser_syntaxe(
 			lexeme_p=(struct Lexeme_s *)noeud_lexeme_p->donnee_p;
 		else
 			lexeme_p=NULL;
-		while ((lexeme_p) && (etat != FIN)) {
+		while ((lexeme_p) && (etat != MES_FIN)) {
 			switch(etat) {
-			case INIT:
-				if (!lexeme_p) etat=FIN;
+			case MES_INIT:
+				if (!lexeme_p) etat=MES_ERREUR;
 				else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
 				else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
 				else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) ||
@@ -551,41 +584,42 @@ int analyser_syntaxe(
 					etat=DONNEE;
 				else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) etat=INSTRUC;
 				else {
-					etat=ERREUR;
+					etat=MES_ERREUR;
 					strcpy(msg_err, "n'est pas valide ici");
 				}
 				break;
 			case EOL:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=FIN;
-				else { /* XXX a-t-on vraiment besoin des réinitialisations de variables ici ? */
-					etat=INIT;
-					index_op=0;
-					op_a_lire=0;
-					type_donnee=D_UNDEF;
-				}
+				if (!lexeme_p) etat=MES_FIN;
+				else etat=MES_INIT;
 				break;
 			case COMMENT:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=FIN;
+				if (!lexeme_p) etat=MES_ERREUR;
 				else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
 				else {
-					etat=ERREUR;
+					etat=MES_ERREUR;
 					strcpy(msg_err, "ne devait pas se trouver après un commentaire");
 				}
 				break;
 			case SECTION:
-				if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) section = S_TEXT;
-				else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])) section = S_DATA;
-				else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS])) section = S_BSS;
-				else ERROR_MSG("erreur automate : nom de section");
+				if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) {
+					section = S_TEXT;
+					decalage_p=&decalage_text;
+				} else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])) {
+					section = S_DATA;
+					decalage_p=&decalage_data;
+				} else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS])) {
+					section = S_BSS;
+					decalage_p=&decalage_bss;
+				} else ERROR_MSG("erreur automate : nom de section");
 
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=FIN;
+				if (!lexeme_p) etat=MES_ERREUR;
 				else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
 				else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
 				else {
-					etat=ERREUR;
+					etat=MES_ERREUR;
 					strcpy(msg_err, "ne devrait pas être après la directive de changement de section");
 				}
 				break;
@@ -593,25 +627,150 @@ int analyser_syntaxe(
 
 				break;
 			case ETIQUET:
-				if (section==S_TEXT) decalage_p=&decalage_text;
-				if (section==S_DATA) decalage_p=&decalage_data;
-				if (section==S_BSS) decalage_p=&decalage_bss;
 				if (SUCCESS!=enregistrer_etiquette(&noeud_lexeme_p, &lexeme_p, section, decalage_p, table_etiquettes_p, msg_err))
-					etat=ERREUR;
+					etat=MES_ERREUR;
 				else {
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=FIN;
-					else etat=INIT;
+					if (!lexeme_p) etat=MES_ERREUR;
+					else etat=MES_INIT;
 				}
 				break;
 			case DONNEE:
 				break;
 			case INSTRUC:
+				def_p=(struct DefinitionInstruction_s *)donnee_table(table_def_instructions_p, lexeme_p->data);
+				if ((!def_p) || (strcmp(def_p->nom, lexeme_p->data))) {
+					etat=MES_ERREUR;
+					strcpy(msg_err, "n'est pas une instruction connue");
+				} else {
+					INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nb_ops, *decalage_p);
+					instruction_p=calloc(1,sizeof(*instruction_p));
+					instruction_p->definition_p=def_p;
+					instruction_p->ligne=lexeme_p->ligne;
+					instruction_p->decalage=*decalage_p;
+					op_a_lire=def_p->nb_ops;
+
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+					if (!lexeme_p) etat=MES_ERREUR;
+					else {
+						if ((lexeme_p->nature!=L_REGISTRE) && (((def_p->type_ops==I_OP_R) && (def_p->nb_ops>0)) || ((def_p->type_ops==I_OP_N) && (def_p->nb_ops>1)) || (def_p->type_ops==I_OP_B))) {
+							etat=MES_ERREUR;
+							strcpy(msg_err, "n'est pas un registre");
+						}
+						else if (def_p->type_ops==I_OP_B) etat=I_B_REG;
+						else if (def_p->nb_ops==3) etat=I_RN_3OP;
+						else if (def_p->nb_ops==2) etat=I_RN_2OP;
+						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_R)) etat=I_R_1OP;
+						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_N)) etat=I_N_OP;
+						else if (def_p->nb_ops!=0) ERROR_MSG("Si on est là c'est qu'il y a un bug");
+						else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
+						else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
+						else ERROR_MSG("Si on est là c'est qu'il y a un bug");
+					}
+				}
 				break;
-			case ERREUR:
-				fprintf(stderr, "Erreur de syntaxe ligne %d, ", lexeme_p ? lexeme_p->ligne : 0);
-				fprintf(stderr, "\"%s\" ", !lexeme_p ? "pas de lexeme" : lexeme_p->data);
-				fprintf(stderr, "%s.\n", msg_err); msg_err[0]='\0';
+			case I_RN_3OP:
+				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
+					etat=MES_ERREUR;
+					strcpy(msg_err, "n'est pas un registre valide");
+				} else {
+					instruction_p->operandes[0]=lexeme_p;
+
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+					if (!lexeme_p) etat=MES_ERREUR;
+					else if (lexeme_p->nature==L_VIRGULE) etat=I_RN_V32;
+					else {
+						etat=MES_ERREUR;
+						strcpy(msg_err, "à la place d'une virgule");
+					}
+				}
+				break;
+			case I_RN_V32:
+				break;
+			case I_RN_2OP:
+				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
+					etat=MES_ERREUR;
+					strcpy(msg_err, "n'est pas un registre valide");
+				} else {
+					instruction_p->operandes[def_p->nb_ops-2]=lexeme_p;
+
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+					if (!lexeme_p) etat=MES_ERREUR;
+					else if (lexeme_p->nature==L_VIRGULE) etat=I_RN_V21;
+					else {
+						etat=MES_ERREUR;
+						strcpy(msg_err, "à la place d'une virgule");
+					}
+				}
+				break;
+			case I_RN_V21:
+				break;
+			case I_R_1OP:
+				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
+					etat=MES_ERREUR;
+					strcpy(msg_err, "n'est pas un registre valide");
+				} else {
+					instruction_p->operandes[def_p->nb_ops-1]=lexeme_p;
+
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+					if (!lexeme_p) etat=MES_ERREUR;
+					else if (lexeme_p->nature==L_VIRGULE) etat=I_RN_V21;
+					else {
+						etat=MES_ERREUR;
+						strcpy(msg_err, "à la place d'une virgule");
+					}
+				}
+				break;
+			case I_N_OP:
+				break;
+			case I_B_REG:
+				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
+					etat=MES_ERREUR;
+					strcpy(msg_err, "n'est pas un registre valide");
+				} else {
+					instruction_p->operandes[0]=lexeme_p;
+
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+					if (!lexeme_p) etat=MES_ERREUR;
+					else if (lexeme_p->nature==L_VIRGULE) etat=I_B_VIR;
+					else {
+						etat=MES_ERREUR;
+						strcpy(msg_err, "à la place d'une virgule");
+					}
+				}
+				break;
+			case I_B_VIR:
+				break;
+			case I_B_OFFS:
+				break;
+			case I_B_PO:
+				break;
+			case I_B_BASE:
+				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
+					etat=MES_ERREUR;
+					strcpy(msg_err, "n'est pas un registre valide");
+				} else {
+					instruction_p->operandes[0]=lexeme_p;
+
+					mef_suivant(&noeud_lexeme_p, &lexeme_p);
+					if (!lexeme_p) etat=MES_ERREUR;
+					else if (lexeme_p->nature==L_PARENTHESE_FERMANTE) etat=I_B_PF;
+					else {
+						etat=MES_ERREUR;
+						strcpy(msg_err, "à la place d'une virgule");
+					}
+				}
+				break;
+			case I_B_PF:
+				mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
+				break;
+			case MES_ERREUR:
+				if (lexeme_p) {
+					fprintf(stderr, "Erreur de syntaxe ligne %d, ", lexeme_p ? lexeme_p->ligne : 0);
+					fprintf(stderr, "\"%s\" ", !lexeme_p ? "pas de lexeme" : lexeme_p->data);
+					fprintf(stderr, "%s.\n", msg_err); msg_err[0]='\0';
+				} else ERROR_MSG("fin de liste de lexème innatendue");
 
 				free(instruction_p); instruction_p=NULL;
 				free(donnee_p);	donnee_p=NULL;
@@ -621,14 +780,14 @@ int analyser_syntaxe(
 
 				while ((lexeme_p) && (lexeme_p->nature!=L_FIN_LIGNE))
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=FIN;
+				if (!lexeme_p) etat=MES_FIN;
 				else etat=EOL;
 
 				resultat=FAILURE;
 				break;
 			default:
-				etat=ERREUR;
-				sprintf(msg_err, "ne devrait pas être là");
+				etat=MES_ERREUR;
+				strcpy(msg_err, "ne devrait pas être là");
 			}
 		}
 	} else
