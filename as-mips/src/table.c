@@ -46,7 +46,7 @@ size_t nombrePremierGET(size_t nombre) {
  * afin d'avoir un groupe cyclique pour la deuxième clef de hachage
  */
 size_t tailleTableHachageRecommandee(size_t nbElementsPrevus) {
-	return nombrePremierGET(nbElementsPrevus + (nbElementsPrevus >> 1));
+	return nombrePremierGET(nbElementsPrevus + (nbElementsPrevus >> 1) + 1);
 }
 
 /**

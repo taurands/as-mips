@@ -25,25 +25,25 @@ enum Etat_Syn_e {
 		MES_INIT,
 		MES_FIN,
 		MES_ERREUR,
-		EOL,
-		COMMENT,
-		SECTION,
-		OPTION,
-		ETIQUET,
-		DONNEE,
-		INSTRUC,
-		I_RN_3OP,
-		I_RN_V32,
-		I_RN_2OP,
-		I_RN_V21,
-		I_R_1OP,
-		I_N_OP,
-		I_B_REG,
-		I_B_VIR,
-		I_B_OFFS,
-		I_B_PO,
-		I_B_BASE,
-		I_B_PF
+		MES_EOL,
+		MES_COMMENT,
+		MES_SECTION,
+		MES_OPTION,
+		MES_ETIQUET,
+		MES_DONNEE,
+		MES_INSTRUC,
+		MES_I_RN_3OP,
+		MES_I_RN_V32,
+		MES_I_RN_2OP,
+		MES_I_RN_V21,
+		MES_I_R_1OP,
+		MES_I_N_OP,
+		MES_I_B_REG,
+		MES_I_B_VIR,
+		MES_I_B_OFFS,
+		MES_I_B_PO,
+		MES_I_B_BASE,
+		MES_I_B_PF
 	};
 
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
@@ -66,6 +66,19 @@ void str_instruction(struct Instruction_s * instruction_p, char *str)
 }
 
 void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
+{
+	if (noeud_lexeme_pp) {
+		if ((*noeud_lexeme_pp) && (lexeme_pp)) {
+			*noeud_lexeme_pp=(*noeud_lexeme_pp)->suivant_p;
+			if (*noeud_lexeme_pp)
+				*lexeme_pp=(struct Lexeme_s *)((*noeud_lexeme_pp)->donnee_p);
+			else
+				*lexeme_pp=NULL;
+		}
+	}
+}
+
+void mef_suivant_sur(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
 {
 	if (noeud_lexeme_pp) {
 		if ((*noeud_lexeme_pp) && (*noeud_lexeme_pp=((*noeud_lexeme_pp)->suivant_p)) && (lexeme_pp))
@@ -506,8 +519,8 @@ enum Etat_Syn_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *ms
 {
 	enum Etat_Syn_e etat;
 	if (!lexeme_p) etat=MES_ERREUR;
-	else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
-	else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
+	else if (lexeme_p->nature==L_FIN_LIGNE) etat=MES_EOL;
+	else if (lexeme_p->nature==L_COMMENTAIRE) etat=MES_COMMENT;
 	else {
 		etat=MES_ERREUR;
 		strcpy(msg_err, msg);
@@ -515,11 +528,70 @@ enum Etat_Syn_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *ms
 	return etat;
 }
 
-enum Etat_Syn_e etat_registre(enum Etat_Syn_e etat_normal_suiv, struct Lexeme_s *lexeme_p, char *msg_err, char *msg)
+enum Etat_Syn_e etat_sera_nombre_ou_symbole(
+		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Lexeme_s **lexeme_pp,
+		enum Etat_Syn_e etat_normal_suiv,
+		char *msg_err)
 {
 	enum Etat_Syn_e etat;
+	mef_suivant(noeud_lexeme_pp, lexeme_pp);
+	if (!(*lexeme_pp)) etat=MES_ERREUR;
+	else if (((*lexeme_pp)->nature==L_NOMBRE) || ((*lexeme_pp)->nature==L_SYMBOLE)) etat=etat_normal_suiv;
+	else {
+		etat=MES_ERREUR;
+		strcpy(msg_err, "n'est pas un registre");
+	}
 	return etat;
 }
+
+enum Etat_Syn_e etat_sera_registre(
+		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Lexeme_s **lexeme_pp,
+		enum Etat_Syn_e etat_normal_suiv,
+		char *msg_err)
+{
+	enum Etat_Syn_e etat;
+
+	mef_suivant(noeud_lexeme_pp, lexeme_pp);
+	if (!(*lexeme_pp)) etat=MES_ERREUR;
+	else if ((*lexeme_pp)->nature==L_REGISTRE) etat=etat_normal_suiv;
+	else {
+		etat=MES_ERREUR;
+		strcpy(msg_err, "n'est pas un registre");
+	}
+	return etat;
+}
+
+enum Etat_Syn_e etat_traitement_registre(
+		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Lexeme_s **lexeme_pp,
+		struct Table_s *def_reg_p,
+		struct Instruction_s *instruction_p,
+		int indice,
+		enum Nature_lexeme_e nature_attendue,
+		enum Etat_Syn_e etat_normal_suiv,
+		char *msg_err,
+		char *msg)
+{
+	enum Etat_Syn_e etat;
+	if (!donnee_table(def_reg_p, (*lexeme_pp)->data)) {
+		etat=MES_ERREUR;
+		strcpy(msg_err, "n'est pas un registre valide");
+	} else {
+		instruction_p->operandes[indice]=*lexeme_pp;
+
+		mef_suivant(noeud_lexeme_pp, lexeme_pp);
+		if (!(*lexeme_pp)) etat=MES_ERREUR;
+		else if ((*lexeme_pp)->nature==nature_attendue) etat=etat_normal_suiv;
+		else {
+			etat=MES_ERREUR;
+			strcpy(msg_err, msg);
+		}
+	}
+	return etat;
+}
+
 
 /**
  * @return Rien, si ce n'est les données mises à jour par les pointeurs paramètres associés
@@ -538,27 +610,22 @@ int analyser_syntaxe(
 	uint32_t decalage_text=0;
 	uint32_t decalage_data=0;
 	uint32_t decalage_bss=0;
+
 	uint32_t *decalage_p=NULL;
+	struct Liste_s *liste_p=NULL;
 
 	char msg_err[2*STRLEN];
 
 	struct NoeudListe_s *noeud_lexeme_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
 
-	enum Etat_Syn_e etat;
-
+	enum Etat_Syn_e etat=MES_INIT;
 	enum Section_e section=S_INIT;
 	int resultat=SUCCESS;
 
-	struct DefinitionInstruction_s *def_p;
-	struct Instruction_s *instruction_p;
-	int op_a_lire;
-	int index_op;
-
-	struct Donnee_s *donnee_p;
-	enum Nature_lexeme_e nature;
-	enum Donnee_e type_donnee=D_UNDEF;
-	long int nombre;
+	struct DefinitionInstruction_s *def_p=NULL;
+	struct Instruction_s *instruction_p=NULL;
+	struct Donnee_s *donnee_p=NULL;
 
 	if (lignes_lexemes_p) {
 		msg_err[0]='\0';
@@ -571,62 +638,59 @@ int analyser_syntaxe(
 			switch(etat) {
 			case MES_INIT:
 				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
-				else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
+				else if (lexeme_p->nature==L_FIN_LIGNE) etat=MES_EOL;
+				else if (lexeme_p->nature==L_COMMENTAIRE) etat=MES_COMMENT;
 				else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) ||
 					(!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])) || (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS]))))
-					etat=SECTION;
-				else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, "noreorder"))) etat=OPTION;
-				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) etat=ETIQUET;
-				else if ((((section=S_BSS) || (section=S_DATA)) && (lexeme_p->nature==L_DIRECTIVE) &&((!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE])))) ||
-						(((section=S_DATA) && (lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE])) ||
+					etat=MES_SECTION;
+				else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, "noreorder"))) etat=MES_OPTION;
+				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) etat=MES_ETIQUET;
+				else if ((((section==S_BSS) || (section==S_DATA)) && (lexeme_p->nature==L_DIRECTIVE) &&((!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE])))) ||
+						(((section==S_DATA) && (lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE])) ||
 						(!strcmp(lexeme_p->data, NOMS_DATA[D_WORD])) || (!strcmp(lexeme_p->data, NOMS_DATA[D_ASCIIZ]))))))
-					etat=DONNEE;
-				else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) etat=INSTRUC;
+					etat=MES_DONNEE;
+				else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) etat=MES_INSTRUC;
 				else {
 					etat=MES_ERREUR;
 					strcpy(msg_err, "n'est pas valide ici");
 				}
 				break;
-			case EOL:
+			case MES_EOL:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				if (!lexeme_p) etat=MES_FIN;
 				else etat=MES_INIT;
 				break;
-			case COMMENT:
+			case MES_COMMENT:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
+				else if (lexeme_p->nature==L_FIN_LIGNE) etat=MES_EOL;
 				else {
 					etat=MES_ERREUR;
 					strcpy(msg_err, "ne devait pas se trouver après un commentaire");
 				}
 				break;
-			case SECTION:
+			case MES_SECTION:
 				if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) {
 					section = S_TEXT;
 					decalage_p=&decalage_text;
+					liste_p=liste_text_p;
 				} else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])) {
 					section = S_DATA;
 					decalage_p=&decalage_data;
+					liste_p=liste_data_p;
 				} else if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS])) {
 					section = S_BSS;
 					decalage_p=&decalage_bss;
+					liste_p=liste_bss_p;
 				} else ERROR_MSG("erreur automate : nom de section");
 
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
-				else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
-				else {
-					etat=MES_ERREUR;
-					strcpy(msg_err, "ne devrait pas être après la directive de changement de section");
-				}
+				etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être après la directive de changement de section");
 				break;
-			case OPTION:
+			case MES_OPTION:
 
 				break;
-			case ETIQUET:
+			case MES_ETIQUET:
 				if (SUCCESS!=enregistrer_etiquette(&noeud_lexeme_p, &lexeme_p, section, decalage_p, table_etiquettes_p, msg_err))
 					etat=MES_ERREUR;
 				else {
@@ -635,9 +699,9 @@ int analyser_syntaxe(
 					else etat=MES_INIT;
 				}
 				break;
-			case DONNEE:
+			case MES_DONNEE:
 				break;
-			case INSTRUC:
+			case MES_INSTRUC:
 				def_p=(struct DefinitionInstruction_s *)donnee_table(table_def_instructions_p, lexeme_p->data);
 				if ((!def_p) || (strcmp(def_p->nom, lexeme_p->data))) {
 					etat=MES_ERREUR;
@@ -648,7 +712,12 @@ int analyser_syntaxe(
 					instruction_p->definition_p=def_p;
 					instruction_p->ligne=lexeme_p->ligne;
 					instruction_p->decalage=*decalage_p;
-					op_a_lire=def_p->nb_ops;
+
+					if (def_p->nb_ops==0) {
+						ajouter_fin_liste(liste_p, instruction_p);
+						instruction_p=NULL; /* XXX il faudra tester l'insertion */
+						(*decalage_p)+=4;
+					}
 
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
 					if (!lexeme_p) etat=MES_ERREUR;
@@ -657,55 +726,32 @@ int analyser_syntaxe(
 							etat=MES_ERREUR;
 							strcpy(msg_err, "n'est pas un registre");
 						}
-						else if (def_p->type_ops==I_OP_B) etat=I_B_REG;
-						else if (def_p->nb_ops==3) etat=I_RN_3OP;
-						else if (def_p->nb_ops==2) etat=I_RN_2OP;
-						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_R)) etat=I_R_1OP;
-						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_N)) etat=I_N_OP;
+						else if (def_p->type_ops==I_OP_B) etat=MES_I_B_REG;
+						else if (def_p->nb_ops==3) etat=MES_I_RN_3OP;
+						else if (def_p->nb_ops==2) etat=MES_I_RN_2OP;
+						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_R)) etat=MES_I_R_1OP;
+						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_N)) etat=MES_I_N_OP;
 						else if (def_p->nb_ops!=0) ERROR_MSG("Si on est là c'est qu'il y a un bug");
-						else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
-						else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
+						else if (lexeme_p->nature == L_FIN_LIGNE) etat=MES_EOL;
+						else if (lexeme_p->nature==L_COMMENTAIRE) etat=MES_COMMENT;
 						else ERROR_MSG("Si on est là c'est qu'il y a un bug");
 					}
 				}
 				break;
-			case I_RN_3OP:
-				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
-					etat=MES_ERREUR;
-					strcpy(msg_err, "n'est pas un registre valide");
-				} else {
-					instruction_p->operandes[0]=lexeme_p;
-
-					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=MES_ERREUR;
-					else if (lexeme_p->nature==L_VIRGULE) etat=I_RN_V32;
-					else {
-						etat=MES_ERREUR;
-						strcpy(msg_err, "à la place d'une virgule");
-					}
-				}
+			case MES_I_RN_3OP:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, def_p->nb_ops-3, L_VIRGULE, MES_I_RN_V32, msg_err, "à la place d'une virgule");
 				break;
-			case I_RN_V32:
+			case MES_I_RN_V32:
+				etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, MES_I_RN_2OP, msg_err);
 				break;
-			case I_RN_2OP:
-				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
-					etat=MES_ERREUR;
-					strcpy(msg_err, "n'est pas un registre valide");
-				} else {
-					instruction_p->operandes[def_p->nb_ops-2]=lexeme_p;
-
-					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=MES_ERREUR;
-					else if (lexeme_p->nature==L_VIRGULE) etat=I_RN_V21;
-					else {
-						etat=MES_ERREUR;
-						strcpy(msg_err, "à la place d'une virgule");
-					}
-				}
+			case MES_I_RN_2OP:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, def_p->nb_ops-2, L_VIRGULE, MES_I_RN_V21, msg_err, "à la place d'une virgule");
 				break;
-			case I_RN_V21:
+			case MES_I_RN_V21:
+				if (def_p->type_ops==I_OP_R) etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, MES_I_R_1OP, msg_err);
+				else etat=etat_sera_nombre_ou_symbole(&noeud_lexeme_p, &lexeme_p, MES_I_N_OP, msg_err);
 				break;
-			case I_R_1OP:
+			case MES_I_R_1OP:
 				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
 					etat=MES_ERREUR;
 					strcpy(msg_err, "n'est pas un registre valide");
@@ -713,55 +759,31 @@ int analyser_syntaxe(
 					instruction_p->operandes[def_p->nb_ops-1]=lexeme_p;
 
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=MES_ERREUR;
-					else if (lexeme_p->nature==L_VIRGULE) etat=I_RN_V21;
-					else {
-						etat=MES_ERREUR;
-						strcpy(msg_err, "à la place d'une virgule");
+					etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
+					if (etat!=MES_ERREUR) {
+						ajouter_fin_liste(liste_p, instruction_p);
+						instruction_p=NULL; /* XXX il faudra tester l'insertion */
+						(*decalage_p)+=4;
 					}
 				}
 				break;
-			case I_N_OP:
+			case MES_I_N_OP:
 				break;
-			case I_B_REG:
-				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
-					etat=MES_ERREUR;
-					strcpy(msg_err, "n'est pas un registre valide");
-				} else {
-					instruction_p->operandes[0]=lexeme_p;
-
-					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=MES_ERREUR;
-					else if (lexeme_p->nature==L_VIRGULE) etat=I_B_VIR;
-					else {
-						etat=MES_ERREUR;
-						strcpy(msg_err, "à la place d'une virgule");
-					}
-				}
+			case MES_I_B_REG:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, 0, L_VIRGULE, MES_I_B_VIR, msg_err, "à la place d'une virgule");
 				break;
-			case I_B_VIR:
+			case MES_I_B_VIR:
+				etat=etat_sera_nombre_ou_symbole(&noeud_lexeme_p, &lexeme_p, MES_I_B_OFFS, msg_err);
 				break;
-			case I_B_OFFS:
+			case MES_I_B_OFFS:
 				break;
-			case I_B_PO:
+			case MES_I_B_PO:
+				etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, MES_I_B_BASE, msg_err);
 				break;
-			case I_B_BASE:
-				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
-					etat=MES_ERREUR;
-					strcpy(msg_err, "n'est pas un registre valide");
-				} else {
-					instruction_p->operandes[0]=lexeme_p;
-
-					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=MES_ERREUR;
-					else if (lexeme_p->nature==L_PARENTHESE_FERMANTE) etat=I_B_PF;
-					else {
-						etat=MES_ERREUR;
-						strcpy(msg_err, "à la place d'une virgule");
-					}
-				}
+			case MES_I_B_BASE:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, 2, L_PARENTHESE_FERMANTE, MES_I_B_PF, msg_err, "à la place d'une parenthèse fermante");
 				break;
-			case I_B_PF:
+			case MES_I_B_PF:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
 				break;
@@ -772,16 +794,15 @@ int analyser_syntaxe(
 					fprintf(stderr, "%s.\n", msg_err); msg_err[0]='\0';
 				} else ERROR_MSG("fin de liste de lexème innatendue");
 
-				free(instruction_p); instruction_p=NULL;
-				free(donnee_p);	donnee_p=NULL;
-				index_op=0;
-				op_a_lire=0;
-				type_donnee=D_UNDEF;
+				free(instruction_p);
+				instruction_p=NULL;
+				free(donnee_p);
+				donnee_p=NULL;
 
 				while ((lexeme_p) && (lexeme_p->nature!=L_FIN_LIGNE))
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				if (!lexeme_p) etat=MES_FIN;
-				else etat=EOL;
+				else etat=MES_EOL;
 
 				resultat=FAILURE;
 				break;

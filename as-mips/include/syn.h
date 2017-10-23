@@ -81,5 +81,8 @@ char *clefEtiquette(void *donnee_p);
 void analyse_syntaxe(struct Liste_s *lignes_lexemes_p,
 		struct Table_s *table_def_instructions_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,
 		struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p);
+int analyser_syntaxe(struct Liste_s *lignes_lexemes_p,
+		struct Table_s *table_def_instructions_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,
+		struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p);
 
 #endif /* _SYN_H_ */

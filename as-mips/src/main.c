@@ -80,8 +80,10 @@ int main(int argc, char *argv[])
 	charge_def_registre(&tableDefinitionRegistres_p, "src/dictionnaire_registres.txt");
 
 	/* effectue l'analyse syntaxique */
+	/*
 	analyse_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
-
+	*/
+	analyser_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
 	/* affiche les résultats de l'analyse syntaxique */
 	afficher_clefs_table(tableEtiquettes_p);
 	/* XXX afficher les trois listes de text, data et bss */
