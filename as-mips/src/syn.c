@@ -769,6 +769,7 @@ int analyser_syntaxe(
 				donnee_p->type=D_ASCIIZ;
 				donnee_p->lexeme_p=lexeme_p;
 				donnee_p->ligne=lexeme_p->ligne;
+				donnee_p->valeur.chaine=NULL;
 				/* il manque à récupérer un pointeur de chaine */
 
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
@@ -778,7 +779,7 @@ int analyser_syntaxe(
 
 				if (etat!=MES_ERREUR) {
 					ajouter_fin_liste(liste_p, donnee_p);
-					(*decalage_p)+=1+strlen(donnee_p->valeur.chaine);
+					(*decalage_p)+=(donnee_p->valeur.chaine ? 1+strlen(donnee_p->valeur.chaine) : 0);
 					donnee_p=NULL; /* XXX il faudra tester l'insertion */
 				}
 				break;
