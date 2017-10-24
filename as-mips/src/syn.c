@@ -20,41 +20,8 @@
 #include <dico.h>
 #include <lex.h>
 #include <syn.h>
-/*
-enum Etat_Syn_e {
-		MES_INIT,
-		MES_FIN,
-		MES_ERREUR,
-		MES_EOL,
-		MES_COMMENT,
-		MES_SECTION,
-		MES_OPTION,
-		MES_ETIQUET,
-		MES_DONNEE,
-		MES_DONNEE_A,
-		MES_DONNEE_W,
-		MES_DONNEE_B,
-		MES_DONNEE_S,
-		MES_VIRG_A,
-		MES_VIRG_W,
-		MES_VIRG_B,
-		MES_VIRG_S,
-		MES_INSTRUC,
-		MES_I_RN_3OP,
-		MES_I_RN_V32,
-		MES_I_RN_2OP,
-		MES_I_RN_V21,
-		MES_I_R_1OP,
-		MES_I_N_OP,
-		MES_I_B_REG,
-		MES_I_B_VIR,
-		MES_I_B_OFFS,
-		MES_I_B_PO,
-		MES_I_B_BASE,
-		MES_I_B_PF
-	};
-	*/
-enum Etat_Syn_e {
+
+enum M_E_S_e {
 		MES_INIT,
 		MES_FIN,
 		MES_ERREUR,
@@ -115,7 +82,7 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
 {
 	int i;
 
-	printf("%5d 0x%08x %8s %8s %8s %8s",
+	printf("%5d %08x XXXXXXXX %8s %8s %8s %8s",
 			instruction_p->ligne,
 			instruction_p->decalage,
 			instruction_p->definition_p->nom,
@@ -147,21 +114,21 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
 void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 {
 	/* printf("nom directive %s  numero de ligne %d  decalage %d",donnee_p->lexeme_p->data, donnee_p->ligne, donnee_p->decalage); */
-	printf("%5d 0x%08x ", donnee_p->ligne, donnee_p->decalage);
+	printf("%5d %08x ", donnee_p->ligne, donnee_p->decalage);
 	switch(donnee_p->type) {
 	case D_BYTE:
-		printf("      0x%02x : byte", donnee_p->valeur.octetNS);
+		printf("      %02x : byte", donnee_p->valeur.octetNS);
 		break;
 	case D_WORD:
 		if (donnee_p->lexeme_p->nature==L_SYMBOLE) {
 			if (table_p) {
 				if (!donnee_table(table_p, donnee_p->lexeme_p->data)) {
-					printf("0xXXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm est inconnu dans la table des étiquettes",
+					printf("XXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm est inconnu dans la table des étiquettes",
 							0x1B, STYLE_BOLD, COLOR_RED,
 							donnee_p->lexeme_p->data,
 							0x1B, STYLE_BOLD, 0);
 				} else {
-					printf("0x%08x : symbole %c[%d;%dm%s%c[%d;%dm en section %s",
+					printf("%08x : symbole %c[%d;%dm%s%c[%d;%dm en section %s",
 							((struct Etiquette_s *)donnee_table(table_p, donnee_p->lexeme_p->data))->decalage,
 							0x1B, STYLE_BOLD, COLOR_GREEN,
 							donnee_p->lexeme_p->data,
@@ -171,14 +138,14 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 			} else
 				printf("0xXXXXXXXX : symbole %s", donnee_p->lexeme_p->data);
 		} else {
-			printf("0x%08x : word", donnee_p->valeur.motNS);
+			printf("%08x : word", donnee_p->valeur.motNS);
 		}
 		break;
 	case D_ASCIIZ:
 		printf("\"%s\" : asciiz", donnee_p->valeur.chaine);
 		break;
 	case D_SPACE:
-		printf("0x%08x : space (nombre d'octets réservés)", donnee_p->valeur.nbOctets);
+		printf("%08x : space (nombre d'octets réservés)", donnee_p->valeur.nbOctets);
 		break;
 	default:
 		printf("type non défini\n");
@@ -202,7 +169,7 @@ void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char
 			}
 		}
 	}
-	printf("\n\n\n");
+	printf("\n\n");
 }
 
 
@@ -221,7 +188,34 @@ void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p
 			}
 		}
 	}
-	printf("\n\n\n");
+	printf("\n\n");
+}
+
+void affiche_table_etiquette(struct Table_s *table_p, char *titre)
+{
+	size_t i, j;
+
+	struct Etiquette_s *etiquette_p=NULL;
+	if (!table_p) {
+		printf("%s n'existe pas !\n", titre);
+	} else {
+		if (!(table_p->nbElts)) {
+			printf("%s est vide\n", titre);
+		} else {
+			printf("%s\n", titre);
+			if (table_p) {
+				j=0;
+				for (i=0; i<table_p->nbEltsMax; i++)
+					if (table_p->table[i]) {
+						j++;
+						etiquette_p=table_p->table[i];
+
+						printf("%08x section %8s  %32s\n",etiquette_p->decalage, NOMS_SECTIONS[etiquette_p->section], etiquette_p->lexeme_p->data);
+					}
+			}
+		}
+	}
+	printf("\n\n");
 }
 
 void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
@@ -295,9 +289,9 @@ int enregistrer_etiquette(
 }
 
 
-enum Etat_Syn_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *msg)
+enum M_E_S_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *msg)
 {
-	enum Etat_Syn_e etat;
+	enum M_E_S_e etat;
 	if (!lexeme_p) etat=MES_ERREUR;
 	else if (lexeme_p->nature==L_FIN_LIGNE) etat=MES_EOL;
 	else if (lexeme_p->nature==L_COMMENTAIRE) etat=MES_COMMENT;
@@ -308,13 +302,13 @@ enum Etat_Syn_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *ms
 	return etat;
 }
 
-enum Etat_Syn_e etat_sera_nombre_ou_symbole(
+enum M_E_S_e etat_sera_nombre_ou_symbole(
 		struct NoeudListe_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
-		enum Etat_Syn_e etat_normal_suiv,
+		enum M_E_S_e etat_normal_suiv,
 		char *msg_err)
 {
-	enum Etat_Syn_e etat;
+	enum M_E_S_e etat;
 	mef_suivant(noeud_lexeme_pp, lexeme_pp);
 	if (!(*lexeme_pp)) etat=MES_ERREUR;
 	else if (((*lexeme_pp)->nature==L_NOMBRE) || ((*lexeme_pp)->nature==L_SYMBOLE)) etat=etat_normal_suiv;
@@ -325,13 +319,13 @@ enum Etat_Syn_e etat_sera_nombre_ou_symbole(
 	return etat;
 }
 
-enum Etat_Syn_e etat_sera_registre(
+enum M_E_S_e etat_sera_registre(
 		struct NoeudListe_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
-		enum Etat_Syn_e etat_normal_suiv,
+		enum M_E_S_e etat_normal_suiv,
 		char *msg_err)
 {
-	enum Etat_Syn_e etat;
+	enum M_E_S_e etat;
 
 	mef_suivant(noeud_lexeme_pp, lexeme_pp);
 	if (!(*lexeme_pp)) etat=MES_ERREUR;
@@ -343,18 +337,18 @@ enum Etat_Syn_e etat_sera_registre(
 	return etat;
 }
 
-enum Etat_Syn_e etat_traitement_registre(
+enum M_E_S_e etat_traitement_registre(
 		struct NoeudListe_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
 		struct Table_s *def_reg_p,
 		struct Instruction_s *instruction_p,
 		int indice,
 		enum Nature_lexeme_e nature_attendue,
-		enum Etat_Syn_e etat_normal_suiv,
+		enum M_E_S_e etat_normal_suiv,
 		char *msg_err,
 		char *msg)
 {
-	enum Etat_Syn_e etat;
+	enum M_E_S_e etat;
 	if (!donnee_table(def_reg_p, (*lexeme_pp)->data)) {
 		etat=MES_ERREUR;
 		strcpy(msg_err, "n'est pas un registre valide");
@@ -373,7 +367,7 @@ enum Etat_Syn_e etat_traitement_registre(
 }
 
 int mef_lire_nombre(
-		enum Etat_Syn_e etat,
+		enum M_E_S_e etat,
 		struct Lexeme_s *lexeme_p,
 		struct Donnee_s **donnee_pp,
 		uint32_t *decalage_p,
@@ -578,7 +572,7 @@ int analyser_syntaxe(
 	struct NoeudListe_s *noeud_lexeme_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
 
-	enum Etat_Syn_e etat=MES_INIT;
+	enum M_E_S_e etat=MES_INIT;
 	enum Section_e section=S_INIT;
 	int resultat=SUCCESS;
 
