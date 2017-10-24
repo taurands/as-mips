@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 	afficher_clefs_table(tableEtiquettes_p);
 	affiche_liste_donnee(listeData_p, tableEtiquettes_p, "Table des données de la section .data");
 	affiche_liste_donnee(listeBss_p, tableEtiquettes_p, "Table des données de la section .bss");
+	affiche_liste_instructions(listeText_p, tableEtiquettes_p, "Table des instructions de .text");
 	/* XXX afficher les trois listes de text, data et bss */
 
     /* ---------------- Free memory and terminate -------------------*/
