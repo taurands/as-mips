@@ -19,7 +19,7 @@ SUB $2, $5
 SUB $2, $5 "$7
 SUB 31, $4, $7
 SUB 31, $5
-MULT $7,$8,$9
+tata:MULT $7,$8,$9
 MULT
 MULT $3
 MULT 10,$7

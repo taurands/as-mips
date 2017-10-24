@@ -21,13 +21,13 @@ ROTR $20, $21, 31
 ROTR $20, $21, toto
 SLL $22, $23, 12
 SLL $24, $25, tata
-SRL $26, $27, tata
+SRL $26, $27, titi
 SRL $26, $27, 30
 SLT $28,$29,$30
 LW $31, 0x60($10)
 SW $zero, 45($a0)
 LUI $t1, 12
-MFHI $s2
+tata:MFHI $s2
 MFLO $k1
 BEQ $1, $3, 2398
 BEQ $gp, $sp, nombre
@@ -53,5 +53,5 @@ MOVE $1, $2
 .asciiz "test"
 .asciiz "", "\"""
 .bss
-.space 12
+titi:.space 12
 .space 05,0xF

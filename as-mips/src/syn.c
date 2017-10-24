@@ -155,6 +155,7 @@ void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char
 			}
 		}
 	}
+	printf("\n\n\n");
 }
 
 
@@ -173,6 +174,7 @@ void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p
 			}
 		}
 	}
+	printf("\n\n\n");
 }
 
 void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
