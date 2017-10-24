@@ -1078,7 +1078,8 @@ int analyser_syntaxe(
 							etat=MES_ERREUR;
 							strcpy(msg_err, "n'est pas un registre");
 						}
-						else if (def_p->type_ops==I_OP_B) etat=MES_I_B_REG;
+						else if (def_p->type_ops==I_OP_B)
+							etat=MES_I_B_REG;
 						else if (def_p->nb_ops==3) etat=MES_I_RN_3OP;
 						else if (def_p->nb_ops==2) etat=MES_I_RN_2OP;
 						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_R)) etat=MES_I_R_1OP;
@@ -1121,8 +1122,15 @@ int analyser_syntaxe(
 				}
 				break;
 			case MES_I_N_OP:
-				etat=MES_ERREUR;
-				strcpy(msg_err, "n'est pas encore traité (MES_I_N_OP Numérique ou symbole)");
+				instruction_p->operandes[def_p->nb_ops-1]=lexeme_p;
+
+				mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
+				if (etat!=MES_ERREUR) {
+					ajouter_fin_liste(liste_p, instruction_p);
+					instruction_p=NULL; /* XXX il faudra tester l'insertion */
+					(*decalage_p)+=4;
+				}
 				break;
 			case MES_I_B_REG:
 				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, 0, L_VIRGULE, MES_I_B_VIR, msg_err, "à la place d'une virgule");
@@ -1131,8 +1139,15 @@ int analyser_syntaxe(
 				etat=etat_sera_nombre_ou_symbole(&noeud_lexeme_p, &lexeme_p, MES_I_B_OFFS, msg_err);
 				break;
 			case MES_I_B_OFFS:
-				etat=MES_ERREUR;
-				strcpy(msg_err, "n'est pas encore traité (MES_I_B_OFFS Numérique ou symbole)");
+				instruction_p->operandes[1]=lexeme_p;
+
+				mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=MES_ERREUR;
+				else if (lexeme_p->nature==L_PARENTHESE_OUVRANTE) etat=MES_I_B_PO;
+				else {
+					etat=MES_ERREUR;
+					strcpy(msg_err, "à la place d'une parenthèse ouvrante");
+				}
 				break;
 			case MES_I_B_PO:
 				etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, MES_I_B_BASE, msg_err);
@@ -1143,6 +1158,11 @@ int analyser_syntaxe(
 			case MES_I_B_PF:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
+				if (etat!=MES_ERREUR) {
+					ajouter_fin_liste(liste_p, instruction_p);
+					instruction_p=NULL; /* XXX il faudra tester l'insertion */
+					(*decalage_p)+=4;
+				}
 				break;
 			default:
 				etat=MES_ERREUR;
