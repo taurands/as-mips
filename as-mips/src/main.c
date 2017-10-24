@@ -80,19 +80,15 @@ int main(int argc, char *argv[])
 	charge_def_registre(&tableDefinitionRegistres_p, "src/dictionnaire_registres.txt");
 
 	/* effectue l'analyse syntaxique */
-	/*
-	analyse_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
-	*/
 	analyser_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
-	/* affiche les résultats de l'analyse syntaxique */
 
+	/* affiche les résultats de l'analyse syntaxique */
 	afficher_clefs_table(tableEtiquettes_p);
 	affiche_liste_donnee(listeData_p, tableEtiquettes_p, "Table des données de la section .data");
 	affiche_liste_donnee(listeBss_p, tableEtiquettes_p, "Table des données de la section .bss");
 	affiche_liste_instructions(listeText_p, tableEtiquettes_p, "Table des instructions de .text");
-	/* XXX afficher les trois listes de text, data et bss */
 
-    /* ---------------- Free memory and terminate -------------------*/
+    /* ---------------- Libérer nos camarades pointeurs -------------------*/
 	tableEtiquettes_p=detruire_table(tableEtiquettes_p);
     tableDefinitionInstructions_p=detruire_table(tableDefinitionInstructions_p);
     tableDefinitionRegistres_p=detruire_table(tableDefinitionRegistres_p);
