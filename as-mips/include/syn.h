@@ -51,8 +51,8 @@ struct Instruction_s {
  * @brief Elément définissant une étiquette
  */
 struct Etiquette_s {
-	struct Lexeme_s *lexeme_p;				/**< pointeur vers le Lexème contenant le nom de l'étiquette */
-	unsigned int ligne;			/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	struct Lexeme_s *lexeme_p;			/**< pointeur vers le Lexème contenant le nom de l'étiquette */
+	unsigned int ligne;					/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	enum Section_e section;				/**< Section où se trouve l'étiquette */
 	uint32_t decalage;					/**< décalage de l'adresse de l'étiquette par rapport à l'étiquette de la section */
 };
@@ -62,9 +62,9 @@ struct Etiquette_s {
  * @brief Elément définissant un élément que l'on peut retrouver dans les sections .data ou .bss
  */
 struct Donnee_s {
-	struct Lexeme_s *lexeme_p;			/**< permet de savoir si l'on travaille avec une étiquette ou une directive */
-	unsigned int ligne;		/**< Numéro de ligne source associé à la ligne de lexème traitée */
-	enum Donnee_e type;				/**< Type de la donnée à stocker */
+	struct Lexeme_s *lexeme_p;		/**< permet de récupérer la définition du symbole le cas échéant */
+	unsigned int ligne;				/**< Numéro de ligne source associé à la ligne de lexème traitée */
+	enum Donnee_e type;				/**< Type de la donnée stockée */
 	uint32_t decalage;				/**< décalage de l'adresse de la donnée par rapport à l'étiquette de la section */
 	union {
 		int8_t		octet;
@@ -77,6 +77,8 @@ struct Donnee_s {
 };
 
 char *clefEtiquette(void *donnee_p);
+
+void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste);
 
 void analyse_syntaxe(struct Liste_s *lignes_lexemes_p,
 		struct Table_s *table_def_instructions_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,

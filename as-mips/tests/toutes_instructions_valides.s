@@ -1,6 +1,14 @@
+.data
+.space 6
+.byte 1, 2
+mot1:.word 1, nombre1
+.byte 1
+mot2:.word nombre
+nombre:.word 1
+.space 1, 2
 .text
 ADD $0,$4,$13
-ADDI $1, $3, 21
+instruc1:ADDI $1, $3, 21
 ADDI $1, $3, nombre
 SUB $2,$5,$6
 MULT $7,$8

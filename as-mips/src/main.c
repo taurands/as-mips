@@ -85,7 +85,10 @@ int main(int argc, char *argv[])
 	*/
 	analyser_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
 	/* affiche les résultats de l'analyse syntaxique */
+
 	afficher_clefs_table(tableEtiquettes_p);
+	affiche_liste_donnee(listeData_p, tableEtiquettes_p, "Table des données de la section .data");
+	affiche_liste_donnee(listeBss_p, tableEtiquettes_p, "Table des données de la section .bss");
 	/* XXX afficher les trois listes de text, data et bss */
 
     /* ---------------- Free memory and terminate -------------------*/
