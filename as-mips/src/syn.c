@@ -434,18 +434,90 @@ int analyser_syntaxe(
 		struct Liste_s *liste_bss_p)				/**< Pointeur sur la liste des réservations des .space de la section .bss */
 {
 /**	@dot
- *	digraph Machine_Etat_Syn {
+ *	digraph Machine_Etat_Instruc {
  *		concentrate=true;
- *		graph [label="\nMachine à états finis d'analyse syntaxique"; fontname = "helvetica"; fontsize = 16;];
- *		edge [fontname = "helvetica"; fontsize = 10;];
- *		node [shape="circle";  fontname = "helvetica"; fontsize = 10; color = "black";] MES_INIT; MES_FIN;
- *		node [shape="circle";  fontname = "helvetica"; fontsize = 10; color = "red";] MES_ERREUR;
- *		node [shape="circle";  fontname = "helvetica"; fontsize = 10; color = "black";] MES_OPTION; MES_NOREORD;
- *		node [shape="tab";  fontname = "helvetica"; fontsize = 10; color = "black";] MES_BYTE; MES_WORD; MES_ASCIIZ; MES_SPACE; MES_ETIQUET; MES_INSTRUC; MES_SECTION;
- *		node [shape="circle";  fontname = "helvetica"; fontsize = 10; color = "black";] MES_DONNEE_A; MES_DONNEE_W; MES_DONNEE_B; MES_DONNEE_S; MES_VIRG_A; MES_VIRG_W; MES_VIRG_B; MES_VIRG_S;
- *		node [shape="circle";  fontname = "helvetica"; fontsize = 10; color = "black";] MES_COMMENT; MES_EOL;
- *		node [shape="circle";  fontname = "helvetica"; fontsize = 10; color = "black";] MES_I_RN_3OP; MES_I_RN_V32; MES_I_RN_2OP; MES_I_RN_V21; MES_I_R_1OP; MES_I_N_OP;
- *		node [shape="circle";  fontname = "helvetica"; fontsize = 10; color = "black";] MES_I_B_REG; MES_I_B_VIR; MES_I_B_OFFS; MES_I_B_PO; MES_I_B_BASE; MES_I_B_PF;
+ *		graph [label="\nMachine à états finis d'analyse syntaxique"; fontname = "arial"; fontsize = 16;];
+ *		edge [fontname = "arial"; fontsize = 10;];
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";]
+ *
+ *		rankdir=LR; // de gauche vers la droite
+ *		MES_INSTRUC -> MES_ERREUR [label = "mauvaise instruction"]
+ *		MES_INSTRUC -> MES_I_B_REG [label = "base offset"]
+ *		MES_INSTRUC -> MES_I_RN_3OP [label = "3 ops"]
+ *		MES_INSTRUC -> MES_I_RN_2OP [label = "2 ops"]
+ *		MES_INSTRUC -> MES_I_R_1OP [label = "1 ops et R"]
+ *		MES_INSTRUC -> MES_I_N_OP [label = "1 ops et N"]
+ *		MES_INSTRUC -> MES_COMMENT [label = "0 ops et COMMENT"]
+ *		MES_INSTRUC -> MES_EOL [label = "0 ops et EOL"]
+ *		MES_INSTRUC -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_B_REG -> MES_ERREUR [label = "pas bon REG"]
+ *		MES_I_B_REG -> MES_I_B_VIR [label = "VIR"]
+ *		MES_I_B_REG -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_B_VIR -> MES_I_B_OFFS [label = "NB ou SYM"]
+ *		MES_I_B_VIR -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_B_OFFS -> MES_I_B_PO [label = "PO"]
+ *		MES_I_B_OFFS -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_B_PO -> MES_I_B_BASE [label = "REG"]
+ *		MES_I_B_PO -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_B_BASE -> MES_ERREUR [label = "pas bon REG"]
+ *		MES_I_B_BASE -> MES_I_B_PF [label = "PF"]
+ *		MES_I_B_BASE -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_B_PF -> MES_COMMENT [label = "COMMENT"]
+ *		MES_I_B_PF -> MES_EOL [label = "EOL"]
+ *		MES_I_B_PF -> MES_ERREUR [label = "sinon"]
+ *
+ *
+ *
+ *		MES_I_RN_3OP -> MES_ERREUR [label = "pas bon REG"]
+ *		MES_I_RN_3OP -> MES_I_RN_V32 [label = "VIR"]
+ *		MES_I_RN_3OP -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_RN_V32 -> MES_I_RN_2OP [label = "REG"]
+ *		MES_I_RN_V32 -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_RN_2OP -> MES_ERREUR [label = "pas bon REG"]
+ *		MES_I_RN_2OP -> MES_I_RN_V21 [label = "VIR"]
+ *		MES_I_RN_2OP -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_RN_V21 -> MES_I_N_OP [label = "N et (NB ou SYM)"]
+ *		MES_I_RN_V21 -> MES_I_R_1OP [label = "R et REG"]
+ *		MES_I_RN_V21 -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_R_1OP -> MES_ERREUR [label = "pas bon REG"]
+ *		MES_I_R_1OP -> MES_COMMENT [label = "COMMENT"]
+ *		MES_I_R_1OP -> MES_EOL [label = "EOL"]
+ *		MES_I_R_1OP -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_I_N_OP -> MES_COMMENT [label = "COMMENT"]
+ *		MES_I_N_OP -> MES_EOL [label = "EOL"]
+ *		MES_I_N_OP -> MES_ERREUR [label = "sinon"]
+ *
+ *		MES_COMMENT -> MES_EOL [label=EOL]
+ *		MES_COMMENT -> MES_ERREUR [label = "sinon"]
+ *	}
+ *  @enddot
+ */
+
+
+/**	@dot
+ *	digraph Machine_Etat_Syn {
+ *		concentrate=false;
+ *		graph [label="\nMachine à états finis d'analyse syntaxique"; fontname = "arial"; fontsize = 16;];
+ *		edge [fontname = "arial"; fontsize = 10;];
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_INIT; MES_FIN;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "red";] MES_ERREUR;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_OPTION; MES_NOREORD;
+ *		node [shape="tab";  fontname = "arial"; fontsize = 10; color = "black";] MES_BYTE; MES_WORD; MES_ASCIIZ; MES_SPACE; MES_ETIQUET; MES_INSTRUC; MES_SECTION;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_DONNEE_A; MES_DONNEE_W; MES_DONNEE_B; MES_DONNEE_S; MES_VIRG_A; MES_VIRG_W; MES_VIRG_B; MES_VIRG_S;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_COMMENT; MES_EOL;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_I_RN_3OP; MES_I_RN_V32; MES_I_RN_2OP; MES_I_RN_V21; MES_I_R_1OP; MES_I_N_OP;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_I_B_REG; MES_I_B_VIR; MES_I_B_OFFS; MES_I_B_PO; MES_I_B_BASE; MES_I_B_PF;
  *		rankdir=LR; // de gauche vers la droite
  *
  *		MES_INIT -> {rank=same MES_INSTRUC MES_BYTE MES_WORD MES_ASCIIZ MES_SPACE MES_ETIQUET MES_SECTION MES_OPTION} [style=invis]
@@ -469,62 +541,62 @@ int analyser_syntaxe(
  *		MES_INIT -> MES_INSTRUC [label = "(section=text) et (ETQ)"]
  *		MES_INIT -> MES_COMMENT [label = "COMMENT"]
  *		MES_INIT -> MES_EOL [label = "EOL"]
- *		MES_INIT -> ERREUR [label = "sinon"]
+ *		MES_INIT -> MES_ERREUR [label = "sinon"]
  *
  *		MES_OPTION -> MES_NOREORD [label = "SYM noreoder"]
  *		MES_OPTION -> MES_COMMENT [label = "COMMENT"]
  *		MES_OPTION -> MES_EOL [label = "EOL"]
- *		MES_OPTION -> ERREUR [label = "sinon"]
+ *		MES_OPTION -> MES_ERREUR [label = "sinon"]
  *
  *		MES_SECTION -> MES_COMMENT [label = "COMMENT"]
  *		MES_SECTION -> MES_EOL [label = "EOL"]
- *		MES_SECTION -> ERREUR [label = "sinon"]
+ *		MES_SECTION -> MES_ERREUR [label = "sinon"]
  *
  *		MES_BYTE -> MES_DONNEE_B [label = "NB"]
- *		MES_BYTE -> ERREUR [label = "sinon"]
+ *		MES_BYTE -> MES_ERREUR [label = "sinon"]
  *
  *		MES_DONNEE_B -> MES_VIRG_B [label = "VIR"]
  *		MES_DONNEE_B -> MES_COMMENT [label = "COMMENT"]
  *		MES_DONNEE_B -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_B -> ERREUR [label = "si non valide ou autre"]
+ *		MES_DONNEE_B -> MES_ERREUR [label = "si non valide ou autre"]
  *
  *		MES_VIRG_B -> MES_DONNEE_B [label = "NB"]
- *		MES_VIRG_B -> ERREUR [label = "sinon"]
+ *		MES_VIRG_B -> MES_ERREUR [label = "sinon"]
  *
  *		MES_WORD -> MES_DONNEE_W [label = "NB ou SYM"]
- *		MES_WORD -> ERREUR [label = "sinon"]
+ *		MES_WORD -> MES_ERREUR [label = "sinon"]
  *
  *		MES_DONNEE_W -> MES_VIRG_W [label = "VIR"]
  *		MES_DONNEE_W -> MES_COMMENT [label = "COMMENT"]
  *		MES_DONNEE_W -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_W -> ERREUR [label = "si non valide ou autre"]
+ *		MES_DONNEE_W -> MES_ERREUR [label = "si non valide ou autre"]
  *
  *		MES_VIRG_W -> MES_DONNEE_W [label = "NB ou SYM"]
- *		MES_VIRG_W -> ERREUR [label = "sinon"]
+ *		MES_VIRG_W -> MES_ERREUR [label = "sinon"]
  *
  *		MES_ASCIIZ -> MES_DONNEE_A [label = "NB"]
- *		MES_ASCIIZ -> ERREUR [label = "sinon"]
+ *		MES_ASCIIZ -> MES_ERREUR [label = "sinon"]
  *
  *		MES_DONNEE_A -> MES_VIRG_A [label = "VIR"]
  *		MES_DONNEE_A -> MES_COMMENT [label = "COMMENT"]
  *		MES_DONNEE_A -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_A -> ERREUR [label = "si non valide ou autre"]
+ *		MES_DONNEE_A -> MES_ERREUR [label = "si non valide ou autre"]
  *
  *		MES_VIRG_A -> MES_DONNEE_A [label = "NB"]
- *		MES_VIRG_A -> ERREUR [label = "sinon"]
+ *		MES_VIRG_A -> MES_ERREUR [label = "sinon"]
  *
  *		MES_SPACE -> MES_DONNEE_S [label = "NB"]
- *		MES_SPACE -> ERREUR [label = "sinon"]
+ *		MES_SPACE -> MES_ERREUR [label = "sinon"]
  *
  *		MES_DONNEE_S -> MES_VIRG_S [label = "VIR"]
  *		MES_DONNEE_S -> MES_COMMENT [label = "COMMENT"]
  *		MES_DONNEE_S -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_S -> ERREUR [label = "si non valide ou autre"]
+ *		MES_DONNEE_S -> MES_ERREUR [label = "si non valide ou autre"]
  *
  *		MES_VIRG_S -> MES_DONNEE_S [label = "NB"]
- *		MES_VIRG_S -> ERREUR [label = "sinon"]
+ *		MES_VIRG_S -> MES_ERREUR [label = "sinon"]
  *
- *		MES_INSTRUC -> ERREUR [label = "mauvaise instruction"]
+ *		MES_INSTRUC -> MES_ERREUR [label = "mauvaise instruction"]
  *		MES_INSTRUC -> MES_I_B_REG [label = "base offset"]
  *		MES_INSTRUC -> MES_I_RN_3OP [label = "3 ops"]
  *		MES_INSTRUC -> MES_I_RN_2OP [label = "2 ops"]
@@ -532,29 +604,29 @@ int analyser_syntaxe(
  *		MES_INSTRUC -> MES_I_N_OP [label = "1 ops et I"]
  *		MES_INSTRUC -> MES_COMMENT [label = "0 ops et COMMENT"]
  *		MES_INSTRUC -> MES_EOL [label = "0 ops et EOL"]
- *		MES_INSTRUC -> ERREUR [label = "sinon"]
+ *		MES_INSTRUC -> MES_ERREUR [label = "sinon"]
  *
- *		MES_I_B_REG -> ERREUR [label = "pas bon REG"]
+ *		MES_I_B_REG -> MES_ERREUR [label = "pas bon REG"]
  *		MES_I_B_REG -> MES_I_B_VIR [label = "VIR"]
- *		MES_I_B_REG -> ERREUR [label = "sinon"]
+ *		MES_I_B_REG -> MES_ERREUR [label = "sinon"]
  *
  *		MES_I_B_VIR -> MES_I_B_OFFS [label = "NB ou SYM"]
- *		MES_I_B_VIR -> ERREUR [label = "sinon"]
+ *		MES_I_B_VIR -> MES_ERREUR [label = "sinon"]
  *
  *		MES_I_B_OFFS -> MES_I_B_PO [label = "PO"]
- *		MES_I_B_OFFS -> ERREUR [label = "sinon"]
+ *		MES_I_B_OFFS -> MES_ERREUR [label = "sinon"]
  *
  *		MES_I_B_PO -> MES_I_B_BASE [label = ""]
- *		MES_I_B_PO -> ERREUR [label = "sinon"]
+ *		MES_I_B_PO -> MES_ERREUR [label = "sinon"]
  *
- *		MES_I_B_BASE -> ERREUR [label = "pas bon REG"]
+ *		MES_I_B_BASE -> MES_ERREUR [label = "pas bon REG"]
  *		MES_I_B_BASE -> MES_I_B_PF [label = "PF"]
- *		MES_I_B_BASE -> ERREUR [label = "sinon"]
+ *		MES_I_B_BASE -> MES_ERREUR [label = "sinon"]
  *
  *		MES_I_B_PF -> MES_I_B_VIR [label = ""]
  *		MES_I_B_PF -> MES_COMMENT [label = "COMMENT"]
  *		MES_I_B_PF -> MES_EOL [label = "EOL"]
- *		MES_I_B_PF -> ERREUR [label = "sinon"]
+ *		MES_I_B_PF -> MES_ERREUR [label = "sinon"]
  *
  *	}
  *  @enddot
