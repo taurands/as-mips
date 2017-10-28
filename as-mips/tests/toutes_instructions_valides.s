@@ -51,7 +51,7 @@ MOVE $1, $2
 .word -1000,-0400,-0x1
 .space 15
 .asciiz "test"
-.asciiz "", "\"""
+.asciiz "" , "\"""
 .bss
 titi:.space 12
 .space 05,0xF

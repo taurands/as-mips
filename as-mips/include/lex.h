@@ -37,7 +37,8 @@ enum Nature_lexeme_e {
  	L_NOMBRE_OCTAL,			/**< Nombre octal. */
  	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
 
-	L_CHAINE,				/**< chaine de caractère avec un zero final */
+	L_DEBUT_CHAINE,			/**< Début d'une chaîne de caractèes, de la forme "xxx */
+	L_CHAINE,				/**< chaine de caractère avec un zero final , de la forme "xxx\0" */
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
 	L_FIN_LIGNE
@@ -67,6 +68,7 @@ enum Etat_lex_e {
 	HEXADECIMAL=L_NOMBRE_HEXADECIMAL,
 
 	CHAINE=L_CHAINE,
+	DEBUT_CHAINE=L_DEBUT_CHAINE,
 
 	COMMENTAIRE=L_COMMENTAIRE,
 	FIN_LIGNE=L_FIN_LIGNE,

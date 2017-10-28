@@ -150,6 +150,7 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
 			else if (c=='.') etat=POINT;
 			else if (c==',') etat=VIRGULE;
 			else if (c=='#') etat=COMMENTAIRE;
+			else if (c=='"') etat=DEBUT_CHAINE;
 			else if (c=='$') etat=REGISTRE;
 			else if (c=='(') etat=PARENTHESE_OUVRANTE;
 			else if (c==')') etat=PARENTHESE_FERMANTE;
@@ -176,6 +177,10 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
 			if(isxdigit(c)) etat=HEXADECIMAL;
 			else etat=ERREUR;
 			break;  
+
+		case DEBUT_CHAINE:
+			if (c=='"') etat=CHAINE;
+			break; /* Pas d'erreur possible ici */
 	
 		case HEXADECIMAL: 
 			if(!isxdigit(c)) etat=ERREUR;
@@ -263,6 +268,8 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
          	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
          	break;
         }
+
+
         else {
         	/* en cas d'états intermédiaires que l'on n'attend pas en sortie, on passe en erreur */
         	switch(etat) {
@@ -279,6 +286,10 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
     				etat=ERREUR;
     				break;
     				
+    			case DEBUT_CHAINE:
+    				etat=ERREUR;
+    				break;
+
 				case POINT:
 					etat=ERREUR;
 					break;
