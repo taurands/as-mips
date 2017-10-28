@@ -1,4 +1,3 @@
-
 /**
  * @file lex.c
  * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
@@ -12,12 +11,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <strings.h>
 
 #include <global.h>
 #include <notify.h>
+#include <str_utils.h>
 #include <lex.h>
-/* #include <gen_list.h> */
+#include <liste.h>
+#include <table.h>
 
 /**
  * @param etat etat de la machine à états finis lexicale
@@ -25,26 +25,31 @@
  * @brief Cette fonction permet de donne le mon correspondant à un état
  *
  */	
-char * etat_lex_to_str(Etat_lex_t etat) {
+char *etat_lex_to_str(enum Etat_lex_e etat)
+{
 	switch(etat) {
 		case INIT:					return "INIT";
 		case POINT:					return "POINT";
 		case VIRGULE:				return "VIRGULE";
+		case NOMBRE:				return "NOMBRE";
 		case DECIMAL:				return "DECIMAL";
 		case HEXADECIMAL:			return "HEXADECIMAL";
 		case OCTAL:					return "OCTAL";
+		case CHAINE:				return "CHAINE";
 		case MOINS:					return "MOINS";
 		case PLUS:					return "PLUS";
 		case REGISTRE:				return "REGISTRE";
 		case SYMBOLE:				return "SYMBOLE";
+		case INSTRUCTION:			return "INSTRUCTION";
 		case DIRECTIVE:				return "DIRECTIVE";
 		case ETIQUETTE:				return "ETIQUETTE";
 		case COMMENTAIRE:			return "COMMENTAIRE";
 		case DEBUT_HEXADECIMAL:		return "DEBUT_HEXADECIMAL";
 		case DECIMAL_ZERO:			return "DECIMAL_ZERO";
-		case PARANTHESE_OUVRANTE:	return "PARANTHESE_OUVRANTE";
-		case PARANTHESE_FERMANTE:	return "PARANTHESE_FERMANTE";
+		case PARENTHESE_OUVRANTE:	return "PARENTHESE_OUVRANTE";
+		case PARENTHESE_FERMANTE:	return "PARENTHESE_FERMANTE";
 		case ERREUR:				return "ERREUR";
+		case FIN_LIGNE:				return "FIN_LIGNE";
 		default : 	ERROR_MSG("Erreur de résolution du nom de l'état %d de la machine à états finis lexicale... Il manque donc au moins un nom d'état à rajouter", etat);
 	}
 	return NULL;
@@ -57,7 +62,8 @@ char * etat_lex_to_str(Etat_lex_t etat) {
  * @brief Cette fonction catégorise un lexème en analysant le(s) caractère(s) le composant.
  *
  */
-enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
+enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
+{
 
 /**	@dot
  *	digraph Machine_Etat_Lex {
@@ -65,7 +71,7 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  *		graph [label="\nMachine à états finis d'analyse lexicale"; fontname = "helvetica"; fontsize = 16;];
  *		edge [fontname = "helvetica"; fontsize = 10;];
  *		node [shape="circle";  fontname = "helvetica"; fontsize = 10;]; ERREUR; INIT;
- *		node [shape="ellipse";  fontname = "helvetica"; fontsize = 10;]; DECIMAL_ZERO; DEBUT_HEXADECIMAL; POINT;
+ *		node [shape="ellipse";  fontname = "helvetica"; fontsize = 10;]; DECIMAL_ZERO; DEBUT_HEXADECIMAL; POINT; PLUS; MOINS;
  *		node [shape="ellipse"; fontname = "helvetica"; fontsize = 10; color=green;];
  *		rankdir=LR; // de gauche vers la droite
  * 		INIT -> DECIMAL [label="1 à 9"];
@@ -76,19 +82,23 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
  *		INIT -> VIRGULE [label=","];
  *		INIT -> COMMENTAIRE [label="#"];
  *		INIT -> REGISTRE [label="$"];
- *		INIT -> PARANTHESE_OUVRANTE [label="("];
- *		INIT -> PARANTHESE_FERMANTE [label=")"];
+ *		INIT -> PARENTHESE_OUVRANTE [label="("];
+ *		INIT -> PARENTHESE_FERMANTE [label=")"];
  *		INIT -> SYMBOLE [label="_alpha"];
  *		INIT -> ERREUR [label="sinon"];
  *
  *		COMMENTAIRE -> COMMENTAIRE;
  *		ERREUR -> ERREUR;
  *
- *		MOINS -> ERREUR;
- *		PLUS -> ERREUR;
+ *		MOINS -> DECIMAL_ZERO [label="0"];
+ *		MOINS -> DECIMAL [label="1 à 9"];
+ *		MOINS -> ERREUR [label="sinon"];
+ *		PLUS -> DECIMAL_ZERO [label="0"];
+ *		PLUS -> DECIMAL [label="1 à 9"];
+ *		PLUS -> ERREUR [label="sinon"];
  *		VIRGULE -> ERREUR;
- *		PARANTHESE_OUVRANTE -> ERREUR;
- *		PARANTHESE_FERMANTE -> ERREUR;
+ *		PARENTHESE_OUVRANTE -> ERREUR;
+ *		PARENTHESE_FERMANTE -> ERREUR;
  *
  *		DECIMAL_ZERO -> OCTAL [label="0 à 7---"];
  *		DECIMAL_ZERO -> DEBUT_HEXADECIMAL [label="x ou X"];
@@ -140,19 +150,21 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
 			else if (c=='.') etat=POINT;
 			else if (c==',') etat=VIRGULE;
 			else if (c=='#') etat=COMMENTAIRE;
+			else if (c=='"') etat=DEBUT_CHAINE;
 			else if (c=='$') etat=REGISTRE;
-			else if (c=='(') etat=PARANTHESE_OUVRANTE;
-			else if (c==')') etat=PARANTHESE_FERMANTE;
+			else if (c=='(') etat=PARENTHESE_OUVRANTE;
+			else if (c==')') etat=PARENTHESE_FERMANTE;
 			else if (isalpha(c) || (c=='_')) etat=SYMBOLE;
 			else etat=ERREUR;
 			break;
 		
 		case VIRGULE:
-		case PARANTHESE_OUVRANTE:
-		case PARANTHESE_FERMANTE:
+		case PARENTHESE_OUVRANTE:
+		case PARENTHESE_FERMANTE:
 		case MOINS:
 		case PLUS:
-			etat=ERREUR; /* Ces états ont été standardisés et ne doivent pas être suivis d'autre caractère à la suite */
+			if (isdigit(c)) etat=(c=='0')? DECIMAL_ZERO : DECIMAL;
+			else etat=ERREUR; /* Ces états ont été standardisés et ne doivent pas être suivis d'autre caractère à la suite */
 			break;
 		
 		case DECIMAL_ZERO: /* On va chercher si le prochain caractere est 'x' pour savoir si la valeur sera un nombre hexadecimal ou non */
@@ -165,6 +177,10 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
 			if(isxdigit(c)) etat=HEXADECIMAL;
 			else etat=ERREUR;
 			break;  
+
+		case DEBUT_CHAINE:
+			if (c=='"') etat=CHAINE;
+			break; /* Pas d'erreur possible ici */
 	
 		case HEXADECIMAL: 
 			if(!isxdigit(c)) etat=ERREUR;
@@ -208,30 +224,29 @@ enum Etat_lex_t machine_etats_finis_lexicale(enum Etat_lex_t etat, char c) {
 }
 
 /**
- * @param line String of the line of source code to be analysed.
- * @param nline the line number in the source code.
- * @return should return the collection of lexemes that represent the input line of source code.
- * @brief This function performs lexical analysis of one standardized line.
- *
+ * @param ligne chaine contenant la ligne du fichier source assembleur à analyser
+ * @param liste_lexemes_p pointeur sur la liste de lexèmes servant à stoquer les lexèmes qui seront extraits dans l'analyses
+ * @param num_ligne le numéro de la ligne dans le fichier source
+ * @param nb_etiquettes_p un pointeur sur le nombre d'étiquette que l'on trouvera dans l'analyse
+ * @param nb_instructions_p un pointeur sur le nombre d'instructions que l'on trouvera à priori dans l'analyse
+ * @return Rien, si ce n'est la liste de lexème mise à jour ainsi les nombres d'étiquettes et d'instructions
+ * @brief Cette fonction fait l'analyse lexicale d'un ligne ayant subi une "standardisation" (pre-processing)
  */
-Liste_t * lex_read_line( char * line, int nline) {
+void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
+{
+    struct Lexeme_s *lexeme_p;
 
-    Liste_t *ligneLexemeCourante_p=NULL;
-    Lexeme_t lexemeCourant;
-
-	enum Etat_lex_t etat;
+	enum Etat_lex_e etat;
 	char c;
 	int i;
+	int debutLigne = 1;
 	
     char *seps = " ";
     char *token = NULL;
     char save[2*STRLEN];
 
-    if (!(ligneLexemeCourante_p=malloc(sizeof(*ligneLexemeCourante_p)))) ERROR_MSG("Impossible de créer une nouvelle ligne de lexèmes");
-    initialiseListe(ligneLexemeCourante_p, sizeof(lexemeCourant), detruitContenuLexeme);
-
     /* copy the input line so that we can do anything with it without impacting outside world*/
-    memcpy( save, line, 2*STRLEN );
+    memcpy( save, ligne, 2*STRLEN );
 
     /* get each token*/
     for( token = strtok( save, seps ); NULL != token; token = strtok( NULL, seps )) {
@@ -243,24 +258,38 @@ Liste_t * lex_read_line( char * line, int nline) {
         }
         
         if (etat==COMMENTAIRE) {
-         	char * diese_p=strchr(line,'#');
-         	if (!(lexemeCourant.data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
-    		strcpy(lexemeCourant.data, diese_p);
-         	lexemeCourant.nature=COMMENTAIRE;
-         	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
+         	char * diese_p=strchr(ligne,'#');
+
+         	lexeme_p = malloc(sizeof(*lexeme_p));
+         	if (!(lexeme_p->data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
+    		strcpy(lexeme_p->data, diese_p);
+         	lexeme_p->nature=COMMENTAIRE;
+         	lexeme_p->ligne=num_ligne;
+         	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
          	break;
         }
+
+
         else {
         	/* en cas d'états intermédiaires que l'on n'attend pas en sortie, on passe en erreur */
         	switch(etat) {
         		case DECIMAL_ZERO:
         			etat=DECIMAL;
         			break;
+
+    			case MOINS:
+    			case PLUS:
+    				etat=ERREUR; /* les signes doivent être accolés à un nombre */
+    				break;
         			
     			case DEBUT_HEXADECIMAL:
     				etat=ERREUR;
     				break;
     				
+    			case DEBUT_CHAINE:
+    				etat=ERREUR;
+    				break;
+
 				case POINT:
 					etat=ERREUR;
 					break;
@@ -272,59 +301,82 @@ Liste_t * lex_read_line( char * line, int nline) {
 				default :
 					;		
         	}
-         	if (!(lexemeCourant.data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
-    		strcpy(lexemeCourant.data, token);
-         	lexemeCourant.nature=etat;
-         	ajouteElementFinListe(ligneLexemeCourante_p, &lexemeCourant);
+        	if (etat==ETIQUETTE) {
+        		token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
+        		(*nb_etiquettes_p)++;
+        	}
+         	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
+        		if (debutLigne && etat==SYMBOLE) {
+        			etat=L_INSTRUCTION;
+        			token=strupr(token);
+        			(*nb_instructions_p)++;
+        		}
+            	if (etat==DIRECTIVE) {
+            		token=strlwr(token);
+            	}
+            	if ((etat==DECIMAL) || (etat==OCTAL) || (etat==HEXADECIMAL)) {
+            		etat=NOMBRE;
+            	}
+        		debutLigne=0;
+        	}
+        	lexeme_p = malloc(sizeof(*lexeme_p));
+
+         	if (!(lexeme_p->data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
+    		strcpy(lexeme_p->data, token);
+         	lexeme_p->nature=etat;
+         	lexeme_p->ligne=num_ligne;
+         	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
     	}
     }
-    return ligneLexemeCourante_p;
+
+    /* rajoute un lexeme marqueur de fin de ligne */
+    lexeme_p = malloc(sizeof(*lexeme_p));
+
+    lexeme_p->data=NULL;
+    lexeme_p->nature=FIN_LIGNE;
+    lexeme_p->ligne=num_ligne;
+    ajouter_fin_liste(liste_lexemes_p, lexeme_p);
 }
 
 /**
- * @param file Assembly source code file name.
- * @param nlines Pointer to the number of lines in the file.
- * @return should return the collection of lexemes
- * @brief This function loads an assembly code from a file into memory.
+ * @param nom_fichier Le nom du fichier source asssembleur
+ * @param liste_lexemes_p Un pointeur sur une liste (générique) de lexèmes
+ * @param nb_lignes_p Le pointeur vers le compteur de nombre de lignes
+ * @param nb_etiquettes_p Le pointeur vers le compteur de nombre d'étiquettes
+ * @param nb_instructions_p Le pointeur vers le compteur de nombre d'instructions
+ * @return Rien. Si ce n'est la liste générique de lexèmes ainsi que les nombres de lignes, d'instructions et d'étiquettes
+ * @brief Cette fonction charge le fichier assembleur et effectue sont analyse lexicale
  *
  */
-Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
+void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
+{
 
     FILE        *fp   = NULL;
     char         line[STRLEN]; /* original source line */
     char         res[2*STRLEN]; /* standardised source line, can be longeur due to some possible added spaces*/
     
-    Liste_t *ligneLexemeCourante_p=NULL;
-    Liste_t *lignesLexeme_p=NULL;
-
-    if (!(lignesLexeme_p=malloc(sizeof(*lignesLexeme_p)))) ERROR_MSG("Impossible de créer une liste de ligne de lexèmes");
-    initialiseListe(lignesLexeme_p, sizeof(*ligneLexemeCourante_p), (fonctionDestructeur *)detruitListe);
-    
-    fp = fopen( file, "r" );
+    fp = fopen( nom_fichier, "r" );
     if ( NULL == fp ) {
         /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
-        ERROR_MSG("Impossible d'ouvrir le fichier \"%s\". Abandon du traitement",file);
+        ERROR_MSG("Impossible d'ouvrir le fichier \"%s\". Abandon du traitement",nom_fichier);
     }
-    *nlines = 0;
+    *nb_lignes_p = 0;
 
     while(!feof(fp)) {
         /*read source code line-by-line */
         if ( NULL != fgets( line, STRLEN-1, fp ) ) {
             if (strlen(line)) if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';  /* remove final '\n' */
-            (*nlines)++;
+            (*nb_lignes_p)++;
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
-                ligneLexemeCourante_p=lex_read_line( res, *nlines );
-                ajouteElementFinListe(lignesLexeme_p, ligneLexemeCourante_p);
-                free(ligneLexemeCourante_p);
+                lex_read_line( res, liste_lexemes_p, *nb_lignes_p, nb_etiquettes_p, nb_instructions_p );
             }
         }       
     }
 
     fclose(fp);
-    if (!*nlines) WARNING_MSG("Attention, le fichier \"%s\" est vide",file);
-    return lignesLexeme_p;
+    if (!*nb_lignes_p) WARNING_MSG("Attention, le fichier \"%s\" est vide", nom_fichier);
 }
 
 /**
@@ -332,16 +384,16 @@ Liste_t * lex_load_file( char *file, unsigned int *nlines ) {
  * @param out Line of source code in a suitable form for further analysis.
  * @return nothing
  * @brief This function will prepare a line of source code for further analysis.
+ *
+ * Aucun changement de casse n'est effectué à ce niveau
  */
-
-/* note that MIPS assembly supports distinctions between lower and upper case*/
-void lex_standardise( char* in, char* out ) {
-
+void lex_standardise(char* in, char* out)
+{
     unsigned int i, j;
     const char * ESPACE_AVANT = "#$,-()+";
     const char * PAS_ESPACE_AVANT = ":";
-    const char * ESPACE_APRES = ":,-()+";
-    const char * PAS_ESPACE_APRES = ".";
+    const char * ESPACE_APRES = ":,()";
+    const char * PAS_ESPACE_APRES = ".-+";
 
     DEBUG_MSG("in  = \"%s\"", in);
     
@@ -380,50 +432,49 @@ void lex_standardise( char* in, char* out ) {
     DEBUG_MSG("out = \"%s\"", out);
 }
 
-void detruitContenuLexeme(void *Lexeme_p) {
-	DEBUG_MSG("Lexeme: %p ... %s",Lexeme_p,((Lexeme_t *)Lexeme_p)->data);
-	free(((Lexeme_t *)Lexeme_p)->data);
+/**
+ * @param lexeme_p pointeur sur un lexeme à détruire
+ * @return Rien
+ * @brief Cette fonction permet de détuire et libérer le contenu d'un lexème
+ *
+ * Cela inclut en particulier la chaine représentation le contenu du lexème.
+ * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
+ */
+void detruit_lexeme(void *lexeme_p)
+{
+	INFO_MSG("Lexeme: %p ... %s",Lexeme_p,((struct Lexeme_s *)Lexeme_p)->data);
+	free(((struct Lexeme_s *)lexeme_p)->data);
+	free(lexeme_p);
 }
 
 /**
  * @param lexeme_p pointeur sur un lexeme
- * @return nothing
+ * @return Rien, si ce n'est l'affichage
  * @brief Cette fonction permet de visualiser le contenu d'un lexeme
  *
  */
-void visualisationLexeme(Lexeme_t * lexeme_p) {
-	printf("(%s|%s)",etat_lex_to_str(lexeme_p->nature),lexeme_p->data);
+void visualisation_lexeme(struct Lexeme_s * lexeme_p)
+{
+	printf("(%s|%s|%d)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data, lexeme_p->ligne);
 }
 
 /**
- * @param debut_liste_p pointeur sur le début d'une liste de lexeme
- * @return nothing
+ * @param liste_p pointeur sur une liste de (générique) de lexèmes
+ * @return rien
  * @brief Cette fonction permet de visualiser le contenu d'une liste de lexeme
  *
  */
-void visualisationLigneLexemes(Liste_t * liste_p) {
+void visualisation_liste_lexemes(struct Liste_s * liste_p)
+{
+	struct NoeudListe_s * lexemeCourant_p=liste_p->debut_liste_p;
 
-	ElementListe_t * lexemeCourant_p=liste_p->debut_liste_p;
 	while (lexemeCourant_p) {
-		visualisationLexeme((Lexeme_t *)lexemeCourant_p->donnees_p);
+		visualisation_lexeme((struct Lexeme_s *)lexemeCourant_p->donnee_p);
+		if (((struct Lexeme_s *)lexemeCourant_p->donnee_p)->nature == L_FIN_LIGNE)
+			printf("\n");
+		else
+			if (lexemeCourant_p->suivant_p) printf(", ");
 		lexemeCourant_p=lexemeCourant_p->suivant_p;
-		if (lexemeCourant_p) printf(", ");
 	}
 }
 
-/**
- * @param debut_liste_p pointeur sur le début d'une liste de ligne de lexeme
- * @return rien
- * @brief Cette fonction permet de visualiser le contenu de la liste de lignes de lexeme
- *
- */
-void visualisationLignesLexemes(Liste_t * liste_p) {
-	int numeroLigne=0;
-	ElementListe_t * ligneCourante_p=liste_p->debut_liste_p;
-    
-    while(ligneCourante_p) {
-    	if (ligneCourante_p == liste_p->debut_liste_p) printf("Ligne (Nature lexème|Contenu lexème), ...\n");
-    	printf("%5d ", ++numeroLigne); visualisationLigneLexemes((Liste_t *)ligneCourante_p->donnees_p); printf("\n");
-    	ligneCourante_p=ligneCourante_p->suivant_p;
-    }
-}

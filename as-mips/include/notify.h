@@ -43,7 +43,7 @@ extern "C" {
 #define STYLE_INFO        STYLE_BOLD
 
 #define COLOR_ERROR       COLOR_RED
-#define COLOR_WARNING     COLOR_YELLOW
+#define COLOR_WARNING     COLOR_MAGENTA
 #define COLOR_INFO        COLOR_GREEN
 
 #define STYLE(purpose)						\
