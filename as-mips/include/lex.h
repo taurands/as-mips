@@ -33,15 +33,17 @@ enum Nature_lexeme_e {
  	L_PARENTHESE_FERMANTE,	/**< ')' utilisé pour finir adressage indirect. */
 
 	L_NOMBRE,				/**< Nombre */
-	L_NOMBRE_DECIMAL,		/**< Nombre décimal. */
- 	L_NOMBRE_OCTAL,			/**< Nombre octal. */
- 	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
 
-	L_DEBUT_CHAINE,			/**< Début d'une chaîne de caractèes, de la forme "xxx */
 	L_CHAINE,				/**< chaine de caractère avec un zero final , de la forme "xxx\0" */
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
-	L_FIN_LIGNE
+	L_FIN_LIGNE,
+
+	L_NOMBRE_DECIMAL,		/**< Nombre décimal. */
+ 	L_NOMBRE_OCTAL,			/**< Nombre octal. */
+ 	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
+	L_DEBUT_CHAINE			/**< Début d'une chaîne de caractèes, de la forme "xxx */
+
 };
 
 /**
@@ -63,15 +65,17 @@ enum Etat_lex_e {
 	PARENTHESE_FERMANTE=L_PARENTHESE_FERMANTE,
 
 	NOMBRE=L_NOMBRE,
+
+	CHAINE=L_CHAINE,
+
+	COMMENTAIRE=L_COMMENTAIRE,
+	FIN_LIGNE=L_FIN_LIGNE,
+
 	DECIMAL=L_NOMBRE_DECIMAL,
 	OCTAL=L_NOMBRE_OCTAL,
 	HEXADECIMAL=L_NOMBRE_HEXADECIMAL,
 
-	CHAINE=L_CHAINE,
 	DEBUT_CHAINE=L_DEBUT_CHAINE,
-
-	COMMENTAIRE=L_COMMENTAIRE,
-	FIN_LIGNE=L_FIN_LIGNE,
 
 	INIT,					/**< Etat initial */
 	MOINS,
