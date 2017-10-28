@@ -34,12 +34,12 @@ struct Liste_s *creer_liste(fonctionDestructeur *freeFn)
  */
 struct Liste_s *detruire_liste(struct Liste_s *liste_p)
 {
-	struct NoeudListe_s *noeud_p;
+	struct Noeud_Liste_s *noeud_p;
 	if (liste_p) {
-		INFO_MSG("Destruction de la Liste: %p : %d éléments",liste_p,liste_p->nbElements);
-		while (liste_p->debut_liste_p != NULL) {
-			noeud_p = liste_p->debut_liste_p;
-			liste_p->debut_liste_p = noeud_p->suivant_p;
+		INFO_MSG("Destruction de la Liste: %p : %d éléments",liste_p,liste_p->nb_elts);
+		while (liste_p->debut_p != NULL) {
+			noeud_p = liste_p->debut_p;
+			liste_p->debut_p = noeud_p->suivant_p;
 
 			if (liste_p->fnDestructeur_p)
 				liste_p->fnDestructeur_p(noeud_p->donnee_p);
@@ -61,7 +61,7 @@ struct Liste_s *detruire_liste(struct Liste_s *liste_p)
  */
 void ajouter_debut_liste(struct Liste_s *liste_p, void *donnee_p)
 {
-	struct NoeudListe_s *noeud_p = NULL;
+	struct Noeud_Liste_s *noeud_p = NULL;
 
 	if (liste_p) {
 		noeud_p=malloc(sizeof(*noeud_p));
@@ -69,13 +69,14 @@ void ajouter_debut_liste(struct Liste_s *liste_p, void *donnee_p)
 			ERROR_MSG("Impossible de créer un nouvel élément de liste");
 
 		noeud_p->donnee_p = donnee_p;
-		noeud_p->suivant_p = liste_p->debut_liste_p;
-		liste_p->debut_liste_p = noeud_p;
+		noeud_p->suivant_p = liste_p->debut_p;
+		liste_p->debut_p = noeud_p;
 
 		/* Cas où la liste était vide et que ce sera le premier élément */
-		if (!liste_p->fin_liste_p)
-			liste_p->fin_liste_p = liste_p->debut_liste_p;
-		liste_p->nbElements++;
+		if (!liste_p->fin_p)
+			liste_p->fin_p = liste_p->debut_p;
+		liste_p->nb_elts++;
+		liste_p->courant_p = noeud_p;
 	}
 }
 
@@ -87,7 +88,7 @@ void ajouter_debut_liste(struct Liste_s *liste_p, void *donnee_p)
  */
 void ajouter_fin_liste(struct Liste_s *liste_p, void *donnee_p)
 {
-	struct NoeudListe_s *noeud_p = NULL;
+	struct Noeud_Liste_s *noeud_p = NULL;
 
 	if (liste_p) {
 		noeud_p=malloc(sizeof(*noeud_p));
@@ -96,12 +97,49 @@ void ajouter_fin_liste(struct Liste_s *liste_p, void *donnee_p)
 
 		noeud_p->donnee_p = donnee_p;
 		noeud_p->suivant_p = NULL;
-		if (liste_p->fin_liste_p)
-			liste_p->fin_liste_p->suivant_p = noeud_p;
-		liste_p->fin_liste_p = noeud_p;
+		if (liste_p->fin_p)
+			liste_p->fin_p->suivant_p = noeud_p;
+		liste_p->fin_p = noeud_p;
 
-		if (!liste_p->debut_liste_p)
-			liste_p->debut_liste_p = noeud_p;
-		liste_p->nbElements++;
+		if (!liste_p->debut_p)
+			liste_p->debut_p = noeud_p;
+		liste_p->nb_elts++;
+		liste_p->courant_p = noeud_p;
 	}
 }
+
+struct Noeud_Liste_s *courant_liste(struct Liste_s *liste_p)
+{
+	if (liste_p)
+		return liste_p->courant_p;
+	else
+		return NULL;
+}
+
+struct Noeud_Liste_s *debut_liste(struct Liste_s *liste_p)
+{
+	if (liste_p) {
+		liste_p->courant_p = liste_p->debut_p;
+		return liste_p->courant_p;
+	} else
+		return NULL;
+}
+
+struct Noeud_Liste_s *suivant_liste(struct Liste_s *liste_p)
+{
+	if (liste_p && liste_p->courant_p) {
+		liste_p->courant_p = liste_p->courant_p->suivant_p;
+		return liste_p->courant_p;
+	} else
+		return NULL;
+}
+
+struct Noeud_Liste_s *fin_liste(struct Liste_s *liste_p)
+{
+	if (liste_p) {
+		liste_p->courant_p = liste_p->fin_p;
+		return liste_p->courant_p;
+	} else
+		return NULL;
+}
+

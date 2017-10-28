@@ -156,15 +156,15 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 
 void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste)
 {
-	struct NoeudListe_s* noeud_liste_p=NULL;
+	struct Noeud_Liste_s* noeud_liste_p=NULL;
 	if (!liste_p) {
 		printf("%s n'existe pas !\n", titre_liste);
 	} else {
-		if (!(liste_p->nbElements)) {
+		if (!(liste_p->nb_elts)) {
 			printf("%s est vide\n", titre_liste);
 		} else {
 			printf("%s\n", titre_liste);
-			for (noeud_liste_p=liste_p->debut_liste_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
+			for (noeud_liste_p=liste_p->debut_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
 				affiche_element_databss((struct Donnee_s *)noeud_liste_p->donnee_p, table_p);
 			}
 		}
@@ -175,15 +175,15 @@ void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char
 
 void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste)
 {
-	struct NoeudListe_s* noeud_liste_p=NULL;
+	struct Noeud_Liste_s* noeud_liste_p=NULL;
 	if (!liste_p) {
 		printf("%s n'existe pas !\n", titre_liste);
 	} else {
-		if (!(liste_p->nbElements)) {
+		if (!(liste_p->nb_elts)) {
 			printf("%s est vide\n", titre_liste);
 		} else {
 			printf("%s\n", titre_liste);
-			for (noeud_liste_p=liste_p->debut_liste_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
+			for (noeud_liste_p=liste_p->debut_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
 				str_instruction((struct Instruction_s *)noeud_liste_p->donnee_p, table_p);
 			}
 		}
@@ -218,7 +218,7 @@ void affiche_table_etiquette(struct Table_s *table_p, char *titre)
 	printf("\n\n");
 }
 
-void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
+void mef_suivant(struct Noeud_Liste_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
 {
 	if (noeud_lexeme_pp) {
 		if ((*noeud_lexeme_pp) && (lexeme_pp)) {
@@ -231,7 +231,7 @@ void mef_suivant(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme
 	}
 }
 
-int suite_est_directive_word(struct NoeudListe_s *noeud_lexeme_p)
+int suite_est_directive_word(struct Noeud_Liste_s *noeud_lexeme_p)
 {
 	int resultat=FALSE;
 	struct Lexeme_s *lexeme_p;
@@ -259,7 +259,7 @@ void aligner_decalage(uint32_t *decalage_p)
 
 }
 int enregistrer_etiquette(
-		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Noeud_Liste_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
 		enum Section_e section,
 		uint32_t *decalage_p,
@@ -303,7 +303,7 @@ enum M_E_S_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *msg)
 }
 
 enum M_E_S_e etat_sera_nombre_ou_symbole(
-		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Noeud_Liste_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
 		enum M_E_S_e etat_normal_suiv,
 		char *msg_err)
@@ -320,7 +320,7 @@ enum M_E_S_e etat_sera_nombre_ou_symbole(
 }
 
 enum M_E_S_e etat_sera_registre(
-		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Noeud_Liste_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
 		enum M_E_S_e etat_normal_suiv,
 		char *msg_err)
@@ -338,7 +338,7 @@ enum M_E_S_e etat_sera_registre(
 }
 
 enum M_E_S_e etat_traitement_registre(
-		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Noeud_Liste_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
 		struct Table_s *def_reg_p,
 		struct Instruction_s *instruction_p,
@@ -505,6 +505,7 @@ int analyser_instruction(
 		char *msg_err
 		)
 {
+/*
 	struct NoeudListe_s *noeud_lexeme_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
 
@@ -514,7 +515,7 @@ int analyser_instruction(
 
 	struct DefinitionInstruction_s *def_p=NULL;
 	struct Instruction_s *instruction_p=NULL;
-
+*/
 	return SUCCESS;
 }
 
@@ -669,7 +670,7 @@ int analyser_syntaxe(
 
 	char msg_err[2*STRLEN];
 
-	struct NoeudListe_s *noeud_lexeme_p=NULL;
+	struct Noeud_Liste_s *noeud_lexeme_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
 
 	enum M_E_S_e etat=INIT;
@@ -682,7 +683,7 @@ int analyser_syntaxe(
 
 	if (lignes_lexemes_p) {
 		msg_err[0]='\0';
-		noeud_lexeme_p=lignes_lexemes_p->debut_liste_p;
+		noeud_lexeme_p=lignes_lexemes_p->debut_p;
 		if (noeud_lexeme_p)
 			lexeme_p=(struct Lexeme_s *)noeud_lexeme_p->donnee_p;
 		else
@@ -1052,7 +1053,7 @@ int analyser_syntaxe(
 }
 
 /* les fonctions suivantes seront à supprimer */
-void mef_suivant_sur(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
+void mef_suivant_sur(struct Noeud_Liste_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp)
 {
 	if (noeud_lexeme_pp) {
 		if ((*noeud_lexeme_pp) && (*noeud_lexeme_pp=((*noeud_lexeme_pp)->suivant_p)) && (lexeme_pp))
@@ -1060,12 +1061,12 @@ void mef_suivant_sur(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **le
 	}
 }
 
-int mef_valide(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp, char * msg_err)
+int mef_valide(struct Noeud_Liste_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp, char * msg_err)
 {
 	return (noeud_lexeme_pp) && (*noeud_lexeme_pp) && (lexeme_pp) && (*lexeme_pp) && ((!msg_err) || ('\0' == msg_err[0])) && ((*lexeme_pp)->nature != L_FIN_LIGNE);
 }
 
-void mef_commentaire(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp, char *msg_err)
+void mef_commentaire(struct Noeud_Liste_s **noeud_lexeme_pp, struct Lexeme_s **lexeme_pp, char *msg_err)
 {
 	if (mef_valide(noeud_lexeme_pp, lexeme_pp, msg_err) && ((*lexeme_pp)->nature == L_COMMENTAIRE)) {
 		INFO_MSG("Passe le commentaire \"%s\"", (*lexeme_pp)->data);
@@ -1074,7 +1075,7 @@ void mef_commentaire(struct NoeudListe_s **noeud_lexeme_pp, struct Lexeme_s **le
 }
 
 void mef_section_init(
-		struct NoeudListe_s **noeud_lexeme_pp,
+		struct Noeud_Liste_s **noeud_lexeme_pp,
 		struct Lexeme_s **lexeme_pp,
 		char *msg_err)
 {

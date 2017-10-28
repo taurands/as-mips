@@ -535,7 +535,7 @@ void visualisation_lexeme(struct Lexeme_s * lexeme_p)
  */
 void visualisation_liste_lexemes(struct Liste_s * liste_p)
 {
-	struct NoeudListe_s * lexemeCourant_p=liste_p->debut_liste_p;
+	struct Noeud_Liste_s * lexemeCourant_p=liste_p->debut_p;
 
 	while (lexemeCourant_p) {
 		visualisation_lexeme((struct Lexeme_s *)lexemeCourant_p->donnee_p);
