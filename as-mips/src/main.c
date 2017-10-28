@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	affiche_liste_donnee(listeBss_p, tableEtiquettes_p, "Table des données de la section .bss");
 	affiche_liste_instructions(listeText_p, tableEtiquettes_p, "Table des instructions de .text");
 
-    /* ---------------- Libérer nos camarades pointeurs -------------------*/
+    /* ---------------- Libération de la mémoire allouée -------------------*/
 	tableEtiquettes_p=detruire_table(tableEtiquettes_p);
     tableDefinitionInstructions_p=detruire_table(tableDefinitionInstructions_p);
     tableDefinitionRegistres_p=detruire_table(tableDefinitionRegistres_p);
