@@ -1,0 +1,10 @@
+*.rls
+*.dbg
+*.orig
+as-mips
+tests/test_gen_list
+.settings/language.settings.xml
+doc/html
+doc/latex
+doc/rtf
+doc/doxygen_warning.txt

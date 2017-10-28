@@ -7,7 +7,7 @@ DOXYGEN=`which doxygen`
 
 SRCDIR=src
 INCDIR=include
-TESTDIR=testing
+TESTDIR=tests
 DOCDIR=doc
 
 GARBAGE=*~ $(SRCDIR)/*~ $(INCDIR)/*~ $(TESTDIR)/*~
@@ -22,6 +22,7 @@ CFLAGS_DBG=$(CFLAGS) -g -DDEBUG -Wall
 CFLAGS_RLS=$(CFLAGS)
 
 SRC=$(wildcard $(SRCDIR)/*.c)
+SRCT=$(wildcard $(TESTDIR)/*.c)
 
 OBJ_DBG=$(SRC:.c=.dbg)
 OBJ_RLS=$(SRC:.c=.rls)
@@ -47,16 +48,18 @@ release : $(OBJ_RLS)
 
 %.rls : %.c
 	$(CC) $< $(CFLAGS_RLS) -c -o $(basename $<).rls
-
+	
+	
 docu : 
 	$(DOXYGEN)
 
 clean : 
 	$(RM) $(TARGET) $(SRCDIR)/*.orig $(SRCDIR)/*.dbg $(SRCDIR)/*.rls $(GARBAGE)
-	$(RM) -r $(DOCDIR)/*
+	$(RM) $(TESTDIR)/*.orig $(TESTDIR)/*.dbg $(TESTDIR)/*.rls
+	# modifié pour ne pas effacer le répertoire /doc/livrable
+	$(RM) -r $(DOCDIR)/html $(DOCDIR)/latex $(DOCDIR)/rtf $(DOCDIR)/doxygen_warning.txt
 
 archive : 
-	#make clean // Supprimé car le livrable est situé dans le répertoire doc qui serait supprimé par le clean 
-	@echo "Assurez-vous d'avoir fait un clean avant de recopier le doc livrable et de faire l'archivage"
+	make clean  
 	cd .. && tar -czvf as-mips-`whoami`-`date +%d-%m-%H-%M`.tgz $(DIRNAME) && cd $(DIRNAME) 
 

@@ -1,23 +1,39 @@
 Squelette de code de l'assembleur MIPS du projet info PHELMA.
-Le code fourni permet d'acquérir des chaînes de caractères d'un fichier et de les afficher à l'écran. 
 
 Le répertoire est organisé ainsi : 
 .
 ├── tests
 │   ├── vide.s
 │   ├── espaces.s
+│   ├── toutes_instructions_valides.s
+│   ├── toutes_instructions_erreurs.s
 │   ├── miam2.s
 │   ├── miam1.s
 │   └── miam.s 
 ├── src
 │   ├── main.c
-│   └── lex.c
+│   ├── syn.c
+│   ├── lex.c
+│   ├── dico.c
+│   ├── table.c
+│   ├── liste.c
+│   ├── str_utils.c
+│   ├── dictionnaire_registres.txt
+│   └── dictionnaire_instructions.txt
 ├── include
+│   ├── syn.h
+│   ├── lex.h
+│   ├── dico.h
+│   ├── table.h
+│   ├── liste.h
+│   ├── str_utils.h
 │   ├── notify.h
 │   ├── lex.h
 │   └── global.h
 ├── doc
 │   └── livrables
+│       ├── Livrable 2 - 2A SICOM - BERTRAND - TAURAND.pdf
+│       └── Livrable 1 - 2A SICOM - BERTRAND - TAURAND.pdf
 ├── README.txt
 ├── Makefile
 └── Doxyfile
