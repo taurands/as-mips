@@ -766,12 +766,30 @@ int analyser_syntaxe(
 					else etat=MES_INIT;
 				}
 				break;
-			case MES_DONNEE_A:
+			/*
+			case MES_DONNEE_B:
+				if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
+				donnee_p->type=D_BYTE;
+				etat=mef_lire_nombre(etat, lexeme_p, &donnee_p, decalage_p, msg_err);
+				if (etat!=MES_ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=MES_ERREUR;
+				else if (lexeme_p->nature!=L_VIRGULE) etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être là, ou il manque une virgule");
+				else etat=MES_VIRG_B;
+
+				if (etat!=MES_ERREUR) {
+					ajouter_fin_liste(liste_p, donnee_p);
+					donnee_p=NULL;
+				}
+				break;
+				*/
+
+			case MES_DONNEE_A: /* XXX Créer une fonction mef_lire_chaine? */
 				if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 				donnee_p->decalage=*decalage_p;
 				donnee_p->type=D_ASCIIZ;
 				donnee_p->lexeme_p=lexeme_p;
 				donnee_p->ligne=lexeme_p->ligne;
+				donnee_p->valeur.chaine=NULL;
 				/* il manque à récupérer un pointeur de chaine */
 
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
@@ -781,7 +799,7 @@ int analyser_syntaxe(
 
 				if (etat!=MES_ERREUR) {
 					ajouter_fin_liste(liste_p, donnee_p);
-					(*decalage_p)+=1+strlen(donnee_p->valeur.chaine);
+					(*decalage_p)+=(donnee_p->valeur.chaine ? 1+strlen(donnee_p->valeur.chaine) : 0);
 					donnee_p=NULL; /* XXX il faudra tester l'insertion */
 				}
 				break;

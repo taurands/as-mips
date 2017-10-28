@@ -49,11 +49,6 @@ release : $(OBJ_RLS)
 %.rls : %.c
 	$(CC) $< $(CFLAGS_RLS) -c -o $(basename $<).rls
 	
-test_gen_list:	tests/test_gen_list.dbg src/gen_list.dbg
-	$(LD) $^ $(LFLAGS) -o tests/test_gen_list
-
-test_gen_list.dbg:	tests/test_gen_list.c
-	$(CC) $< $(CFLAGS_DBG) -c -o $(basename $<).rls
 	
 docu : 
 	$(DOXYGEN)
