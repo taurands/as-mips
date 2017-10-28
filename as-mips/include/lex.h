@@ -37,52 +37,7 @@ enum Nature_lexeme_e {
 	L_CHAINE,				/**< chaine de caractère avec un zero final , de la forme "xxx\0" */
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
-	L_FIN_LIGNE,
-
-	L_NOMBRE_DECIMAL,		/**< Nombre décimal. */
- 	L_NOMBRE_OCTAL,			/**< Nombre octal. */
- 	L_NOMBRE_HEXADECIMAL,	/**< Nombre hexanumérique. */
-	L_DEBUT_CHAINE			/**< Début d'une chaîne de caractèes, de la forme "xxx */
-
-};
-
-/**
- * @enum Etat_lex_e
- * @brief Constantes de définition des états de la machine à états finis d'analyse lexicale
- * 
- */
-enum Etat_lex_e {
-	ERREUR=L_ERREUR,
-
-	SYMBOLE=L_SYMBOLE,
-	INSTRUCTION=L_INSTRUCTION,
-	DIRECTIVE=L_DIRECTIVE,
-	ETIQUETTE=L_ETIQUETTE,
-
-	REGISTRE=L_REGISTRE,
-	VIRGULE=L_VIRGULE,
-	PARENTHESE_OUVRANTE=L_PARENTHESE_OUVRANTE,
-	PARENTHESE_FERMANTE=L_PARENTHESE_FERMANTE,
-
-	NOMBRE=L_NOMBRE,
-
-	CHAINE=L_CHAINE,
-
-	COMMENTAIRE=L_COMMENTAIRE,
-	FIN_LIGNE=L_FIN_LIGNE,
-
-	DECIMAL=L_NOMBRE_DECIMAL,
-	OCTAL=L_NOMBRE_OCTAL,
-	HEXADECIMAL=L_NOMBRE_HEXADECIMAL,
-
-	DEBUT_CHAINE=L_DEBUT_CHAINE,
-
-	INIT,					/**< Etat initial */
-	MOINS,
-	PLUS,
-	DEBUT_HEXADECIMAL,		/**< On a lu "0x" et on attend le premier caractère hexadécimal */
-	DECIMAL_ZERO,			/**< On a lu un "0" */
-	POINT					/**< On a lu un point */
+	L_FIN_LIGNE
 };
 
 /**
@@ -105,7 +60,7 @@ void visualisation_lexeme(struct Lexeme_s * lexeme_p);
 void visualisation_liste_lexemes(struct Liste_s * liste_p);
 
 void detruit_lexeme(void *lexeme_p);
-char *etat_lex_to_str(enum Etat_lex_e etat);
+char *nature_lex_to_str(enum Nature_lexeme_e nature);
 
 #endif /* _LEX_H_ */
 

@@ -20,11 +20,79 @@
 #include <table.h>
 
 /**
+ * @enum Etat_lex_e
+ * @brief Constantes de définition des états de la machine à états finis d'analyse lexicale
+ *
+ */
+enum Etat_lex_e {
+	ERREUR=L_ERREUR,
+
+	SYMBOLE=L_SYMBOLE,
+	INSTRUCTION=L_INSTRUCTION,
+	DIRECTIVE=L_DIRECTIVE,
+	ETIQUETTE=L_ETIQUETTE,
+
+	REGISTRE=L_REGISTRE,
+	VIRGULE=L_VIRGULE,
+	PARENTHESE_OUVRANTE=L_PARENTHESE_OUVRANTE,
+	PARENTHESE_FERMANTE=L_PARENTHESE_FERMANTE,
+
+	NOMBRE=L_NOMBRE,
+
+	CHAINE=L_CHAINE,
+
+	COMMENTAIRE=L_COMMENTAIRE,
+	FIN_LIGNE=L_FIN_LIGNE,
+
+	DECIMAL,
+	OCTAL,
+	HEXADECIMAL,
+
+	DEBUT_CHAINE,
+
+	INIT,					/**< Etat initial */
+	MOINS,
+	PLUS,
+	DEBUT_HEXADECIMAL,		/**< On a lu "0x" et on attend le premier caractère hexadécimal */
+	DECIMAL_ZERO,			/**< On a lu un "0" */
+	POINT					/**< On a lu un point */
+};
+
+/**
  * @param etat etat de la machine à états finis lexicale
  * @return chaine de caractères contenant le nom de l'état
  * @brief Cette fonction permet de donne le mon correspondant à un état
  *
  */	
+char *nature_lex_to_str(enum Nature_lexeme_e nature)
+{
+	switch(nature) {
+		case L_ERREUR:					return "ERREUR";
+		case L_SYMBOLE:					return "SYMBOLE";
+		case L_INSTRUCTION:				return "INSTRUCTION";
+		case L_DIRECTIVE:				return "DIRECTIVE";
+		case L_ETIQUETTE:				return "ETIQUETTE";
+		case L_REGISTRE:				return "REGISTRE";
+		case L_VIRGULE:					return "VIRGULE";
+		case L_PARENTHESE_OUVRANTE:		return "PARENTHESE_OUVRANTE";
+		case L_PARENTHESE_FERMANTE:		return "PARENTHESE_FERMANTE";
+		case L_NOMBRE:					return "NOMBRE";
+		case L_CHAINE:					return "CHAINE";
+		case L_COMMENTAIRE:				return "COMMENTAIRE";
+		case L_FIN_LIGNE:				return "FIN_LIGNE";
+		default :
+			ERROR_MSG("Erreur de résolution du nom de la nature du lexème... Il manque donc au moins un nom à rajouter pour %d", nature);
+	}
+	return NULL;
+}
+
+/**
+ * @param etat etat de la machine à états finis lexicale
+ * @return chaine de caractères contenant le nom de l'état
+ * @brief Cette fonction permet de donne le mon correspondant à un état
+ *
+ */
+/*
 char *etat_lex_to_str(enum Etat_lex_e etat)
 {
 	switch(etat) {
@@ -54,6 +122,7 @@ char *etat_lex_to_str(enum Etat_lex_e etat)
 	}
 	return NULL;
 }
+*/
 
 /**
  * @param etat Etat antérieur de la machine à états finis d'analyse lexicale
@@ -263,7 +332,7 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
          	lexeme_p = malloc(sizeof(*lexeme_p));
          	if (!(lexeme_p->data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
     		strcpy(lexeme_p->data, diese_p);
-         	lexeme_p->nature=COMMENTAIRE;
+         	lexeme_p->nature=L_COMMENTAIRE;
          	lexeme_p->ligne=num_ligne;
          	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
          	break;
@@ -307,7 +376,7 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
         	}
          	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
         		if (debutLigne && etat==SYMBOLE) {
-        			etat=L_INSTRUCTION;
+        			etat=INSTRUCTION;
         			token=strupr(token);
         			(*nb_instructions_p)++;
         		}
@@ -333,7 +402,7 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
     lexeme_p = malloc(sizeof(*lexeme_p));
 
     lexeme_p->data=NULL;
-    lexeme_p->nature=FIN_LIGNE;
+    lexeme_p->nature=L_FIN_LIGNE;
     lexeme_p->ligne=num_ligne;
     ajouter_fin_liste(liste_lexemes_p, lexeme_p);
 }
@@ -455,7 +524,7 @@ void detruit_lexeme(void *lexeme_p)
  */
 void visualisation_lexeme(struct Lexeme_s * lexeme_p)
 {
-	printf("(%s|%s|%d)", etat_lex_to_str(lexeme_p->nature), lexeme_p->data, lexeme_p->ligne);
+	printf("(%s|%s|%d)", nature_lex_to_str(lexeme_p->nature), lexeme_p->data, lexeme_p->ligne);
 }
 
 /**

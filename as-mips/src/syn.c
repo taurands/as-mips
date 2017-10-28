@@ -22,49 +22,49 @@
 #include <syn.h>
 
 enum M_E_S_e {
-		MES_INIT,
-		MES_FIN,
-		MES_ERREUR,
-		MES_COMMENT,
-		MES_EOL,
+		INIT,
+		FIN,
+		ERREUR,
+		COMMENT,
+		EOL,
 
-		MES_OPTION,
-		MES_NOREORD,
+		OPTION,
+		NOREORD,
 
-		MES_SECTION,
+		SECTION,
 
-		MES_ETIQUET,
-		MES_INSTRUC,
+		ETIQUET,
+		INSTRUC,
 
-		MES_BYTE,
-		MES_WORD,
-		MES_ASCIIZ,
-		MES_SPACE,
+		BYTE,
+		WORD,
+		ASCIIZ,
+		SPACE,
 
-		MES_DONNEE_A,
-		MES_DONNEE_W,
-		MES_DONNEE_B,
-		MES_DONNEE_S,
-		MES_VIRG_A,
-		MES_VIRG_W,
-		MES_VIRG_B,
-		MES_VIRG_S,
+		DONNEE_A,
+		DONNEE_W,
+		DONNEE_B,
+		DONNEE_S,
+		VIRG_A,
+		VIRG_W,
+		VIRG_B,
+		VIRG_S,
 
-		MES_I_RN_3OP,
-		MES_I_RN_V32,
-		MES_I_RN_2OP,
-		MES_I_RN_V21,
-		MES_I_R_1OP,
-		MES_I_N_OP,
+		I_RN_3OP,
+		I_RN_V32,
+		I_RN_2OP,
+		I_RN_V21,
+		I_R_1OP,
+		I_N_OP,
 
-		MES_I_B_REG,
-		MES_I_B_VIR,
-		MES_I_B_OFFS,
-		MES_I_B_PO,
-		MES_I_B_BASE,
-		MES_I_B_PF,
+		I_B_REG,
+		I_B_VIR,
+		I_B_OFFS,
+		I_B_PO,
+		I_B_BASE,
+		I_B_PF,
 
-		MES_DONNEE
+		DONNEE
 		};
 
 
@@ -292,11 +292,11 @@ int enregistrer_etiquette(
 enum M_E_S_e etat_comm_eol(struct Lexeme_s *lexeme_p, char *msg_err, char *msg)
 {
 	enum M_E_S_e etat;
-	if (!lexeme_p) etat=MES_ERREUR;
-	else if (lexeme_p->nature==L_FIN_LIGNE) etat=MES_EOL;
-	else if (lexeme_p->nature==L_COMMENTAIRE) etat=MES_COMMENT;
+	if (!lexeme_p) etat=ERREUR;
+	else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
+	else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
 	else {
-		etat=MES_ERREUR;
+		etat=ERREUR;
 		strcpy(msg_err, msg);
 	}
 	return etat;
@@ -310,10 +310,10 @@ enum M_E_S_e etat_sera_nombre_ou_symbole(
 {
 	enum M_E_S_e etat;
 	mef_suivant(noeud_lexeme_pp, lexeme_pp);
-	if (!(*lexeme_pp)) etat=MES_ERREUR;
+	if (!(*lexeme_pp)) etat=ERREUR;
 	else if (((*lexeme_pp)->nature==L_NOMBRE) || ((*lexeme_pp)->nature==L_SYMBOLE)) etat=etat_normal_suiv;
 	else {
-		etat=MES_ERREUR;
+		etat=ERREUR;
 		strcpy(msg_err, "n'est pas un nombre ou un symbole");
 	}
 	return etat;
@@ -328,10 +328,10 @@ enum M_E_S_e etat_sera_registre(
 	enum M_E_S_e etat;
 
 	mef_suivant(noeud_lexeme_pp, lexeme_pp);
-	if (!(*lexeme_pp)) etat=MES_ERREUR;
+	if (!(*lexeme_pp)) etat=ERREUR;
 	else if ((*lexeme_pp)->nature==L_REGISTRE) etat=etat_normal_suiv;
 	else {
-		etat=MES_ERREUR;
+		etat=ERREUR;
 		strcpy(msg_err, "n'est pas un registre");
 	}
 	return etat;
@@ -350,16 +350,16 @@ enum M_E_S_e etat_traitement_registre(
 {
 	enum M_E_S_e etat;
 	if (!donnee_table(def_reg_p, (*lexeme_pp)->data)) {
-		etat=MES_ERREUR;
+		etat=ERREUR;
 		strcpy(msg_err, "n'est pas un registre valide");
 	} else {
 		instruction_p->operandes[indice]=*lexeme_pp;
 
 		mef_suivant(noeud_lexeme_pp, lexeme_pp);
-		if (!(*lexeme_pp)) etat=MES_ERREUR;
+		if (!(*lexeme_pp)) etat=ERREUR;
 		else if ((*lexeme_pp)->nature==nature_attendue) etat=etat_normal_suiv;
 		else {
-			etat=MES_ERREUR;
+			etat=ERREUR;
 			strcpy(msg_err, msg);
 		}
 	}
@@ -385,7 +385,7 @@ int mef_lire_nombre(
 		strcpy(msg_err, "n'a pas pu être évalué numériquement");
 		free((*donnee_pp));
 		*donnee_pp=NULL;
-		return MES_ERREUR;
+		return ERREUR;
 	} else {
 		if ((((*donnee_pp)->type==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
 			(((*donnee_pp)->type==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
@@ -394,7 +394,7 @@ int mef_lire_nombre(
 			strcpy(msg_err, "est au delà des valeurs permises");
 			free((*donnee_pp));
 			*donnee_pp=NULL;
-			return MES_ERREUR;
+			return ERREUR;
 		} else {
 			if ((*donnee_pp)->type==D_BYTE) {
 				if (nombre>=0)
@@ -419,10 +419,234 @@ int mef_lire_nombre(
 
 /**
  * @return Rien, si ce n'est les données mises à jour par les pointeurs paramètres associés
+ * @brief effectue l'analyse syntaxique de premier niveau d'une ligne de lexemes pour une instruction
+ *
+ *	@dot
+ *	digraph Machine_Etat_Instruc {
+ *		concentrate=false;
+ *		graph [label="\nMachine à états finis d'analyse syntaxique - Traitement des instructions"; fontname = "arial"; fontsize = 16;];
+ *		edge [fontname = "arial"; fontsize = 10;];
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";]
+ *
+ *		rankdir=LR; // de gauche vers la droite
+ *		INSTRUC -> ERREUR [label = "mauvaise instruction"]
+ *		INSTRUC -> I_B_REG [label = "base offset"]
+ *		INSTRUC -> I_RN_3OP [label = "3 ops"]
+ *		INSTRUC -> I_RN_2OP [label = "2 ops"]
+ *		INSTRUC -> I_R_1OP [label = "1 ops et R"]
+ *		INSTRUC -> I_N_OP [label = "1 ops et N"]
+ *		INSTRUC -> ERREUR [label = "sinon"]
+ *
+ *		I_B_REG -> I_B_VIR [label = "VIR"]
+ *		I_B_VIR -> I_B_OFFS [label = "NB ou SYM"]
+ *		I_B_OFFS -> I_B_PO [label = "PO"]
+ *		I_B_PO -> I_B_BASE [label = "REG"]
+ *		I_B_BASE -> I_B_PF [label = "PF"]
+ *		I_B_PF -> COMMENT [label = "COMMENT"]
+ *		I_B_PF -> EOL [label = "EOL"]
+
+ *		I_RN_3OP -> I_RN_V32 [label = "VIR"]
+ *		I_RN_V32 -> I_RN_2OP [label = "REG"]
+ *		I_RN_2OP -> I_RN_V21 [label = "VIR"]
+ *		I_RN_V21 -> I_R_1OP [label = "R et REG"]
+ *		I_R_1OP -> ERREUR [label = "pas bon REG"]
+ *		I_R_1OP -> COMMENT [label = "COMMENT"]
+ *		I_R_1OP -> EOL [label = "EOL"]
+ *		I_RN_V21 -> I_N_OP [label = "N et (NB ou SYM)"]
+ *		I_N_OP -> COMMENT [label = "COMMENT"]
+ *		I_N_OP -> EOL [label = "EOL"]
+ *
+ *		I_B_REG -> ERREUR [label = "pas bon REG"]
+ *		I_B_REG -> ERREUR [label = "sinon"]
+ *
+ *		I_B_VIR -> ERREUR [label = "sinon"]
+ *
+ *		I_B_OFFS -> ERREUR [label = "sinon"]
+ *
+ *		I_B_PO -> ERREUR [label = "sinon"]
+ *
+ *		I_B_BASE -> ERREUR [label = "pas bon REG"]
+ *		I_B_BASE -> ERREUR [label = "sinon"]
+ *
+ *		I_B_PF -> ERREUR [label = "sinon"]
+ *
+ *
+ *
+ *		I_RN_3OP -> ERREUR [label = "pas bon REG"]
+ *		I_RN_3OP -> ERREUR [label = "sinon"]
+ *
+ *		I_RN_V32 -> ERREUR [label = "sinon"]
+ *
+ *		I_RN_2OP -> ERREUR [label = "pas bon REG"]
+ *		I_RN_2OP -> ERREUR [label = "sinon"]
+ *
+ *		I_RN_V21 -> ERREUR [label = "sinon"]
+ *
+ *		I_R_1OP -> ERREUR [label = "sinon"]
+ *
+ *		I_N_OP -> ERREUR [label = "sinon"]
+ *
+ *		INSTRUC -> COMMENT [label = "0 ops et COMMENT"]
+ *		INSTRUC -> EOL [label = "0 ops et EOL"]
+ *
+ *		COMMENT -> EOL [label=EOL]
+ *		COMMENT -> ERREUR [label = "sinon"]
+ *	}
+ *  @enddot
+ *
+ */
+int analyser_instruction(
+		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
+		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
+		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
+		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
+		uint32_t *decalage_p,
+		struct Liste_s *liste_p,
+		char *msg_err
+		)
+{
+	struct NoeudListe_s *noeud_lexeme_p=NULL;
+	struct Lexeme_s *lexeme_p=NULL;
+
+	enum M_E_S_e etat=INIT;
+	enum Section_e section=S_INIT;
+	int resultat=SUCCESS;
+
+	struct DefinitionInstruction_s *def_p=NULL;
+	struct Instruction_s *instruction_p=NULL;
+
+	return SUCCESS;
+}
+
+/**
+ * @return Rien, si ce n'est les données mises à jour par les pointeurs paramètres associés
  * @brief effectue l'analyse syntaxique de premier niveau d'une liste de lexemes
  *
+ *	@dot
+ *	digraph Machine_Etat_Syn {
+ *		concentrate=false;
+ *		graph [label="\nMachine à états finis d'analyse syntaxique"; fontname = "arial"; fontsize = 16;];
+ *		edge [fontname = "arial"; fontsize = 10;];
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] INIT; FIN;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "red";] ERREUR;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] OPTION; NOREORD;
+ *		node [shape="tab";  fontname = "arial"; fontsize = 10; color = "black";] BYTE; WORD; ASCIIZ; SPACE; ETIQUET; INSTRUC; SECTION;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] DONNEE_A; DONNEE_W; DONNEE_B; DONNEE_S; VIRG_A; VIRG_W; VIRG_B; VIRG_S;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] COMMENT; EOL;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] I_RN_3OP; I_RN_V32; I_RN_2OP; I_RN_V21; I_R_1OP; I_N_OP;
+ *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] I_B_REG; I_B_VIR; I_B_OFFS; I_B_PO; I_B_BASE; I_B_PF;
+ *		rankdir=LR; // de gauche vers la droite
  *
+ *		INIT -> {rank=same INSTRUC BYTE WORD ASCIIZ SPACE ETIQUET SECTION OPTION} [style=invis]
+ *		INSTRUC -> {rank=same I_B_REG I_RN_3OP DONNEE_A DONNEE_W DONNEE_B DONNEE_S NOREORD} [style=invis]
+ *		I_B_REG -> {rank=same I_B_VIR I_RN_V32 VIRG_A VIRG_W VIRG_B VIRG_S} [style=invis]
+ *		I_B_VIR -> {rank=same I_B_OFFS I_RN_2OP} [style=invis]
+ *		I_B_OFFS -> {rank=same I_B_PO I_RN_V21} [style=invis]
+ *		I_B_PO -> {rank=same I_B_BASE I_R_1OP I_N_OP} [style=invis]
+ *		I_B_BASE -> {rank=same I_B_PF} [style=invis]
+ *		I_B_PF -> {rank=same COMMENT} [style=invis]
+ *		COMMENT -> {rank=same EOL } [style=invis]
+ *		EOL -> {rank=same ERREUR } [style=invis]
+ *		ERREUR -> {rank=same FIN } [style=invis]
  *
+ *		INIT -> OPTION [label = "DIR .set"]
+ *		INIT -> SECTION [label = "DIR .text ou .data ou .bss"]
+ *		INIT -> BYTE [label = "(section=data) et (DIR .byte)"]
+ *		INIT -> WORD [label = "(section=data) et (DIR .word)"]
+ *		INIT -> ASCIIZ [label = "(section=data) et (DIR .asciiz)"]
+ *		INIT -> SPACE [label = "(section=data ou bss) et (DIR .space)"]
+ *		INIT -> INSTRUC [label = "(section=text) et (ETQ)"]
+ *		INIT -> COMMENT [label = "COMMENT"]
+ *		INIT -> EOL [label = "EOL"]
+ *		INIT -> ERREUR [label = "sinon"]
+ *
+ *		OPTION -> NOREORD [label = "SYM noreoder"]
+ *		OPTION -> COMMENT [label = "COMMENT"]
+ *		OPTION -> EOL [label = "EOL"]
+ *		OPTION -> ERREUR [label = "sinon"]
+ *
+ *		SECTION -> COMMENT [label = "COMMENT"]
+ *		SECTION -> EOL [label = "EOL"]
+ *		SECTION -> ERREUR [label = "sinon"]
+ *
+ *		BYTE -> DONNEE_B [label = "NB"]
+ *		BYTE -> ERREUR [label = "sinon"]
+ *
+ *		DONNEE_B -> VIRG_B [label = "VIR"]
+ *		DONNEE_B -> COMMENT [label = "COMMENT"]
+ *		DONNEE_B -> EOL [label = "EOL"]
+ *		DONNEE_B -> ERREUR [label = "si non valide ou autre"]
+ *
+ *		VIRG_B -> DONNEE_B [label = "NB"]
+ *		VIRG_B -> ERREUR [label = "sinon"]
+ *
+ *		WORD -> DONNEE_W [label = "NB ou SYM"]
+ *		WORD -> ERREUR [label = "sinon"]
+ *
+ *		DONNEE_W -> VIRG_W [label = "VIR"]
+ *		DONNEE_W -> COMMENT [label = "COMMENT"]
+ *		DONNEE_W -> EOL [label = "EOL"]
+ *		DONNEE_W -> ERREUR [label = "si non valide ou autre"]
+ *
+ *		VIRG_W -> DONNEE_W [label = "NB ou SYM"]
+ *		VIRG_W -> ERREUR [label = "sinon"]
+ *
+ *		ASCIIZ -> DONNEE_A [label = "NB"]
+ *		ASCIIZ -> ERREUR [label = "sinon"]
+ *
+ *		DONNEE_A -> VIRG_A [label = "VIR"]
+ *		DONNEE_A -> COMMENT [label = "COMMENT"]
+ *		DONNEE_A -> EOL [label = "EOL"]
+ *		DONNEE_A -> ERREUR [label = "si non valide ou autre"]
+ *
+ *		VIRG_A -> DONNEE_A [label = "NB"]
+ *		VIRG_A -> ERREUR [label = "sinon"]
+ *
+ *		SPACE -> DONNEE_S [label = "NB"]
+ *		SPACE -> ERREUR [label = "sinon"]
+ *
+ *		DONNEE_S -> VIRG_S [label = "VIR"]
+ *		DONNEE_S -> COMMENT [label = "COMMENT"]
+ *		DONNEE_S -> EOL [label = "EOL"]
+ *		DONNEE_S -> ERREUR [label = "si non valide ou autre"]
+ *
+ *		VIRG_S -> DONNEE_S [label = "NB"]
+ *		VIRG_S -> ERREUR [label = "sinon"]
+ *
+ *		INSTRUC -> ERREUR [label = "mauvaise instruction"]
+ *		INSTRUC -> I_B_REG [label = "base offset"]
+ *		INSTRUC -> I_RN_3OP [label = "3 ops"]
+ *		INSTRUC -> I_RN_2OP [label = "2 ops"]
+ *		INSTRUC -> I_R_1OP [label = "1 ops et R"]
+ *		INSTRUC -> I_N_OP [label = "1 ops et I"]
+ *		INSTRUC -> COMMENT [label = "0 ops et COMMENT"]
+ *		INSTRUC -> EOL [label = "0 ops et EOL"]
+ *		INSTRUC -> ERREUR [label = "sinon"]
+ *
+ *		I_B_REG -> ERREUR [label = "pas bon REG"]
+ *		I_B_REG -> I_B_VIR [label = "VIR"]
+ *		I_B_REG -> ERREUR [label = "sinon"]
+ *
+ *		I_B_VIR -> I_B_OFFS [label = "NB ou SYM"]
+ *		I_B_VIR -> ERREUR [label = "sinon"]
+ *
+ *		I_B_OFFS -> I_B_PO [label = "PO"]
+ *		I_B_OFFS -> ERREUR [label = "sinon"]
+ *
+ *		I_B_PO -> I_B_BASE [label = ""]
+ *		I_B_PO -> ERREUR [label = "sinon"]
+ *
+ *		I_B_BASE -> ERREUR [label = "pas bon REG"]
+ *		I_B_BASE -> I_B_PF [label = "PF"]
+ *		I_B_BASE -> ERREUR [label = "sinon"]
+ *
+ *		I_B_PF -> I_B_VIR [label = ""]
+ *		I_B_PF -> COMMENT [label = "COMMENT"]
+ *		I_B_PF -> EOL [label = "EOL"]
+ *		I_B_PF -> ERREUR [label = "sinon"]
+ *
+ *	}
+ *  @enddot
  */
 int analyser_syntaxe(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
@@ -433,207 +657,8 @@ int analyser_syntaxe(
 		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
 		struct Liste_s *liste_bss_p)				/**< Pointeur sur la liste des réservations des .space de la section .bss */
 {
-/**	@dot
- *	digraph Machine_Etat_Instruc {
- *		concentrate=false;
- *		graph [label="\nMachine à états finis d'analyse syntaxique - Traitement des instructions"; fontname = "arial"; fontsize = 16;];
- *		edge [fontname = "arial"; fontsize = 10;];
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";]
- *
- *		rankdir=LR; // de gauche vers la droite
- *		MES_INSTRUC -> MES_ERREUR [label = "mauvaise instruction"]
- *		MES_INSTRUC -> MES_I_B_REG [label = "base offset"]
- *		MES_INSTRUC -> MES_I_RN_3OP [label = "3 ops"]
- *		MES_INSTRUC -> MES_I_RN_2OP [label = "2 ops"]
- *		MES_INSTRUC -> MES_I_R_1OP [label = "1 ops et R"]
- *		MES_INSTRUC -> MES_I_N_OP [label = "1 ops et N"]
- *		MES_INSTRUC -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_REG -> MES_I_B_VIR [label = "VIR"]
- *		MES_I_B_VIR -> MES_I_B_OFFS [label = "NB ou SYM"]
- *		MES_I_B_OFFS -> MES_I_B_PO [label = "PO"]
- *		MES_I_B_PO -> MES_I_B_BASE [label = "REG"]
- *		MES_I_B_BASE -> MES_I_B_PF [label = "PF"]
- *		MES_I_B_PF -> MES_COMMENT [label = "COMMENT"]
- *		MES_I_B_PF -> MES_EOL [label = "EOL"]
-
- *		MES_I_RN_3OP -> MES_I_RN_V32 [label = "VIR"]
- *		MES_I_RN_V32 -> MES_I_RN_2OP [label = "REG"]
- *		MES_I_RN_2OP -> MES_I_RN_V21 [label = "VIR"]
- *		MES_I_RN_V21 -> MES_I_R_1OP [label = "R et REG"]
- *		MES_I_R_1OP -> MES_ERREUR [label = "pas bon REG"]
- *		MES_I_R_1OP -> MES_COMMENT [label = "COMMENT"]
- *		MES_I_R_1OP -> MES_EOL [label = "EOL"]
- *		MES_I_RN_V21 -> MES_I_N_OP [label = "N et (NB ou SYM)"]
- *		MES_I_N_OP -> MES_COMMENT [label = "COMMENT"]
- *		MES_I_N_OP -> MES_EOL [label = "EOL"]
- *
- *		MES_I_B_REG -> MES_ERREUR [label = "pas bon REG"]
- *		MES_I_B_REG -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_VIR -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_OFFS -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_PO -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_BASE -> MES_ERREUR [label = "pas bon REG"]
- *		MES_I_B_BASE -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_PF -> MES_ERREUR [label = "sinon"]
- *
- *
- *
- *		MES_I_RN_3OP -> MES_ERREUR [label = "pas bon REG"]
- *		MES_I_RN_3OP -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_RN_V32 -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_RN_2OP -> MES_ERREUR [label = "pas bon REG"]
- *		MES_I_RN_2OP -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_RN_V21 -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_R_1OP -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_N_OP -> MES_ERREUR [label = "sinon"]
- *
- *		MES_INSTRUC -> MES_COMMENT [label = "0 ops et COMMENT"]
- *		MES_INSTRUC -> MES_EOL [label = "0 ops et EOL"]
- *
- *		MES_COMMENT -> MES_EOL [label=EOL]
- *		MES_COMMENT -> MES_ERREUR [label = "sinon"]
- *	}
- *  @enddot
- */
 
 
-/**	@dot
- *	digraph Machine_Etat_Syn {
- *		concentrate=false;
- *		graph [label="\nMachine à états finis d'analyse syntaxique"; fontname = "arial"; fontsize = 16;];
- *		edge [fontname = "arial"; fontsize = 10;];
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_INIT; MES_FIN;
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "red";] MES_ERREUR;
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_OPTION; MES_NOREORD;
- *		node [shape="tab";  fontname = "arial"; fontsize = 10; color = "black";] MES_BYTE; MES_WORD; MES_ASCIIZ; MES_SPACE; MES_ETIQUET; MES_INSTRUC; MES_SECTION;
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_DONNEE_A; MES_DONNEE_W; MES_DONNEE_B; MES_DONNEE_S; MES_VIRG_A; MES_VIRG_W; MES_VIRG_B; MES_VIRG_S;
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_COMMENT; MES_EOL;
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_I_RN_3OP; MES_I_RN_V32; MES_I_RN_2OP; MES_I_RN_V21; MES_I_R_1OP; MES_I_N_OP;
- *		node [shape="ellipse";  fontname = "arial"; fontsize = 10; color = "black";] MES_I_B_REG; MES_I_B_VIR; MES_I_B_OFFS; MES_I_B_PO; MES_I_B_BASE; MES_I_B_PF;
- *		rankdir=LR; // de gauche vers la droite
- *
- *		MES_INIT -> {rank=same MES_INSTRUC MES_BYTE MES_WORD MES_ASCIIZ MES_SPACE MES_ETIQUET MES_SECTION MES_OPTION} [style=invis]
- *		MES_INSTRUC -> {rank=same MES_I_B_REG MES_I_RN_3OP MES_DONNEE_A MES_DONNEE_W MES_DONNEE_B MES_DONNEE_S MES_NOREORD} [style=invis]
- *		MES_I_B_REG -> {rank=same MES_I_B_VIR MES_I_RN_V32 MES_VIRG_A MES_VIRG_W MES_VIRG_B MES_VIRG_S} [style=invis]
- *		MES_I_B_VIR -> {rank=same MES_I_B_OFFS MES_I_RN_2OP} [style=invis]
- *		MES_I_B_OFFS -> {rank=same MES_I_B_PO MES_I_RN_V21} [style=invis]
- *		MES_I_B_PO -> {rank=same MES_I_B_BASE MES_I_R_1OP MES_I_N_OP} [style=invis]
- *		MES_I_B_BASE -> {rank=same MES_I_B_PF} [style=invis]
- *		MES_I_B_PF -> {rank=same MES_COMMENT} [style=invis]
- *		MES_COMMENT -> {rank=same MES_EOL } [style=invis]
- *		MES_EOL -> {rank=same MES_ERREUR } [style=invis]
- *		MES_ERREUR -> {rank=same MES_FIN } [style=invis]
- *
- *		MES_INIT -> MES_OPTION [label = "DIR .set"]
- *		MES_INIT -> MES_SECTION [label = "DIR .text ou .data ou .bss"]
- *		MES_INIT -> MES_BYTE [label = "(section=data) et (DIR .byte)"]
- *		MES_INIT -> MES_WORD [label = "(section=data) et (DIR .word)"]
- *		MES_INIT -> MES_ASCIIZ [label = "(section=data) et (DIR .asciiz)"]
- *		MES_INIT -> MES_SPACE [label = "(section=data ou bss) et (DIR .space)"]
- *		MES_INIT -> MES_INSTRUC [label = "(section=text) et (ETQ)"]
- *		MES_INIT -> MES_COMMENT [label = "COMMENT"]
- *		MES_INIT -> MES_EOL [label = "EOL"]
- *		MES_INIT -> MES_ERREUR [label = "sinon"]
- *
- *		MES_OPTION -> MES_NOREORD [label = "SYM noreoder"]
- *		MES_OPTION -> MES_COMMENT [label = "COMMENT"]
- *		MES_OPTION -> MES_EOL [label = "EOL"]
- *		MES_OPTION -> MES_ERREUR [label = "sinon"]
- *
- *		MES_SECTION -> MES_COMMENT [label = "COMMENT"]
- *		MES_SECTION -> MES_EOL [label = "EOL"]
- *		MES_SECTION -> MES_ERREUR [label = "sinon"]
- *
- *		MES_BYTE -> MES_DONNEE_B [label = "NB"]
- *		MES_BYTE -> MES_ERREUR [label = "sinon"]
- *
- *		MES_DONNEE_B -> MES_VIRG_B [label = "VIR"]
- *		MES_DONNEE_B -> MES_COMMENT [label = "COMMENT"]
- *		MES_DONNEE_B -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_B -> MES_ERREUR [label = "si non valide ou autre"]
- *
- *		MES_VIRG_B -> MES_DONNEE_B [label = "NB"]
- *		MES_VIRG_B -> MES_ERREUR [label = "sinon"]
- *
- *		MES_WORD -> MES_DONNEE_W [label = "NB ou SYM"]
- *		MES_WORD -> MES_ERREUR [label = "sinon"]
- *
- *		MES_DONNEE_W -> MES_VIRG_W [label = "VIR"]
- *		MES_DONNEE_W -> MES_COMMENT [label = "COMMENT"]
- *		MES_DONNEE_W -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_W -> MES_ERREUR [label = "si non valide ou autre"]
- *
- *		MES_VIRG_W -> MES_DONNEE_W [label = "NB ou SYM"]
- *		MES_VIRG_W -> MES_ERREUR [label = "sinon"]
- *
- *		MES_ASCIIZ -> MES_DONNEE_A [label = "NB"]
- *		MES_ASCIIZ -> MES_ERREUR [label = "sinon"]
- *
- *		MES_DONNEE_A -> MES_VIRG_A [label = "VIR"]
- *		MES_DONNEE_A -> MES_COMMENT [label = "COMMENT"]
- *		MES_DONNEE_A -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_A -> MES_ERREUR [label = "si non valide ou autre"]
- *
- *		MES_VIRG_A -> MES_DONNEE_A [label = "NB"]
- *		MES_VIRG_A -> MES_ERREUR [label = "sinon"]
- *
- *		MES_SPACE -> MES_DONNEE_S [label = "NB"]
- *		MES_SPACE -> MES_ERREUR [label = "sinon"]
- *
- *		MES_DONNEE_S -> MES_VIRG_S [label = "VIR"]
- *		MES_DONNEE_S -> MES_COMMENT [label = "COMMENT"]
- *		MES_DONNEE_S -> MES_EOL [label = "EOL"]
- *		MES_DONNEE_S -> MES_ERREUR [label = "si non valide ou autre"]
- *
- *		MES_VIRG_S -> MES_DONNEE_S [label = "NB"]
- *		MES_VIRG_S -> MES_ERREUR [label = "sinon"]
- *
- *		MES_INSTRUC -> MES_ERREUR [label = "mauvaise instruction"]
- *		MES_INSTRUC -> MES_I_B_REG [label = "base offset"]
- *		MES_INSTRUC -> MES_I_RN_3OP [label = "3 ops"]
- *		MES_INSTRUC -> MES_I_RN_2OP [label = "2 ops"]
- *		MES_INSTRUC -> MES_I_R_1OP [label = "1 ops et R"]
- *		MES_INSTRUC -> MES_I_N_OP [label = "1 ops et I"]
- *		MES_INSTRUC -> MES_COMMENT [label = "0 ops et COMMENT"]
- *		MES_INSTRUC -> MES_EOL [label = "0 ops et EOL"]
- *		MES_INSTRUC -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_REG -> MES_ERREUR [label = "pas bon REG"]
- *		MES_I_B_REG -> MES_I_B_VIR [label = "VIR"]
- *		MES_I_B_REG -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_VIR -> MES_I_B_OFFS [label = "NB ou SYM"]
- *		MES_I_B_VIR -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_OFFS -> MES_I_B_PO [label = "PO"]
- *		MES_I_B_OFFS -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_PO -> MES_I_B_BASE [label = ""]
- *		MES_I_B_PO -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_BASE -> MES_ERREUR [label = "pas bon REG"]
- *		MES_I_B_BASE -> MES_I_B_PF [label = "PF"]
- *		MES_I_B_BASE -> MES_ERREUR [label = "sinon"]
- *
- *		MES_I_B_PF -> MES_I_B_VIR [label = ""]
- *		MES_I_B_PF -> MES_COMMENT [label = "COMMENT"]
- *		MES_I_B_PF -> MES_EOL [label = "EOL"]
- *		MES_I_B_PF -> MES_ERREUR [label = "sinon"]
- *
- *	}
- *  @enddot
- */
 
 	uint32_t decalage_text=0;
 	uint32_t decalage_data=0;
@@ -647,7 +672,7 @@ int analyser_syntaxe(
 	struct NoeudListe_s *noeud_lexeme_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
 
-	enum M_E_S_e etat=MES_INIT;
+	enum M_E_S_e etat=INIT;
 	enum Section_e section=S_INIT;
 	int resultat=SUCCESS;
 
@@ -662,9 +687,9 @@ int analyser_syntaxe(
 			lexeme_p=(struct Lexeme_s *)noeud_lexeme_p->donnee_p;
 		else
 			lexeme_p=NULL;
-		while ((lexeme_p) && (etat != MES_FIN)) {
+		while ((lexeme_p) && (etat != FIN)) {
 			switch(etat) {
-			case MES_ERREUR:
+			case ERREUR:
 				if (lexeme_p) {
 					fprintf(stderr, "Erreur de syntaxe ligne %d, ", lexeme_p ? lexeme_p->ligne : 0);
 					fprintf(stderr, "%c[%d;%dm%s%c[%d;%dm ", 0x1B, STYLE_BOLD, COLOR_RED, (!(lexeme_p->data) ? "Fin_de_ligne" : lexeme_p->data),0x1B, STYLE_OFF, 0);
@@ -678,64 +703,64 @@ int analyser_syntaxe(
 
 				while ((lexeme_p) && (lexeme_p->nature!=L_FIN_LIGNE))
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_FIN;
-				else etat=MES_EOL;
+				if (!lexeme_p) etat=FIN;
+				else etat=EOL;
 
 				resultat=FAILURE;
 				break;
-			case MES_INIT:
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature==L_FIN_LIGNE) etat=MES_EOL;
-				else if (lexeme_p->nature==L_COMMENTAIRE) etat=MES_COMMENT;
+			case INIT:
+				if (!lexeme_p) etat=ERREUR;
+				else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
+				else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
 				else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) ||
 					(!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])) || (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS]))))
-					etat=MES_SECTION;
-				else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".set"))) etat=MES_OPTION;
-				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) etat=MES_ETIQUET;
+					etat=SECTION;
+				else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".set"))) etat=OPTION;
+				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) etat=ETIQUET;
 				else if ((((section==S_BSS) || (section==S_DATA)) && (lexeme_p->nature==L_DIRECTIVE) &&((!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE])))) ||
 						(((section==S_DATA) && (lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE])) ||
 						(!strcmp(lexeme_p->data, NOMS_DATA[D_WORD])) || (!strcmp(lexeme_p->data, NOMS_DATA[D_ASCIIZ]))))))
-					etat=MES_DONNEE;
+					etat=DONNEE;
 
 				/* les4 suivants devraient pouvoir remplacés par le précédent */
 				else if ((section==S_DATA) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_ASCIIZ]))) {
-					etat=MES_DONNEE;
+					etat=DONNEE;
 					WARNING_MSG("On ne devrait pas passer là");
 				}
 				else if ((section==S_DATA) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE]))) {
-					etat=MES_DONNEE;
+					etat=DONNEE;
 					WARNING_MSG("On ne devrait pas passer là");
 				}
 				else if ((section==S_DATA) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) {
-					etat=MES_DONNEE;
+					etat=DONNEE;
 					WARNING_MSG("On ne devrait pas passer là");
 				}
 				else if (((section==S_BSS) || (section==S_DATA)) && (lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))))	{
-					etat=MES_DONNEE;
+					etat=DONNEE;
 					WARNING_MSG("On ne devrait pas passer là");
 				}
 
-				else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) etat=MES_INSTRUC;
+				else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) etat=INSTRUC;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "n'est pas valide ici");
 				}
 				break;
-			case MES_EOL:
+			case EOL:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_FIN;
-				else etat=MES_INIT;
+				if (!lexeme_p) etat=FIN;
+				else etat=INIT;
 				break;
-			case MES_COMMENT:
+			case COMMENT:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature==L_FIN_LIGNE) etat=MES_EOL;
+				if (!lexeme_p) etat=ERREUR;
+				else if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "ne devait pas se trouver après un commentaire");
 				}
 				break;
-			case MES_SECTION:
+			case SECTION:
 				if (!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])) {
 					section = S_TEXT;
 					decalage_p=&decalage_text;
@@ -753,37 +778,37 @@ int analyser_syntaxe(
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être après la directive de changement de section");
 				break;
-			case MES_OPTION:
-				etat=MES_ERREUR;
-				strcpy(msg_err, "n'est pas encore traité (MES_OPTION)");
+			case OPTION:
+				etat=ERREUR;
+				strcpy(msg_err, "n'est pas encore traité (OPTION)");
 				break;
-			case MES_ETIQUET:
+			case ETIQUET:
 				if (SUCCESS!=enregistrer_etiquette(&noeud_lexeme_p, &lexeme_p, section, decalage_p, table_etiquettes_p, msg_err))
-					etat=MES_ERREUR;
+					etat=ERREUR;
 				else {
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=MES_ERREUR;
-					else etat=MES_INIT;
+					if (!lexeme_p) etat=ERREUR;
+					else etat=INIT;
 				}
 				break;
 			/*
-			case MES_DONNEE_B:
+			case DONNEE_B:
 				if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 				donnee_p->type=D_BYTE;
 				etat=mef_lire_nombre(etat, lexeme_p, &donnee_p, decalage_p, msg_err);
-				if (etat!=MES_ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
+				if (etat!=ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=ERREUR;
 				else if (lexeme_p->nature!=L_VIRGULE) etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être là, ou il manque une virgule");
-				else etat=MES_VIRG_B;
+				else etat=VIRG_B;
 
-				if (etat!=MES_ERREUR) {
+				if (etat!=ERREUR) {
 					ajouter_fin_liste(liste_p, donnee_p);
 					donnee_p=NULL;
 				}
 				break;
 				*/
 
-			case MES_DONNEE_A: /* XXX Créer une fonction mef_lire_chaine? */
+			case DONNEE_A: /* XXX Créer une fonction mef_lire_chaine? */
 				if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 				donnee_p->decalage=*decalage_p;
 				donnee_p->type=D_ASCIIZ;
@@ -793,118 +818,118 @@ int analyser_syntaxe(
 				/* il manque à récupérer un pointeur de chaine */
 
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
+				if (!lexeme_p) etat=ERREUR;
 				else if (lexeme_p->nature!=L_VIRGULE) etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être là, ou il manque une virgule");
-				else etat=MES_VIRG_A;
+				else etat=VIRG_A;
 
-				if (etat!=MES_ERREUR) {
+				if (etat!=ERREUR) {
 					ajouter_fin_liste(liste_p, donnee_p);
 					(*decalage_p)+=(donnee_p->valeur.chaine ? 1+strlen(donnee_p->valeur.chaine) : 0);
 					donnee_p=NULL; /* XXX il faudra tester l'insertion */
 				}
 				break;
-			case MES_VIRG_A:
+			case VIRG_A:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature==L_CHAINE) etat=MES_DONNEE_A;
+				if (!lexeme_p) etat=ERREUR;
+				else if (lexeme_p->nature==L_CHAINE) etat=DONNEE_A;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "ne devrait pas être là");
 				}
 				break;
 
-			case MES_DONNEE_W:
+			case DONNEE_W:
 				if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 				aligner_decalage(decalage_p);
 				donnee_p->type=D_WORD;
 				etat=mef_lire_nombre(etat, lexeme_p, &donnee_p, decalage_p, msg_err);
-				if (etat!=MES_ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
+				if (etat!=ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=ERREUR;
 				else if (lexeme_p->nature!=L_VIRGULE) etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être là, ou il manque une virgule");
-				else etat=MES_VIRG_W;
+				else etat=VIRG_W;
 
-				if (etat!=MES_ERREUR) {
+				if (etat!=ERREUR) {
 					ajouter_fin_liste(liste_p, donnee_p);
 					donnee_p=NULL; /* XXX il faudra tester l'insertion */
 				}
 				break;
-			case MES_VIRG_W:
+			case VIRG_W:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if ((lexeme_p->nature==L_NOMBRE) || (lexeme_p->nature==L_SYMBOLE)) etat=MES_DONNEE_W;
+				if (!lexeme_p) etat=ERREUR;
+				else if ((lexeme_p->nature==L_NOMBRE) || (lexeme_p->nature==L_SYMBOLE)) etat=DONNEE_W;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "ne devrait pas être là");
 				}
 				break;
 
-			case MES_DONNEE_B:
+			case DONNEE_B:
 				if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 				donnee_p->type=D_BYTE;
 				etat=mef_lire_nombre(etat, lexeme_p, &donnee_p, decalage_p, msg_err);
-				if (etat!=MES_ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
+				if (etat!=ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=ERREUR;
 				else if (lexeme_p->nature!=L_VIRGULE) etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être là, ou il manque une virgule");
-				else etat=MES_VIRG_B;
+				else etat=VIRG_B;
 
-				if (etat!=MES_ERREUR) {
+				if (etat!=ERREUR) {
 					ajouter_fin_liste(liste_p, donnee_p);
 					donnee_p=NULL; /* XXX il faudra tester l'insertion */
 				}
 				break;
-			case MES_VIRG_B:
+			case VIRG_B:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature==L_NOMBRE) etat=MES_DONNEE_B;
+				if (!lexeme_p) etat=ERREUR;
+				else if (lexeme_p->nature==L_NOMBRE) etat=DONNEE_B;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "ne devrait pas être là");
 				}
 				break;
 
-			case MES_DONNEE_S:
+			case DONNEE_S:
 				if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 				donnee_p->type=D_SPACE;
 				etat=mef_lire_nombre(etat, lexeme_p, &donnee_p, decalage_p, msg_err);
-				if (etat!=MES_ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
+				if (etat!=ERREUR) mef_suivant(&noeud_lexeme_p, &lexeme_p);
+				if (!lexeme_p) etat=ERREUR;
 				else if (lexeme_p->nature!=L_VIRGULE) etat=etat_comm_eol(lexeme_p, msg_err, "ne devrait pas être là, ou il manque une virgule");
-				else etat=MES_VIRG_S;
+				else etat=VIRG_S;
 
-				if (etat!=MES_ERREUR) {
+				if (etat!=ERREUR) {
 					ajouter_fin_liste(liste_p, donnee_p);
 					donnee_p=NULL; /* XXX il faudra tester l'insertion */
 				}
 				break;
-			case MES_VIRG_S:
+			case VIRG_S:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature==L_NOMBRE) etat=MES_DONNEE_S;
+				if (!lexeme_p) etat=ERREUR;
+				else if (lexeme_p->nature==L_NOMBRE) etat=DONNEE_S;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "ne devrait pas être là");
 				}
 				break;
 
-			case MES_DONNEE:
-				if (!noeud_lexeme_p->suivant_p->donnee_p) etat=MES_ERREUR;
-				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_SYMBOLE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) etat=MES_DONNEE_W;
-				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) etat=MES_DONNEE_W;
-				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_ASCIIZ]))) etat=MES_DONNEE_A;
-				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE]))) etat=MES_DONNEE_B;
-				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) etat=MES_DONNEE_S;
-				else if ((section==S_BSS)  && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) etat=MES_DONNEE_S;
+			case DONNEE:
+				if (!noeud_lexeme_p->suivant_p->donnee_p) etat=ERREUR;
+				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_SYMBOLE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) etat=DONNEE_W;
+				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) etat=DONNEE_W;
+				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_ASCIIZ]))) etat=DONNEE_A;
+				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE]))) etat=DONNEE_B;
+				else if ((section==S_DATA) && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) etat=DONNEE_S;
+				else if ((section==S_BSS)  && (((struct Lexeme_s *)(noeud_lexeme_p->suivant_p->donnee_p))->nature==L_NOMBRE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) etat=DONNEE_S;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "ne devrait pas être là");
 				}
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				break;
 
-			case MES_INSTRUC:
+			case INSTRUC:
 				def_p=(struct DefinitionInstruction_s *)donnee_table(table_def_instructions_p, lexeme_p->data);
 				if ((!def_p) || (strcmp(def_p->nom, lexeme_p->data))) {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "n'est pas une instruction connue");
 				} else {
 					INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nb_ops, *decalage_p);
@@ -914,7 +939,7 @@ int analyser_syntaxe(
 					instruction_p->decalage=*decalage_p;
 
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
-					if (!lexeme_p) etat=MES_ERREUR;
+					if (!lexeme_p) etat=ERREUR;
 					else {
 						if ((def_p->nb_ops==0) && ((lexeme_p->nature == L_FIN_LIGNE) || (lexeme_p->nature==L_COMMENTAIRE)))  {
 							ajouter_fin_liste(liste_p, instruction_p);
@@ -923,100 +948,100 @@ int analyser_syntaxe(
 						}
 
 						if ((lexeme_p->nature!=L_REGISTRE) && (((def_p->type_ops==I_OP_R) && (def_p->nb_ops>0)) || ((def_p->type_ops==I_OP_N) && (def_p->nb_ops>1)) || (def_p->type_ops==I_OP_B))) {
-							etat=MES_ERREUR;
+							etat=ERREUR;
 							strcpy(msg_err, "n'est pas un registre");
 						}
 						else if (def_p->type_ops==I_OP_B)
-							etat=MES_I_B_REG;
-						else if (def_p->nb_ops==3) etat=MES_I_RN_3OP;
-						else if (def_p->nb_ops==2) etat=MES_I_RN_2OP;
-						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_R)) etat=MES_I_R_1OP;
-						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_N)) etat=MES_I_N_OP;
+							etat=I_B_REG;
+						else if (def_p->nb_ops==3) etat=I_RN_3OP;
+						else if (def_p->nb_ops==2) etat=I_RN_2OP;
+						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_R)) etat=I_R_1OP;
+						else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_N)) etat=I_N_OP;
 						else if (def_p->nb_ops!=0) ERROR_MSG("Si on est là c'est qu'il y a un bug");
-						else if (lexeme_p->nature == L_FIN_LIGNE) etat=MES_EOL;
-						else if (lexeme_p->nature==L_COMMENTAIRE) etat=MES_COMMENT;
+						else if (lexeme_p->nature == L_FIN_LIGNE) etat=EOL;
+						else if (lexeme_p->nature==L_COMMENTAIRE) etat=COMMENT;
 						else if (def_p->nb_ops==0) {
-							etat=MES_ERREUR;
+							etat=ERREUR;
 							strcpy(msg_err, "est en trop pour cette instruction");
 						}
 						else ERROR_MSG("Si on est là c'est qu'il y a un bug");
 					}
 				}
 				break;
-			case MES_I_RN_3OP:
-				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, def_p->nb_ops-3, L_VIRGULE, MES_I_RN_V32, msg_err, "à la place d'une virgule");
+			case I_RN_3OP:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, def_p->nb_ops-3, L_VIRGULE, I_RN_V32, msg_err, "à la place d'une virgule");
 				break;
-			case MES_I_RN_V32:
-				etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, MES_I_RN_2OP, msg_err);
+			case I_RN_V32:
+				etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, I_RN_2OP, msg_err);
 				break;
-			case MES_I_RN_2OP:
-				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, def_p->nb_ops-2, L_VIRGULE, MES_I_RN_V21, msg_err, "à la place d'une virgule");
+			case I_RN_2OP:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, def_p->nb_ops-2, L_VIRGULE, I_RN_V21, msg_err, "à la place d'une virgule");
 				break;
-			case MES_I_RN_V21:
-				if (def_p->type_ops==I_OP_R) etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, MES_I_R_1OP, msg_err);
-				else etat=etat_sera_nombre_ou_symbole(&noeud_lexeme_p, &lexeme_p, MES_I_N_OP, msg_err);
+			case I_RN_V21:
+				if (def_p->type_ops==I_OP_R) etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, I_R_1OP, msg_err);
+				else etat=etat_sera_nombre_ou_symbole(&noeud_lexeme_p, &lexeme_p, I_N_OP, msg_err);
 				break;
-			case MES_I_R_1OP:
+			case I_R_1OP:
 				if (!donnee_table(table_def_registres_p, lexeme_p->data)) {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "n'est pas un registre valide");
 				} else {
 					instruction_p->operandes[def_p->nb_ops-1]=lexeme_p;
 
 					mef_suivant(&noeud_lexeme_p, &lexeme_p);
 					etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
-					if (etat!=MES_ERREUR) {
+					if (etat!=ERREUR) {
 						ajouter_fin_liste(liste_p, instruction_p);
 						instruction_p=NULL; /* XXX il faudra tester l'insertion */
 						(*decalage_p)+=4;
 					}
 				}
 				break;
-			case MES_I_N_OP:
+			case I_N_OP:
 				instruction_p->operandes[def_p->nb_ops-1]=lexeme_p;
 
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
-				if (etat!=MES_ERREUR) {
+				if (etat!=ERREUR) {
 					ajouter_fin_liste(liste_p, instruction_p);
 					instruction_p=NULL; /* XXX il faudra tester l'insertion */
 					(*decalage_p)+=4;
 				}
 				break;
-			case MES_I_B_REG:
-				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, 0, L_VIRGULE, MES_I_B_VIR, msg_err, "à la place d'une virgule");
+			case I_B_REG:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, 0, L_VIRGULE, I_B_VIR, msg_err, "à la place d'une virgule");
 				break;
-			case MES_I_B_VIR:
-				etat=etat_sera_nombre_ou_symbole(&noeud_lexeme_p, &lexeme_p, MES_I_B_OFFS, msg_err);
+			case I_B_VIR:
+				etat=etat_sera_nombre_ou_symbole(&noeud_lexeme_p, &lexeme_p, I_B_OFFS, msg_err);
 				break;
-			case MES_I_B_OFFS:
+			case I_B_OFFS:
 				instruction_p->operandes[1]=lexeme_p;
 
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
-				if (!lexeme_p) etat=MES_ERREUR;
-				else if (lexeme_p->nature==L_PARENTHESE_OUVRANTE) etat=MES_I_B_PO;
+				if (!lexeme_p) etat=ERREUR;
+				else if (lexeme_p->nature==L_PARENTHESE_OUVRANTE) etat=I_B_PO;
 				else {
-					etat=MES_ERREUR;
+					etat=ERREUR;
 					strcpy(msg_err, "à la place d'une parenthèse ouvrante");
 				}
 				break;
-			case MES_I_B_PO:
-				etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, MES_I_B_BASE, msg_err);
+			case I_B_PO:
+				etat=etat_sera_registre(&noeud_lexeme_p, &lexeme_p, I_B_BASE, msg_err);
 				break;
-			case MES_I_B_BASE:
-				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, 2, L_PARENTHESE_FERMANTE, MES_I_B_PF, msg_err, "à la place d'une parenthèse fermante");
+			case I_B_BASE:
+				etat=etat_traitement_registre(&noeud_lexeme_p, &lexeme_p, table_def_registres_p, instruction_p, 2, L_PARENTHESE_FERMANTE, I_B_PF, msg_err, "à la place d'une parenthèse fermante");
 				break;
-			case MES_I_B_PF:
+			case I_B_PF:
 				mef_suivant(&noeud_lexeme_p, &lexeme_p);
 				etat=etat_comm_eol(lexeme_p, msg_err, "est en trop pour cette instruction");
-				if (etat!=MES_ERREUR) {
+				if (etat!=ERREUR) {
 					ajouter_fin_liste(liste_p, instruction_p);
 					instruction_p=NULL; /* XXX il faudra tester l'insertion */
 					(*decalage_p)+=4;
 				}
 				break;
 			default:
-				etat=MES_ERREUR;
+				etat=ERREUR;
 				strcpy(msg_err, "ne devrait pas être là");
 			}
 		}
