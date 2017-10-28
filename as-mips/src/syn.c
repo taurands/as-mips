@@ -499,24 +499,59 @@ int analyser_instruction(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
 		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
 		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
-		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
+		struct Liste_s *liste_p,				/**< Pointeur sur la liste des instructions de la section .text */
 		uint32_t *decalage_p,
-		struct Liste_s *liste_p,
-		char *msg_err
-		)
+		char *msg_err)
 {
-/*
-	struct NoeudListe_s *noeud_lexeme_p=NULL;
+	struct Noeud_Liste_s *noeud_courant_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
+	struct DefinitionInstruction_s *def_instruction_p=NULL;
+	struct Instruction_s *instruction_p=NULL;
 
 	enum M_E_S_e etat=INIT;
-	enum Section_e section=S_INIT;
-	int resultat=SUCCESS;
 
-	struct DefinitionInstruction_s *def_p=NULL;
-	struct Instruction_s *instruction_p=NULL;
-*/
-	return SUCCESS;
+	if (!lignes_lexemes_p || !table_def_instructions_p || !table_def_registres_p || !liste_p || !decalage_p || !msg_err)
+		return FAILURE;
+	else if ((noeud_courant_p = courant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p)) {
+		def_instruction_p=donnee_table(table_def_instructions_p, lexeme_p->data);
+		if (!def_instruction_p) {
+			etat=ERREUR;
+			strcpy(msg_err, "n'est pas une instruction connue");
+			return FAILURE;
+		} else {
+			INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_instruction_p->nom, def_instruction_p->nb_ops, *decalage_p);
+			instruction_p=calloc(1,sizeof(*instruction_p));
+			instruction_p->definition_p=def_instruction_p;
+			instruction_p->ligne=lexeme_p->ligne;
+			instruction_p->decalage=*decalage_p;
+
+			while ((etat != ERREUR) && (etat != EOL) && (noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p)) {
+				switch(etat) {
+				case ERREUR:
+					break;
+				case COMMENT:
+					if (lexeme_p->nature==L_FIN_LIGNE) etat=EOL;
+					else {
+						etat=ERREUR;
+						strcpy(msg_err, "ne devait pas se trouver après un commentaire");
+					}
+					break;
+				default:
+					etat=ERREUR;
+					strcpy(msg_err, "ne devrait pas être là");
+				}
+			}
+
+			/* tester le null, fin ligne, ... */
+			if (etat == ERREUR) {
+				free(instruction_p);
+				return FAILURE;
+			}
+			return SUCCESS;
+		}
+	} else {
+		return FAILURE;
+	}
 }
 
 /**
@@ -933,7 +968,7 @@ int analyser_syntaxe(
 					etat=ERREUR;
 					strcpy(msg_err, "n'est pas une instruction connue");
 				} else {
-					INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_p->nom, def_p->nb_ops, *decalage_p);
+					INFO_MSG("Prise en compte de l'instruction %s à %d opérandes au décalage %d", def_instruction_p->nom, def_instruction_p->nb_ops, *decalage_p);
 					instruction_p=calloc(1,sizeof(*instruction_p));
 					instruction_p->definition_p=def_p;
 					instruction_p->ligne=lexeme_p->ligne;

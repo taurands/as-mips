@@ -17,7 +17,7 @@
 char* strdup(char* sourceStr) {
 	char* destStr=NULL;
 	if (sourceStr) {
-		destStr=malloc(sizeof(*destStr)*(1+strlen(sourceStr)));
+		destStr = malloc(sizeof(*destStr)*(1+strlen(sourceStr)));
 		if (destStr) strcpy(destStr,sourceStr);
 	}
 	return destStr;

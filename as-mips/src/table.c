@@ -90,48 +90,56 @@ size_t hashBernstein(char *chaine) {
  * @return pointeur sur la table de hachage générique créée
  * @brief Crée une table de hachage générique
  */
-struct Table_s *creer_table(size_t nb_elts, fonctionClef *fn_clef_p, fonctionDestruction *fn_destruction_p)
+int creer_table(struct Table_s **table_pp, size_t nb_elts, fonctionClef *fn_clef_p, fonctionDestruction *fn_destruction_p)
 {
-	struct Table_s *table_p = calloc(1, sizeof(*table_p));
+	if (table_pp && !*table_pp) {
+		(*table_pp)=calloc (1, sizeof(**table_pp));
+		if (!*table_pp)
+			return FAIL_ALLOC;
 
-    if (!table_p) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la structure de la table de hachage");
+	    (*table_pp)->nbEltsMax = tailleTableHachageRecommandee(nb_elts);
+	    (*table_pp)->nbElts=0;
+	    (*table_pp)->fnClef_p=fn_clef_p;
+	    (*table_pp)->fnDestruction_p=fn_destruction_p;
+	    (*table_pp)->table = calloc ((*table_pp)->nbEltsMax, sizeof(*(*table_pp)->table));
+	    if (!(*table_pp)->table) {
+	    	free (*table_pp);
+	    	*table_pp = NULL;
+	    	return FAIL_ALLOC;
+	    }
 
-    table_p->nbEltsMax = tailleTableHachageRecommandee(nb_elts);
-    table_p->nbElts=0;
-    table_p->fnClef_p=fn_clef_p;
-    table_p->fnDestruction_p=fn_destruction_p;
-
-    table_p->table = calloc(table_p->nbEltsMax, sizeof(*table_p->table));
-    if (!table_p->table) ERROR_MSG("Impossible d'obtenir la mémoire pour la création de la table de hachage");
-
-    return table_p;
+		return SUCCESS;
+	} else
+		return FAILURE;
 }
 
 /**
  * @param table_p pointeur sur une table de hachage générique
- * @return NULL
+ * @return SUCCESS si la table existe, NULL sinon
  * @brief Supprime et libère la table de hachage et tout son contenu lié
  *
  * Si une fonction de destuction a été passée à la création de la table, elle sera utilisée pour libérer
  * la mémoire occupée par les éléments et leurs dépendances éventuelles. Sinon, seul les éléments pointés seront
  * enlevés de la table et libérés.
  */
-struct Table_s *detruire_table(struct Table_s *table_p) {
+int detruire_table(struct Table_s **table_pp) {
 	size_t i;
 
-	if (table_p) {
-		for (i=0; i<table_p->nbEltsMax; i++)
-			if (table_p->table[i]) {
-				if (table_p->fnDestruction_p)
-					table_p->fnDestruction_p(table_p->table[i]);
+	if (table_pp && *table_pp) {
+		for (i=0; i<(*table_pp)->nbEltsMax; i++)
+			if ((*table_pp)->table[i]) {
+				if ((*table_pp)->fnDestruction_p)
+					(*table_pp)->fnDestruction_p((*table_pp)->table[i]);
 				else
-					free(table_p->table[i]);
+					free((*table_pp)->table[i]);
 			}
 
-		free(table_p->table);
-		free(table_p);
-	}
-	return NULL;
+		free((*table_pp)->table);
+		free((*table_pp));
+		*table_pp = NULL;
+		return SUCCESS;
+	} else
+		return FAILURE;
 }
 
 /**
