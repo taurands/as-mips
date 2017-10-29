@@ -40,7 +40,7 @@ void print_usage (char *exec)
  */
 int main (int argc, char *argv[])
 {
-	int erreur=SUCCESS;
+	int code_retour=SUCCESS;
 
     unsigned int nb_lignes = 0;
     unsigned int nb_etiquettes = 0;
@@ -67,13 +67,13 @@ int main (int argc, char *argv[])
     }
 
     do { /* Do While pour permettre de sortir proprement en cas de problème d'allocation mémoire */
-    	if ((erreur = creer_liste (&liste_lexemes_p, (fonctionDestructeur *)detruit_lexeme)))
+    	if ((code_retour = creer_liste (&liste_lexemes_p, (fonctionDestructeur *)detruit_lexeme)))
     		break;
-    	if ((erreur = creer_liste (&liste_text_p, NULL)))
+    	if ((code_retour = creer_liste (&liste_text_p, NULL)))
     		break;
-    	if ((erreur = creer_liste (&liste_data_p, NULL)))
+    	if ((code_retour = creer_liste (&liste_data_p, NULL)))
     		break;
-    	if ((erreur = creer_liste (&liste_bss_p, NULL)))
+    	if ((code_retour = creer_liste (&liste_bss_p, NULL)))
     		break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/
@@ -84,15 +84,15 @@ int main (int argc, char *argv[])
     	visualisation_liste_lexemes(liste_lexemes_p);
 
     	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
-    	if ((erreur = creer_table(&table_etiquettes_p, nb_etiquettes, clefEtiquette, NULL)))
+    	if ((code_retour = creer_table(&table_etiquettes_p, nb_etiquettes, clefEtiquette, NULL)))
     		break;
-    	if ((erreur = charge_def_instruction(&table_def_instructions_p, NOM_DICO_INSTRUCTIONS)))
+    	if ((code_retour = charge_def_instruction(&table_def_instructions_p, NOM_DICO_INSTRUCTIONS)))
     		break;
-    	if ((erreur = charge_def_registre(&table_def_registres_p, NOM_DICO_REGISTRES)))
+    	if ((code_retour = charge_def_registre(&table_def_registres_p, NOM_DICO_REGISTRES)))
     		break;
 
     	/* effectue l'analyse syntaxique */
-    	analyser_syntaxe(liste_lexemes_p, table_def_instructions_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
+    	analyser2_syntaxe(liste_lexemes_p, table_def_instructions_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
 
     	/* affiche les résultats de l'analyse syntaxique */
     	affiche_table_etiquette(table_etiquettes_p, "Table des étiquettes");
@@ -112,6 +112,6 @@ int main (int argc, char *argv[])
     detruire_liste (&liste_bss_p);
 	detruire_liste (&liste_lexemes_p);
 
-	exit (erreur);
+	exit (code_retour);
 }
 
