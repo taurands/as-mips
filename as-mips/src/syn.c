@@ -157,7 +157,7 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 
 void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste)
 {
-	struct Noeud_Liste_s* noeud_liste_p=NULL;
+	struct Noeud_Liste_s* noeud_liste_p = NULL;
 	if (!liste_p) {
 		printf("%s n'existe pas !\n", titre_liste);
 	} else {
@@ -407,48 +407,44 @@ enum M_E_S_e etat_traitement_registre(
 
 int lire_nombre(
 		struct Lexeme_s *lexeme_p,
-		struct Donnee_s **donnee_pp,
+		struct Donnee_s *donnee_p,
 		uint32_t *decalage_p,
 		char *msg_err)
 {
 	long int nombre;
 
-	(*donnee_pp)->decalage=*decalage_p;
-	(*donnee_pp)->lexeme_p=lexeme_p;
-	(*donnee_pp)->ligne=lexeme_p->ligne;
+	donnee_p->decalage = *decalage_p;
+	donnee_p->lexeme_p = lexeme_p;
+	donnee_p->ligne = lexeme_p->ligne;
 
-	errno=0; /* remet le code d'erreur à 0 */
-	nombre=strtol(lexeme_p->data, NULL, 0); /* Convertit la chaine en nombre, avec base automatique */
+	errno = 0; /* remet le code d'erreur à 0 */
+	nombre = strtol(lexeme_p->data, NULL, 0); /* Convertit la chaine en nombre, avec base automatique */
 	if (errno) {
 		strcpy(msg_err, "n'a pas pu être évalué numériquement");
-		free((*donnee_pp));
-		*donnee_pp=NULL;
 		return FAILURE;
 	} else {
-		if ((((*donnee_pp)->type==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
-			(((*donnee_pp)->type==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
-			(((*donnee_pp)->type==D_SPACE) && (nombre<=0) && (nombre+*decalage_p>=UINT32_MAX))) {
+		if (((donnee_p->type==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
+			((donnee_p->type==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
+			((donnee_p->type==D_SPACE) && (nombre<=0) && (nombre+*decalage_p>=UINT32_MAX))) {
 
 			strcpy(msg_err, "est au delà des valeurs permises");
-			free((*donnee_pp));
-			*donnee_pp=NULL;
 			return FAILURE;
 		} else {
-			if ((*donnee_pp)->type==D_BYTE) {
+			if (donnee_p->type==D_BYTE) {
 				if (nombre>=0)
-					(*donnee_pp)->valeur.octetNS=(uint8_t)nombre;
+					donnee_p->valeur.octetNS=(uint8_t)nombre;
 				else
-					(*donnee_pp)->valeur.octet=(int8_t)nombre;
+					donnee_p->valeur.octet=(int8_t)nombre;
 				(*decalage_p)++;
-			} else if ((*donnee_pp)->type==D_WORD) {
+			} else if (donnee_p->type==D_WORD) {
 				if (nombre>=0)
-					(*donnee_pp)->valeur.motNS=(uint32_t)nombre;
+					donnee_p->valeur.motNS=(uint32_t)nombre;
 				else
-					(*donnee_pp)->valeur.mot=(int32_t)nombre;
+					donnee_p->valeur.mot=(int32_t)nombre;
 				(*decalage_p)+=4;
 			} else { /* typeDonnee==D_SPACE */
-				(*donnee_pp)->valeur.nbOctets=(uint32_t)nombre;
-				(*decalage_p)+=(*donnee_pp)->valeur.nbOctets;
+				donnee_p->valeur.nbOctets=(uint32_t)nombre;
+				(*decalage_p)+=donnee_p->valeur.nbOctets;
 			}
 		}
 	}
@@ -542,21 +538,25 @@ int analyser_donnee(
 					((type_donnee == D_ASCIIZ) && (lexeme_p->nature == L_CHAINE)) ||
 					((type_donnee == D_WORD) && (lexeme_p->nature == L_SYMBOLE))) {
 
-					if (!(donnee_p=calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
-					donnee_p->type=type_donnee;
+					if (!(donnee_p = calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
+					donnee_p->type = type_donnee;
 
 					if (type_donnee == D_ASCIIZ) {
-						donnee_p->decalage=*decalage_p;
-						donnee_p->type=D_ASCIIZ;
-						donnee_p->lexeme_p=lexeme_p;
-						donnee_p->ligne=lexeme_p->ligne;
+						donnee_p->decalage =* decalage_p;
+						donnee_p->type = D_ASCIIZ;
+						donnee_p->lexeme_p = lexeme_p;
+						donnee_p->ligne = lexeme_p->ligne;
 						donnee_p->valeur.chaine=NULL; /* XXX Il faut lire... */
 
 						(*decalage_p)+=(donnee_p->valeur.chaine ? 1+strlen(donnee_p->valeur.chaine) : 0);
 					} else {
 						if (type_donnee == D_WORD)
 							aligner_decalage(decalage_p);
-						code_retour = lire_nombre(lexeme_p, &donnee_p, decalage_p, msg_err);
+						code_retour = lire_nombre(lexeme_p, donnee_p, decalage_p, msg_err);
+						if (code_retour != SUCCESS) {
+							free(donnee_p);
+							return code_retour;
+						}
 					}
 
 					code_retour = ajouter_fin_liste(liste_p, donnee_p);
@@ -566,7 +566,8 @@ int analyser_donnee(
 						strcpy(msg_err, "");
 						return code_retour;
 					} else {
-
+						donnee_p = NULL;
+						etat = SUITE;
 					}
 				} else {
 					strcpy(msg_err, "n'a pas le type attendu");
@@ -590,16 +591,7 @@ int analyser_donnee(
 				strcpy(msg_err, "ne devrait pas être là");
 			}
 		} while ((etat != ERREUR) && (etat != EOL) && (noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
-
-		/* tester le null, fin ligne, ... */
-		if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, donnee_p))) {
-			donnee_p=NULL;
-			(*decalage_p)+=4; /* XXX Dépend de la taille */
-			return SUCCESS;
-		} else {
-			free(donnee_p);
-			return FAILURE;
-		}
+		return (etat == ERREUR) ? FAILURE : SUCCESS;
 	} else {
 		return FAILURE;
 	}
@@ -691,10 +683,10 @@ int analyser_instruction(
 		uint32_t *decalage_p,
 		char *msg_err)
 {
-	struct Noeud_Liste_s *noeud_courant_p=NULL;
-	struct Lexeme_s *lexeme_p=NULL;
-	struct DefinitionInstruction_s *def_p=NULL;
-	struct Instruction_s *instruction_p=NULL;
+	struct Noeud_Liste_s *noeud_courant_p = NULL;
+	struct Lexeme_s *lexeme_p = NULL;
+	struct DefinitionInstruction_s *def_p = NULL;
+	struct Instruction_s *instruction_p = NULL;
 
 	enum M_E_S_e etat=INSTRUC;
 
@@ -728,7 +720,7 @@ int analyser_instruction(
 					else if ((def_p->nb_ops==1) && (def_p->type_ops==I_OP_N))
 						etat = I_N_OP;
 					else if (def_p->nb_ops==0)
-						etat = COMMENT;
+						etat = SUITE;
 					else
 						ERROR_MSG("Si on est là, c'est qu'il y a un bug sur le nombre d'opérandes de la définition d'instruction");
 				}
@@ -784,7 +776,7 @@ int analyser_instruction(
 					strcpy(msg_err, "n'est pas un registre valide");
 				} else {
 					instruction_p->operandes[def_p->nb_ops-1] = lexeme_p;
-					etat = COMMENT;
+					etat = SUITE;
 				}
 				break;
 			case I_N_OP:
@@ -793,7 +785,7 @@ int analyser_instruction(
 					strcpy(msg_err, "n'est ni un nombre, ni un registre");
 				} else {
 					instruction_p->operandes[def_p->nb_ops-1] = lexeme_p;
-					etat = COMMENT;
+					etat = SUITE;
 				}
 				break;
 
@@ -851,15 +843,15 @@ int analyser_instruction(
 					etat = ERREUR;
 					strcpy(msg_err, "n'est pas une parenthèse fermante");
 				} else {
-					etat = COMMENT;
+					etat = SUITE;
 				}
 				break;
-			case COMMENT:
+			case SUITE:
 				if ((lexeme_p->nature != L_COMMENTAIRE) && (lexeme_p->nature != L_FIN_LIGNE)) {
 					etat=ERREUR;
 					strcpy(msg_err, "ne devait pas se trouver après cette instruction");
 				} else if (lexeme_p->nature == L_COMMENTAIRE) {
-					etat=COMMENT;
+					etat=SUITE;
 				} else {
 					etat=EOL;
 				}
@@ -918,25 +910,22 @@ int analyser2_syntaxe(
 				if (lexeme_p->nature==L_FIN_LIGNE)
 					etat=INIT;
 				else if (lexeme_p->nature==L_COMMENTAIRE)
-					etat=COMMENT;
-				else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".set")))
-						etat=OPTION;
-				else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])))) {
-					section = S_TEXT;
-					etat = INIT;
-				} else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])))) {
-					section = S_DATA;
-					etat = INIT;
-				} else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS])))) {
-					section = S_BSS;
-					etat = INIT;
-				} else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) {
+					etat=INIT;
+				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) {
 					if (section == S_TEXT)
 						erreur = enregistrer_etiquette(lexeme_p, section, &decalage_text, table_etiquettes_p, msg_err);
-					if (section == S_DATA)
+					else if (section == S_DATA)
 						erreur = enregistrer_etiquette(lexeme_p, section, &decalage_data, table_etiquettes_p, msg_err);
-					if (section == S_BSS)
+					else if (section == S_BSS)
 						erreur = enregistrer_etiquette(lexeme_p, section, &decalage_bss, table_etiquettes_p, msg_err);
+					if (erreur == FAIL_ALLOC)
+						return FAIL_ALLOC;
+					else if (erreur == SUCCESS)
+						etat = INIT;
+					else
+						etat = ERREUR;
+				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
+					erreur = analyser_instruction(lignes_lexemes_p, table_def_instructions_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
 					if (erreur == FAIL_ALLOC)
 						return FAIL_ALLOC;
 					else if (erreur == SUCCESS)
@@ -975,7 +964,7 @@ int analyser2_syntaxe(
 						etat = INIT;
 					else
 						etat = ERREUR;
-				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) {
+				} else if ((section==S_BSS) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) {
 					erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, &decalage_bss, msg_err);
 					if (erreur == FAIL_ALLOC)
 						return FAIL_ALLOC;
@@ -983,15 +972,18 @@ int analyser2_syntaxe(
 						etat = INIT;
 					else
 						etat = ERREUR;
-				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
-					erreur = analyser_instruction(lignes_lexemes_p, table_def_instructions_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
-					if (erreur == FAIL_ALLOC)
-						return FAIL_ALLOC;
-					else if (erreur == SUCCESS)
-						etat = INIT;
-					else
-						etat = ERREUR;
-				} else {
+				} else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_TEXT])))) {
+					section = S_TEXT;
+					etat = SUITE;
+				} else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_DATA])))) {
+					section = S_DATA;
+					etat = SUITE;
+				} else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS])))) {
+					section = S_BSS;
+					etat = SUITE;
+				} else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".set")))
+					etat=OPTION;
+				else {
 					etat=ERREUR;
 					strcpy(msg_err, "n'est pas valide ici");
 				}
@@ -1004,29 +996,33 @@ int analyser2_syntaxe(
 					strcpy(msg_err, "ne devait pas se trouver après la directive .set");
 				}
 				break;
-			case COMMENT:
-				if (lexeme_p->nature==L_FIN_LIGNE)
-					etat=INIT;
-				else {
+			case SUITE:
+				if ((lexeme_p->nature != L_COMMENTAIRE) && (lexeme_p->nature != L_FIN_LIGNE)) {
 					etat=ERREUR;
-					strcpy(msg_err, "ne devait pas se trouver après un commentaire");
+					strcpy(msg_err, "ne devait pas se trouver après cette instruction");
+				} else if (lexeme_p->nature == L_COMMENTAIRE) {
+					etat=SUITE;
+				} else {
+					etat=INIT;
 				}
 				break;
 			default:
 				etat=ERREUR;
-				strcpy(msg_err, "ne devrait pas être là");
+				strcpy(msg_err, "ne devrait pas être là (defaut switch principal)");
 			}
 
 			if (etat == ERREUR) {
-				if (lexeme_p) {
+				if ((noeud_courant_p = courant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p)) {
 					fprintf(stderr, "Erreur de syntaxe ligne %d, ", lexeme_p ? lexeme_p->ligne : 0);
-					fprintf(stderr, "%c[%d;%dm%s%c[%d;%dm ", 0x1B, STYLE_BOLD, COLOR_RED, (!(lexeme_p->data) ? "Fin_de_ligne" : lexeme_p->data),0x1B, STYLE_OFF, 0);
+					fprintf(stderr, "%c[%d;%dm%s%c[%d;%dm ", 0x1B, STYLE_BOLD, COLOR_RED, (!(lexeme_p->data) ? "une fin de ligne" : lexeme_p->data),0x1B, STYLE_OFF, 0);
 					fprintf(stderr, "%s.\n", msg_err);
 					msg_err[0]='\0';
-				} else ERROR_MSG("fin de liste de lexème innatendue");
+				} else
+					ERROR_MSG("fin de liste de lexème innatendue");
 				while ((noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p) && (lexeme_p->nature != L_FIN_LIGNE))
 					; /* Passe tous les lexèmes jusqu'à la fin de ligne */
 				resultat=FAILURE;
+				etat = INIT;
 			}
 		} while ((noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
 		return resultat;
