@@ -17,13 +17,16 @@
 #include <dico.h>
 #include <table.h>
 
+char NOM_DICO_INSTRUCTIONS[] = "src/dictionnaire_instructions.txt";
+char NOM_DICO_REGISTRES[] = "src/dictionnaire_registres.txt";
+
 /**
  * @param exec Name of executable.
  * @return Nothing.
  * @brief Print usage.
  *
  */
-void print_usage( char *exec )
+void print_usage (char *exec)
 {
     fprintf(stderr, "Usage: %s file.s\n", exec);
 }
@@ -35,69 +38,80 @@ void print_usage( char *exec )
  * @brief Main entry point for MIPS assembler.
  *
  */
-int main(int argc, char *argv[])
+int main (int argc, char *argv[])
 {
+	int code_retour=SUCCESS;
 
-    unsigned int nbLignes 	= 0;
-    unsigned int nbEtiquettes = 0;
-    unsigned int nbInstructions = 0;
+    unsigned int nb_lignes = 0;
+    unsigned int nb_etiquettes = 0;
+    unsigned int nb_instructions = 0;
 
-    char         *file 	= NULL;
+    char *nom_fichier_asm = NULL;
     
-    struct Table_s *tableDefinitionInstructions_p=NULL;
-    struct Table_s *tableDefinitionRegistres_p=NULL;
-    struct Table_s *tableEtiquettes_p=NULL;
-    struct Liste_s *listeLexemes_p=NULL;
-    struct Liste_s *listeText_p=NULL;
-    struct Liste_s *listeData_p=NULL;
-    struct Liste_s *listeBss_p=NULL;
+    struct Table_s *table_def_instructions_p=NULL;
+    struct Table_s *table_def_registres_p=NULL;
+    struct Table_s *table_etiquettes_p=NULL;
+    struct Liste_s *liste_lexemes_p=NULL;
+    struct Liste_s *liste_text_p=NULL;
+    struct Liste_s *liste_data_p=NULL;
+    struct Liste_s *liste_bss_p=NULL;
 
     if (argc != 2) {
         print_usage(argv[0]);
-        exit(EXIT_FAILURE);
+        exit (EXIT_FAILURE);
     }
-    file = argv[argc-1];
-    if (NULL == file) {
+    nom_fichier_asm = argv[argc-1];
+    if (NULL == nom_fichier_asm) {
         fprintf(stderr, "Pas de nom pour le fichier assembleur. Abandon du traitement.\n" );
-        exit(EXIT_FAILURE);
+        exit (EXIT_FAILURE);
     }
 
-    listeLexemes_p=creer_liste((fonctionDestructeur *)detruit_lexeme);
-    listeText_p=creer_liste(NULL);
-    listeData_p=creer_liste(NULL);
-    listeBss_p=creer_liste(NULL);
+    do { /* Do While pour permettre de sortir proprement en cas de problème d'allocation mémoire */
+    	if ((code_retour = creer_liste (&liste_lexemes_p, (fonctionDestructeur *)detruit_lexeme)))
+    		break;
+    	if ((code_retour = creer_liste (&liste_text_p, NULL)))
+    		break;
+    	if ((code_retour = creer_liste (&liste_data_p, NULL)))
+    		break;
+    	if ((code_retour = creer_liste (&liste_bss_p, NULL)))
+    		break;
 
-    /* ---------------- effectue l'analyse lexicale  -------------------*/
-    lex_load_file(file, listeLexemes_p, &nbLignes, &nbEtiquettes, &nbInstructions);
+        /* ---------------- effectue l'analyse lexicale  -------------------*/
+        lex_load_file(nom_fichier_asm, liste_lexemes_p, &nb_lignes, &nb_etiquettes, &nb_instructions);
 
-    /* ---------------- print the lexical analysis -------------------*/
-    DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nbLignes, nbEtiquettes, nbInstructions);
-	visualisation_liste_lexemes(listeLexemes_p);
+        /* ---------------- print the lexical analysis -------------------*/
+        DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nb_lignes, nb_etiquettes, nb_instructions);
+    	visualisation_liste_lexemes(liste_lexemes_p);
 
-	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
-	tableEtiquettes_p=creer_table(nbEtiquettes, clefEtiquette, NULL);
-	charge_def_instruction(&tableDefinitionInstructions_p, "src/dictionnaire_instructions.txt");
-	charge_def_registre(&tableDefinitionRegistres_p, "src/dictionnaire_registres.txt");
+    	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
+    	if ((code_retour = creer_table(&table_etiquettes_p, nb_etiquettes, clefEtiquette, NULL)))
+    		break;
+    	if ((code_retour = charge_def_instruction(&table_def_instructions_p, NOM_DICO_INSTRUCTIONS)))
+    		break;
+    	if ((code_retour = charge_def_registre(&table_def_registres_p, NOM_DICO_REGISTRES)))
+    		break;
 
-	/* effectue l'analyse syntaxique */
-	analyser_syntaxe(listeLexemes_p, tableDefinitionInstructions_p, tableDefinitionRegistres_p, tableEtiquettes_p, listeText_p, listeData_p, listeBss_p);
+    	/* effectue l'analyse syntaxique */
+    	analyser_syntaxe(liste_lexemes_p, table_def_instructions_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
 
-	/* affiche les résultats de l'analyse syntaxique */
-	affiche_table_etiquette(tableEtiquettes_p, "Table des étiquettes");
-	affiche_liste_donnee(listeData_p, tableEtiquettes_p, "Table des données de la section .data");
-	affiche_liste_donnee(listeBss_p, tableEtiquettes_p, "Table des données de la section .bss");
-	affiche_liste_instructions(listeText_p, tableEtiquettes_p, "Table des instructions de .text");
+    	/* affiche les résultats de l'analyse syntaxique */
+    	affiche_table_etiquette(table_etiquettes_p, "Table des étiquettes");
+    	affiche_liste_instructions(liste_text_p, table_etiquettes_p, "Table des instructions de .text");
+    	affiche_liste_donnee(liste_data_p, table_etiquettes_p, "Table des données de la section .data");
+    	affiche_liste_donnee(liste_bss_p, table_etiquettes_p, "Table des données de la section .bss");
+    } while (FALSE);
 
-    /* ---------------- Libérer nos camarades pointeurs -------------------*/
-	tableEtiquettes_p=detruire_table(tableEtiquettes_p);
-    tableDefinitionInstructions_p=detruire_table(tableDefinitionInstructions_p);
-    tableDefinitionRegistres_p=detruire_table(tableDefinitionRegistres_p);
 
-	listeText_p=detruire_liste(listeText_p);
-    listeData_p=detruire_liste(listeData_p);
-    listeBss_p=detruire_liste(listeBss_p);
-	listeLexemes_p=detruire_liste(listeLexemes_p);
+    /* ---------------- Libération de la mémoire allouée -------------------*/
+	detruire_table (&table_etiquettes_p);
+    detruire_table (&table_def_instructions_p);
+    detruire_table (&table_def_registres_p);
 
-	exit( EXIT_SUCCESS );
+	detruire_liste (&liste_text_p);
+    detruire_liste (&liste_data_p);
+    detruire_liste (&liste_bss_p);
+	detruire_liste (&liste_lexemes_p);
+
+	exit (code_retour);
 }
 

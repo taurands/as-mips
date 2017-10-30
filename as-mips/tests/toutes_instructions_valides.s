@@ -1,7 +1,8 @@
+.set noreorder #
 .data
 .space 6
-.byte 1, 2
-mot1:.word 1, nombre1
+mot0:.byte 1, 2, 3
+mot1:mot1a:mot1b:.word 0x1234, nombre1
 .byte 1
 mot2:.word nombre
 nombre:.word 1

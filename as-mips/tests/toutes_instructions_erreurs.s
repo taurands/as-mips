@@ -84,5 +84,6 @@ MOVE $1, $2 NOP #Ne détecte pas le NOP en trop
 .bss
 .space -3 #Valeur négative acceptée
 .space "3"
-.txt
+.text
+seb:ADD $1, $2, $33
 .space 12

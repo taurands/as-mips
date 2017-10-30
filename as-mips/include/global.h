@@ -63,6 +63,10 @@
   \brief INTERNALS: Return value for boolean FAILURE.
  */
 #define FAILURE          1
+/*!
+  \brief INTERNALS: Return value for boolean FAIL_ALLOC (failure to get memory through malloc or calloc).
+ */
+#define FAIL_ALLOC		-1
 
 
 #endif /* _GLOBAL_H */

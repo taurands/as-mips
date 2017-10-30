@@ -74,46 +74,105 @@ void destruction_def_registre(void *donnee_p)
  */
 int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichier)
 {
-	char *nom_instruction=calloc(STRLEN, sizeof(char));
+	int resultat = SUCCESS;
+
+	FILE *f_p = NULL;
+	struct DefinitionInstruction_s *def_instruction_p = NULL;
+
+	char *nom_instruction = NULL;
 	char car_nature;
-	int nb_operandes=0;
-	int i=0;
+	int nb_operandes = 0;
+	int i = 0;
 	int nb_mots;
 
-	struct DefinitionInstruction_s *def_instruction_p=NULL;
+	do {
+		if (!(nom_instruction = calloc(STRLEN, sizeof(char)))) {
+			resultat = FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'instruction");
+			break;
+		}
 
-	FILE* f_p=fopen(nom_fichier,"r"); /* Ouverture du dictionnaire d'instruction */
-	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
+		f_p = fopen(nom_fichier,"r"); /* Ouverture du dictionnaire d'instruction */
+		if (!f_p) {
+			resultat = FAILURE;
+			WARNING_MSG ("Impossible d'ouvrir le fichier %s de définition d'instruction", nom_fichier);
+			break;
+		}
 
-	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
-	*table_definition_pp=creer_table(nb_mots, clef_def_instruction, destruction_def_instruction);
+		if (1 != fscanf(f_p,"%u",&nb_mots)) { /* Lecture de la première ligne du dictionnaire */
+			resultat = FAILURE;
+			WARNING_MSG ("Nombre d'instructions du dictionnaire introuvable dans %s", nom_fichier);
+			break;
+		} else if (nb_mots < 1) {
+			resultat = FAILURE;
+			WARNING_MSG ("Le dictionnaire %s doit contenir au moins une instruction", nom_fichier);
+			break;
+		}
 
-	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
+		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_instruction, destruction_def_instruction))) {
+			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions d'instructions");
+			break;
+		}
 
-		if (1 != fscanf(f_p,"%s", nom_instruction)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
-		if (1 != fscanf(f_p,"%d", &nb_operandes)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nombre d'arguments de l'instruction en cours");
-		if (1 != fscanf(f_p,"%c", &car_nature)) ERROR_MSG("Pas de caractère de type syntaxique pour %s", nom_instruction);
+		while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
-		def_instruction_p=malloc(sizeof(*def_instruction_p));
-		def_instruction_p->nom=strdup(nom_instruction);
-		def_instruction_p->nb_ops=nb_operandes;
+			if (1 != fscanf(f_p,"%s", nom_instruction)) {
+				resultat = FAILURE;
+				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+				break;
+			}
+			if (1 != fscanf(f_p,"%d", &nb_operandes)) {
+				resultat = FAILURE;
+				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nombre d'arguments de l'instruction en cours");
+				break;
+			}
+			if (1 != fscanf(f_p,"%c", &car_nature)) {
+				resultat = FAILURE;
+				WARNING_MSG ("Pas de caractère de type syntaxique pour %s", nom_instruction);
+				break;
+			}
 
-		if (car_nature==TYPE_OPS[I_OP_R])
-			def_instruction_p->type_ops=I_OP_R;
-		else if (car_nature==TYPE_OPS[I_OP_N])
-			def_instruction_p->type_ops=I_OP_N;
-		else if (car_nature==TYPE_OPS[I_OP_B])
-			def_instruction_p->type_ops=I_OP_B;
-		else
-			ERROR_MSG("Type d'opérande inconnu pour l'instruction %s (ligne %d)", nom_instruction, i+1);
+			if (!(def_instruction_p = calloc (1, sizeof(*def_instruction_p)))) {
+				resultat = FAIL_ALLOC;
+				WARNING_MSG ("Plus assez de mémoire pour créer une nouvelle définition d'instruction");
+				break;
+			}
+			if (!(def_instruction_p->nom = strdup(nom_instruction)) && nom_instruction) {
+				resultat = FAIL_ALLOC;
+				WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'instruction");
+				break;
+			}
+			def_instruction_p->nb_ops=nb_operandes;
 
-		ajouter_table(*table_definition_pp, def_instruction_p);
-		i++;
-	}
-	fclose(f_p);
+			if (car_nature == TYPE_OPS[I_OP_R])
+				def_instruction_p->type_ops=I_OP_R;
+			else if (car_nature == TYPE_OPS[I_OP_N])
+				def_instruction_p->type_ops=I_OP_N;
+			else if (car_nature == TYPE_OPS[I_OP_B])
+				def_instruction_p->type_ops=I_OP_B;
+			else {
+				resultat = FAILURE;
+				WARNING_MSG("Type d'opérande inconnu pour l'instruction %s (ligne %d)", nom_instruction, i+1);
+				break;
+			}
 
-	free(nom_instruction);
-	return SUCCESS;
+			if ((resultat = ajouter_table(*table_definition_pp, def_instruction_p))) {
+				WARNING_MSG ("Le dictionnaire d'instructions contient l'instruction %s en double", def_instruction_p->nom);
+				free(def_instruction_p->nom);
+				break;
+			}
+			else
+				def_instruction_p = NULL;
+			i++;
+		}
+	} while (FALSE);
+
+	if (f_p)
+		fclose(f_p);
+
+	free (def_instruction_p);
+	free (nom_instruction);
+	return resultat;
 }
 
 /**
@@ -125,6 +184,8 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
  */
 int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 {
+	int erreur = SUCCESS;
+
 	char *nom_reg=calloc(STRLEN, sizeof(char));
 	int valeur=0;
 	int i=0;
@@ -136,7 +197,8 @@ int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
 	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
-	*table_definition_pp=creer_table(nb_mots, clef_def_registre, destruction_def_registre);
+	if ((erreur = creer_table(table_definition_pp, nb_mots, clef_def_registre, destruction_def_registre)))
+			return FAIL_ALLOC;
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
