@@ -48,7 +48,8 @@ enum Etat_lex_e {
 	OCTAL,
 	HEXADECIMAL,
 
-	DEBUT_CHAINE,
+	CARAC_CHAINE,
+	SPECIAL_CHAINE,
 
 	INIT,					/**< Etat initial */
 	MOINS,
@@ -57,6 +58,10 @@ enum Etat_lex_e {
 	DECIMAL_ZERO,			/**< On a lu un "0" */
 	POINT					/**< On a lu un point */
 };
+
+
+const char *FIN_SPECIAL = "\"'nrtfvab\\0";
+const char *REMPLACEMENT_SPECIAL = "\"'\n\r\t\f\v\a\b\\\0";
 
 /**
  * @param etat etat de la machine à états finis lexicale
@@ -213,20 +218,36 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
 
 	switch(etat) {
 		case INIT:
-			if (isdigit(c)) etat=(c=='0')? DECIMAL_ZERO : DECIMAL; 	
-			else if (c=='-') etat=MOINS;
-			else if (c=='+') etat=PLUS;
-			else if (c=='.') etat=POINT;
-			else if (c==',') etat=VIRGULE;
-			else if (c=='#') etat=COMMENTAIRE;
-			else if (c=='"') etat=DEBUT_CHAINE;
-			else if (c=='$') etat=REGISTRE;
-			else if (c=='(') etat=PARENTHESE_OUVRANTE;
-			else if (c==')') etat=PARENTHESE_FERMANTE;
-			else if (isalpha(c) || (c=='_')) etat=SYMBOLE;
-			else etat=ERREUR;
+			if (isdigit(c)) etat=(c == '0')? DECIMAL_ZERO : DECIMAL;
+			else if (c == '-') etat = MOINS;
+			else if (c == '+') etat = PLUS;
+			else if (c == '.') etat = POINT;
+			else if (c == ',') etat = VIRGULE;
+			else if (c == '#') etat = COMMENTAIRE;
+			else if (c == '"') etat = CARAC_CHAINE;
+			else if (c == '$') etat = REGISTRE;
+			else if (c == '(') etat = PARENTHESE_OUVRANTE;
+			else if (c == ')') etat = PARENTHESE_FERMANTE;
+			else if (isalpha(c) || (c == '_')) etat = SYMBOLE;
+			else etat = ERREUR;
 			break;
 		
+		case CARAC_CHAINE:
+			if (c == '"') etat = CHAINE;
+			else if (c == '\\') etat = SPECIAL_CHAINE;
+			else etat = CARAC_CHAINE;
+			break;
+
+		case SPECIAL_CHAINE:
+			if (strchr(FIN_SPECIAL,c)) etat = CARAC_CHAINE;
+			else etat = ERREUR;
+			break;
+
+		case CHAINE:
+			etat = ERREUR;
+			break;
+
+
 		case VIRGULE:
 		case PARENTHESE_OUVRANTE:
 		case PARENTHESE_FERMANTE:
@@ -246,10 +267,6 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
 			if(isxdigit(c)) etat=HEXADECIMAL;
 			else etat=ERREUR;
 			break;  
-
-		case DEBUT_CHAINE:
-			if (c=='"') etat=CHAINE;
-			break; /* Pas d'erreur possible ici */
 	
 		case HEXADECIMAL: 
 			if(!isxdigit(c)) etat=ERREUR;
@@ -346,27 +363,16 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
         			etat=DECIMAL;
         			break;
 
-    			case MOINS:
+        		case CARAC_CHAINE:
+        		case SPECIAL_CHAINE:
+        		case MOINS:
     			case PLUS:
-    				etat=ERREUR; /* les signes doivent être accolés à un nombre */
-    				break;
-        			
     			case DEBUT_HEXADECIMAL:
-    				etat=ERREUR;
+				case POINT:
+				case INIT:
+   				etat=ERREUR;
     				break;
     				
-    			case DEBUT_CHAINE:
-    				etat=ERREUR;
-    				break;
-
-				case POINT:
-					etat=ERREUR;
-					break;
-					
-				case INIT:
-					etat=ERREUR;
-					break;
-					
 				default :
 					;		
         	}
@@ -463,8 +469,6 @@ void lex_standardise(char* in, char* out)
     const char * PAS_ESPACE_AVANT = ":";
     const char * ESPACE_APRES = ":,()";
     const char * PAS_ESPACE_APRES = ".-+";
-    const char DEBUT_SPECIAL = '\\';
-    const char * FIN_SPECIAL = "\"'nrtfvab\\";
 
     DEBUG_MSG("in  = \"%s\"", in);
     
