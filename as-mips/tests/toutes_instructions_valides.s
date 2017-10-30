@@ -51,6 +51,7 @@ MOVE $1, $2
 .word 32000
 .word -1000,-0400,-0x1
 .space 15
+.byte '\n', '\'' , '"', '\"', '7'
 .asciiz "test"
 .asciiz "" , "\""
 .bss

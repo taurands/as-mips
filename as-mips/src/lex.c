@@ -39,6 +39,7 @@ enum Etat_lex_e {
 
 	NOMBRE=L_NOMBRE,
 
+	CAR=L_CAR,
 	CHAINE=L_CHAINE,
 
 	COMMENTAIRE=L_COMMENTAIRE,
@@ -47,6 +48,10 @@ enum Etat_lex_e {
 	DECIMAL,
 	OCTAL,
 	HEXADECIMAL,
+
+	CARAC_CAR,
+	SPECIAL_CAR,
+	QUOTE_CAR,
 
 	CARAC_CHAINE,
 	SPECIAL_CHAINE,
@@ -82,6 +87,7 @@ char *nature_lex_to_str(enum Nature_lexeme_e nature)
 		case L_PARENTHESE_OUVRANTE:		return "PARENTHESE_OUVRANTE";
 		case L_PARENTHESE_FERMANTE:		return "PARENTHESE_FERMANTE";
 		case L_NOMBRE:					return "NOMBRE";
+		case L_CAR:						return "CARACTERE";
 		case L_CHAINE:					return "CHAINE";
 		case L_COMMENTAIRE:				return "COMMENTAIRE";
 		case L_FIN_LIGNE:				return "FIN_LIGNE";
@@ -218,18 +224,56 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
 
 	switch(etat) {
 		case INIT:
-			if (isdigit(c)) etat=(c == '0')? DECIMAL_ZERO : DECIMAL;
-			else if (c == '-') etat = MOINS;
-			else if (c == '+') etat = PLUS;
-			else if (c == '.') etat = POINT;
-			else if (c == ',') etat = VIRGULE;
-			else if (c == '#') etat = COMMENTAIRE;
-			else if (c == '"') etat = CARAC_CHAINE;
-			else if (c == '$') etat = REGISTRE;
-			else if (c == '(') etat = PARENTHESE_OUVRANTE;
-			else if (c == ')') etat = PARENTHESE_FERMANTE;
-			else if (isalpha(c) || (c == '_')) etat = SYMBOLE;
-			else etat = ERREUR;
+			if (isdigit(c))
+				etat=(c == '0')? DECIMAL_ZERO : DECIMAL;
+			else if (c == '-')
+				etat = MOINS;
+			else if (c == '+')
+				etat = PLUS;
+			else if (c == '.')
+				etat = POINT;
+			else if (c == ',')
+				etat = VIRGULE;
+			else if (c == '#')
+				etat = COMMENTAIRE;
+			else if (c == '\'')
+				etat = CARAC_CAR;
+			else if (c == '"')
+				etat = CARAC_CHAINE;
+			else if (c == '$')
+				etat = REGISTRE;
+			else if (c == '(')
+				etat = PARENTHESE_OUVRANTE;
+			else if (c == ')')
+				etat = PARENTHESE_FERMANTE;
+			else if (isalpha(c) || (c == '_'))
+				etat = SYMBOLE;
+			else
+				etat = ERREUR;
+			break;
+
+		case CARAC_CAR:
+			if (c == '\'')
+				etat = ERREUR;
+			else if (c == '\\')
+				etat = SPECIAL_CAR;
+			else
+				etat=QUOTE_CAR;
+			break;
+
+		case SPECIAL_CAR:
+			if (strchr(FIN_SPECIAL,c)) etat = QUOTE_CAR;
+			break;
+
+		case QUOTE_CAR:
+			if (c == '\'')
+				etat = CAR;
+			else
+				etat = ERREUR;
+			break;
+
+		case CAR:
+			etat = ERREUR;
 			break;
 		
 		case CARAC_CHAINE:

@@ -34,6 +34,7 @@ enum Nature_lexeme_e {
 
 	L_NOMBRE,				/**< Nombre */
 
+	L_CAR,					/**< Caractère */
 	L_CHAINE,				/**< chaine de caractère avec un zero final , de la forme "xxx\0" */
  	
  	L_COMMENTAIRE,			/**< Le commentaire commence par '#' et fini à la fin de la ligne. */
