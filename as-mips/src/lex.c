@@ -160,6 +160,8 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
  *		INIT -> PLUS [label="+"];
  *		INIT -> POINT [label="."];
  *		INIT -> VIRGULE [label=","];
+ *		INIT -> CARAC_CAR [label="'"];
+ *		INIT -> CARAC_CHAINE [label="\""];
  *		INIT -> COMMENTAIRE [label="#"];
  *		INIT -> REGISTRE [label="$"];
  *		INIT -> PARENTHESE_OUVRANTE [label="("];
@@ -169,6 +171,27 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
  *
  *		COMMENTAIRE -> COMMENTAIRE;
  *		ERREUR -> ERREUR;
+ *
+ *		CARAC_CAR -> ERREUR [label="'"];
+ *		CARAC_CAR -> SPECIAL_CAR [label="\\"];
+ *		CARAC_CAR -> QUOTE_CAR [label="sinon"];
+ *
+ *		SPECIAL_CAR -> QUOTE_CAR [label="bon caractère spécial"];
+ *		SPECIAL_CAR -> ERREUR [label="sinon"];
+ *
+ *		QUOTE_CAR -> CAR [label="'"];
+ *		QUOTE_CAR -> ERREUR [label="sinon"];
+ *
+ *		CAR -> ERREUR;
+ *
+ *		CARAC_CHAINE -> CHAINE [label="\""];
+ *		CARAC_CHAINE -> SPECIAL_CHAINE [label="\\"];
+ *		CARAC_CHAINE -> CARAC_CHAINE [label="sinon"];
+ *
+ *		SPECIAL_CHAINE -> CARAC_CHAINE [label="bon caractère spécial"];
+ *		SPECIAL_CHAINE -> ERREUR [label="sinon"];
+ *
+ *		CHAINE -> ERREUR;
  *
  *		MOINS -> DECIMAL_ZERO [label="0"];
  *		MOINS -> DECIMAL [label="1 à 9"];
@@ -262,7 +285,10 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
 			break;
 
 		case SPECIAL_CAR:
-			if (strchr(FIN_SPECIAL,c)) etat = QUOTE_CAR;
+			if (strchr(FIN_SPECIAL,c))
+				etat = QUOTE_CAR;
+			else
+				etat = ERREUR;
 			break;
 
 		case QUOTE_CAR:
@@ -509,43 +535,65 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned 
 void lex_standardise(char* in, char* out)
 {
     unsigned int i, j;
-    const char * ESPACE_AVANT = "#$,-()+";
+    const char * ESPACE_AVANT = "#$,-()+'\"";
     const char * PAS_ESPACE_AVANT = ":";
     const char * ESPACE_APRES = ":,()";
     const char * PAS_ESPACE_APRES = ".-+";
 
+    int special = FALSE;
+    int pas_modif = FALSE;
+    char car_modif = '\0';
+
     DEBUG_MSG("in  = \"%s\"", in);
     
     for ( i= 0, j= 0; i < strlen(in); i++ ) {
-        if (strchr(ESPACE_AVANT, in[i])) {
-        	if (j>0) if (out[j-1] != ' ') out[j++]=' '; /* rajoute un espace avant les symboles '$', ',', '(', ')', '-', '+' # si pas en début de ligne et pas déjà un espace. */
-			out[j++]=in[i]; /* Puis, recopie le symbole */      
+    	if (pas_modif) {
+    		out[j++]=in[i];
+    		if ((!special) && (in[i] == car_modif))
+    			pas_modif = FALSE;
+    		else if ((!special) && (in[i] == '\\'))
+    			special=TRUE;
+    		else if (special)
+    			special = FALSE;
+    	}
+    	else {
+            if (strchr(ESPACE_AVANT, in[i])) {
+            	 /* rajoute un espace avant les symboles '$', ',', '(', ')', '-', '+' # si pas en début de ligne et pas déjà un espace. */
+            	if ((j>0) && (out[j-1] != ' ')) out[j++]=' ';
+    			out[j++]=in[i]; /* Puis, recopie le symbole */
 
-        	/* Si c'est un commentaire, puis recopie tous les caractères suivants jusqu'à la fin de la ligne sans faire de standardisation aval */
-		    if ( in[i] == '#') for ( i++; i < strlen(in); i++ ) out[j++]=in[i];
-        }
-        else {
-		    /* translate all spaces (i.e., tab) into simple spaces */
-		    if (isblank((int) in[i])) {
-		    	/* on recopie un espace sauf si on est en debut de ligne ou après un caractère contenu dans PAS_ESPACE_APRES l'interdisant */
-				if ( j > 0 ) if (!strchr(PAS_ESPACE_APRES, out[j-1])) out[j++]=' ';
-		    }
-		    
-		    /* otherwise copy as is */
-		    else {
-		    	out[j]=in[i];        	
-				if (strchr(PAS_ESPACE_AVANT, out[j])) {
-					while (j>0) {
-						/* enlève les espaces avant un ':' */
-						if (out[j-1] == ' ') out[(j--)-1]=in[i];
-						else break;
-					}
-				}
-				j++;
-			}
-        }
-        /* Ajoute un espace après les caractères contenus dans ESPACE_APRES sauf s'il y en a déjà en */
-        if (strchr(ESPACE_APRES, in[i])) if ( i+1 < strlen(in) ) if (!isblank((int) in[i+1])) out[j++]=' ';
+    			/* Traite le cas des caractères de début de chaine, caractère et commentaire */
+    			if ((in[i] == '#') || (in[i] == '\'') || (in[i]) == '"') {
+    				pas_modif = TRUE;
+    				if (in[i] == '#')
+    					car_modif = '\0';
+    				else
+    					car_modif = in[i];
+    			}
+            }
+            else {
+    		    /* translate all spaces (i.e., tab) into simple spaces */
+    		    if (isblank((int) in[i])) {
+    		    	/* on recopie un espace sauf si on est en debut de ligne ou après un caractère contenu dans PAS_ESPACE_APRES l'interdisant */
+    				if ( j > 0 ) if (!strchr(PAS_ESPACE_APRES, out[j-1])) out[j++]=' ';
+    		    }
+
+    		    /* otherwise copy as is */
+    		    else {
+    		    	out[j]=in[i];
+    				if (strchr(PAS_ESPACE_AVANT, out[j])) {
+    					while (j>0) {
+    						/* enlève les espaces avant un ':' */
+    						if (out[j-1] == ' ') out[(j--)-1]=in[i];
+    						else break;
+    					}
+    				}
+    				j++;
+    			}
+            }
+            /* Ajoute un espace après les caractères contenus dans ESPACE_APRES sauf s'il y en a déjà en */
+            if (strchr(ESPACE_APRES, in[i])) if ( i+1 < strlen(in) ) if (!isblank((int) in[i+1])) out[j++]=' ';
+    	}
     }
     out[j]='\0';
     DEBUG_MSG("out = \"%s\"", out);

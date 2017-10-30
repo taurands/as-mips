@@ -52,7 +52,8 @@ MOVE $1, $2
 .word -1000,-0400,-0x1
 .space 15
 .byte '\n', '\'' , '"', '\"', '7'
-.asciiz "test"
+.asciiz"test"#. toto
+.asciiz " :","	a"
 .asciiz "" , "\""
 .bss
 titi:.space 12

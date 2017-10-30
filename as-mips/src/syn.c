@@ -192,11 +192,6 @@ int enregistrer_etiquette(
 		return FAIL_ALLOC;
 	}
 
-	/* XXX Revoir méthode d'alignement
-	if ((section == S_DATA) && (suite_est_directive_word((*noeud_lexeme_pp)->suivant_p)))
-		aligner_decalage(decalage_p);
-	*/
-
 	etiquetteCourante_p->lexeme_p = lexeme_p;
 	etiquetteCourante_p->section = section;
 	etiquetteCourante_p->decalage = *decalage_p;
@@ -647,7 +642,7 @@ int analyser_instruction(
 			}
 		} while ((etat != ERREUR) && (etat != EOL) && (noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
 
-		/* tester le null, fin ligne, ... */
+		/* XXX tester le null, fin ligne, ... */
 		if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, instruction_p))) {
 			instruction_p=NULL;
 			(*decalage_p)+=4;
