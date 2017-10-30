@@ -394,6 +394,8 @@ void lex_standardise(char* in, char* out)
     const char * PAS_ESPACE_AVANT = ":";
     const char * ESPACE_APRES = ":,()";
     const char * PAS_ESPACE_APRES = ".-+";
+    const char DEBUT_SPECIAL = '\\';
+    const char * FIN_SPECIAL = "\"'nrtfvab\\";
 
     DEBUG_MSG("in  = \"%s\"", in);
     
