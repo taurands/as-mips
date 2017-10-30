@@ -390,94 +390,102 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
  */
 void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
 {
-    struct Lexeme_s *lexeme_p;
+	struct Lexeme_s *lexeme_p;
 
 	enum Etat_lex_e etat;
-	char c;
-	int i;
 	int debutLigne = 1;
-	
-    char *seps = " ";
-    char *token = NULL;
-    char save[2*STRLEN];
 
-    /* copy the input line so that we can do anything with it without impacting outside world*/
-    memcpy( save, ligne, 2*STRLEN );
+	char *SEPS = " ";
+	char *DEBUT = "\"'#";
+	char *FIN = "\"'\0";
 
-    /* get each token*/
-    for( token = strtok( save, seps ); NULL != token; token = strtok( NULL, seps )) {
-    	etat=INIT;
-		i=0; /* On se place sur le premier caractère du token en cours */
-		while('\0'!=(c=token[i])) { /* Tant que la ligne n'est pas terminee */
-			etat=machine_etats_finis_lexicale(etat,c);
-			i++;
-        }
-        
-        if (etat==COMMENTAIRE) {
-         	char * diese_p=strchr(ligne,'#');
+	char *token = NULL;
 
-         	lexeme_p = malloc(sizeof(*lexeme_p));
-         	if (!(lexeme_p->data = (char *)malloc(strlen(diese_p)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau commentaire");
-    		strcpy(lexeme_p->data, diese_p);
-         	lexeme_p->nature=L_COMMENTAIRE;
-         	lexeme_p->ligne=num_ligne;
-         	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
-         	break;
-        }
+	int bornant = FALSE;
+	char car_bornant = '\0';
+	int special = FALSE;
 
+	char *debut_token=NULL;
+	char *fin_token=NULL;
 
-        else {
-        	/* en cas d'états intermédiaires que l'on n'attend pas en sortie, on passe en erreur */
-        	switch(etat) {
-        		case DECIMAL_ZERO:
-        			etat=DECIMAL;
-        			break;
+	/* get each token*/
+	debut_token = ligne;
+	while (*debut_token) {
+		while (*debut_token && strchr(SEPS,*debut_token))
+			debut_token++;
+		if (debut_token) {
+			if (debut_token && strchr(DEBUT, *debut_token)) {
+				bornant = TRUE;
+				car_bornant = *(FIN+(strchr(DEBUT, *debut_token)-DEBUT));
+			}
+			fin_token = debut_token;
 
-        		case CARAC_CHAINE:
-        		case SPECIAL_CHAINE:
-        		case MOINS:
-    			case PLUS:
-    			case DEBUT_HEXADECIMAL:
-				case POINT:
-				case INIT:
-   				etat=ERREUR;
-    				break;
-    				
-				default :
-					;		
-        	}
-        	if (etat==ETIQUETTE) {
-        		token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
-        		(*nb_etiquettes_p)++;
-        	}
-         	else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
-        		if (debutLigne && etat==SYMBOLE) {
-        			etat=INSTRUCTION;
-        			token=strupr(token);
-        			(*nb_instructions_p)++;
-        		}
-            	if (etat==DIRECTIVE) {
-            		token=strlwr(token);
-            	}
-            	if ((etat==DECIMAL) || (etat==OCTAL) || (etat==HEXADECIMAL)) {
-            		etat=NOMBRE;
-            	}
-        		debutLigne=0;
-        	}
-        	lexeme_p = malloc(sizeof(*lexeme_p));
+			etat=INIT;
+			while ((*fin_token) && ((bornant) || ((!bornant) && (!strchr(SEPS, *fin_token))))) {
+				etat=machine_etats_finis_lexicale(etat, *fin_token);
+				if ((bornant) && (!special) && ((*fin_token) == '\\'))
+					special=TRUE;
+				else if (special)
+					special = FALSE;
+				else if ((bornant) && (!special) && (car_bornant == *fin_token))
+						bornant = FALSE;
+				fin_token++;
+			}
+			bornant = FALSE;
+			token = strextract(debut_token,fin_token);
+			debut_token = fin_token;
 
-         	if (!(lexeme_p->data = (char *)malloc(strlen(token)+1*sizeof(char)))) ERROR_MSG("Impossible de dupliquer le contenu du nouveau lexeme");
-    		strcpy(lexeme_p->data, token);
-         	lexeme_p->nature=etat;
-         	lexeme_p->ligne=num_ligne;
-         	ajouter_fin_liste(liste_lexemes_p, lexeme_p);
-    	}
-    }
+			/* en cas d'états intermédiaires que l'on n'attend pas en sortie, on passe en erreur */
+			switch(etat) {
+			case DECIMAL_ZERO:
+				etat=DECIMAL;
+				break;
 
-    /* rajoute un lexeme marqueur de fin de ligne */
-    lexeme_p = malloc(sizeof(*lexeme_p));
+			case CARAC_CHAINE:
+			case SPECIAL_CHAINE:
+			case MOINS:
+			case PLUS:
+			case DEBUT_HEXADECIMAL:
+			case POINT:
+			case INIT:
+				etat=ERREUR;
+				break;
 
-    lexeme_p->data=NULL;
+			default :
+				;
+			}
+			if (etat==ETIQUETTE) {
+				token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
+				(*nb_etiquettes_p)++;
+			}
+			else { /* Tout symbole en début de ligne précédé éventuellement de une ou plusieurs étiquettes est une instruction */
+				if (debutLigne && etat==SYMBOLE) {
+					etat=INSTRUCTION;
+					token=strupr(token);
+					(*nb_instructions_p)++;
+				}
+				if (etat==DIRECTIVE) {
+					token=strlwr(token);
+				}
+				if ((etat==DECIMAL) || (etat==OCTAL) || (etat==HEXADECIMAL)) {
+					etat=NOMBRE;
+				}
+				debutLigne=0;
+			}
+			lexeme_p = malloc(sizeof(*lexeme_p));
+
+			lexeme_p->data = token;
+			lexeme_p->nature=etat;
+			lexeme_p->ligne=num_ligne;
+			ajouter_fin_liste(liste_lexemes_p, lexeme_p);
+
+		}
+	}
+
+	/* rajoute un lexeme marqueur de fin de ligne */
+	lexeme_p = malloc(sizeof(*lexeme_p));
+
+    lexeme_p->data = strdup(ligne);
     lexeme_p->nature=L_FIN_LIGNE;
     lexeme_p->ligne=num_ligne;
     ajouter_fin_liste(liste_lexemes_p, lexeme_p);
@@ -540,9 +548,9 @@ void lex_standardise(char* in, char* out)
     const char * ESPACE_APRES = ":,()";
     const char * PAS_ESPACE_APRES = ".-+";
 
-    int special = FALSE;
     int pas_modif = FALSE;
     char car_modif = '\0';
+    int special = FALSE;
 
     DEBUG_MSG("in  = \"%s\"", in);
     

@@ -834,12 +834,14 @@ int analyser_syntaxe(
 				if ((noeud_courant_p = courant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p)) {
 					fprintf(stderr, "Erreur de syntaxe ligne %d, ", lexeme_p ? lexeme_p->ligne : 0);
 					fprintf(stderr, "%c[%d;%dm%s%c[%d;%dm ", 0x1B, STYLE_BOLD, COLOR_RED, (!(lexeme_p->data) ? "une fin de ligne" : lexeme_p->data),0x1B, STYLE_OFF, 0);
-					fprintf(stderr, "%s.\n", msg_err);
+					fprintf(stderr, "%s :\n", msg_err);
 					msg_err[0]='\0';
 				} else
 					ERROR_MSG("fin de liste de lexème innatendue");
 				while ((noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p) && (lexeme_p->nature != L_FIN_LIGNE))
 					; /* Passe tous les lexèmes jusqu'à la fin de ligne */
+				if (lexeme_p)
+					fprintf(stderr, "%s\n\n", lexeme_p->data);
 				resultat=FAILURE;
 				etat = INIT;
 			}

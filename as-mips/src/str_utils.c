@@ -14,11 +14,11 @@
  * @return pointeur sur la chaine dupliquée
  * @brief Cette fonction permet de faire ne copie de chaine de caractères
  */
-char* strdup(char* sourceStr) {
+char *strdup (char* sourceStr) {
 	char* destStr=NULL;
 	if (sourceStr) {
-		destStr = malloc(sizeof(*destStr)*(1+strlen(sourceStr)));
-		if (destStr) strcpy(destStr,sourceStr);
+		destStr = malloc (sizeof(*destStr)*(1+strlen (sourceStr)));
+		if (destStr) strcpy (destStr,sourceStr);
 	}
 	return destStr;
 }
@@ -30,11 +30,11 @@ char* strdup(char* sourceStr) {
  *
  * Attention, le contenu de la chaine source est modifié
  */
-char* strlwr(char* sourceStr)
+char *strlwr (char* sourceStr)
 {
     char* tmp = sourceStr;
     for (;*tmp;++tmp) {
-        *tmp = tolower((unsigned char) *tmp);
+        *tmp = tolower ((unsigned char) *tmp);
     }
     return sourceStr;
 }
@@ -46,11 +46,24 @@ char* strlwr(char* sourceStr)
  *
  * Attention, le contenu de la chaine source est modifié
  */
-char* strupr(char* sourceStr)
+char *strupr (char* sourceStr)
 {
     char* tmp = sourceStr;
     for (;*tmp;++tmp) {
-        *tmp = toupper((unsigned char) *tmp);
+        *tmp = toupper ((unsigned char) *tmp);
     }
     return sourceStr;
+}
+
+char *strextract (char *debut, char *fin) {
+	char *extract = NULL;
+
+	if (!debut || !fin || (debut == fin))
+		return NULL;
+	else {
+		extract = calloc (1+fin-debut, sizeof(*extract));
+		if (extract)
+			memcpy (extract, debut, fin-debut);
+		return extract;
+	}
 }
