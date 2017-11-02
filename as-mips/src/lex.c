@@ -413,8 +413,8 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
 	while (*debut_token) {
 		while (*debut_token && strchr(SEPS,*debut_token))
 			debut_token++;
-		if (debut_token) {
-			if (debut_token && strchr(DEBUT, *debut_token)) {
+		if (*debut_token) {
+			if (*debut_token && strchr(DEBUT, *debut_token)) {
 				bornant = TRUE;
 				car_bornant = *(FIN+(strchr(DEBUT, *debut_token)-DEBUT));
 			}
@@ -427,7 +427,7 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
 					special=TRUE;
 				else if (special)
 					special = FALSE;
-				else if ((bornant) && (!special) && (car_bornant == *fin_token))
+				else if ((bornant) && (debut_token != fin_token) && (!special) && (car_bornant == *fin_token))
 						bornant = FALSE;
 				fin_token++;
 			}
@@ -617,9 +617,11 @@ void lex_standardise(char* in, char* out)
  */
 void detruit_lexeme(void *lexeme_p)
 {
-	INFO_MSG("Lexeme: %p ... %s",Lexeme_p,((struct Lexeme_s *)Lexeme_p)->data);
-	free(((struct Lexeme_s *)lexeme_p)->data);
-	free(lexeme_p);
+	if (lexeme_p) {
+		INFO_MSG("Lexeme: %p ... %s",Lexeme_p,((struct Lexeme_s *)Lexeme_p)->data);
+		free(((struct Lexeme_s *)lexeme_p)->data);
+		free(lexeme_p);
+	}
 }
 
 /**

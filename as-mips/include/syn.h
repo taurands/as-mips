@@ -31,8 +31,10 @@ enum Donnee_e {
 	D_UNDEF=-1,				/**< Nature indéfinie */
  	D_SPACE=0,				/**< Réservace d'espace */
  	D_BYTE=1,				/**< Octet */
- 	D_WORD=2,				/**< Mot de 32 bits */
- 	D_ASCIIZ=3				/**< Chaine de caractère avec '\0` à la fin */
+	D_HALF=2,				/**< demi mot (16 bits) */
+ 	D_WORD=3,				/**< Mot de 32 bits */
+	D_FLOAT=4,				/**< nombre flottant simple 32 bits */
+ 	D_ASCIIZ=5				/**< Chaine de caractère avec '\0` à la fin */
 };
 
 /**
@@ -69,20 +71,25 @@ struct Donnee_s {
 	union {
 		int8_t		octet;
 		uint8_t		octetNS;
+		char		car;
+		int16_t		demi;
+		uint16_t	demiNS;
 		int32_t		mot;
 		uint32_t	motNS;
 		uint32_t	nbOctets;
+		float		simple;
 		char		*chaine;
 	} valeur;
 };
 
-char *clefEtiquette(void *donnee_p);
+char *clefEtiquette (void *donnee_p);
+void detruit_donnee (void *donnee_p);
 
-void affiche_table_etiquette(struct Table_s *table_p, char *titre);
-void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste);
-void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste);
+void affiche_table_etiquette (struct Table_s *table_p, char *titre);
+void affiche_liste_donnee (struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste);
+void affiche_liste_instructions (struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste);
 
-int analyser_syntaxe(struct Liste_s *lignes_lexemes_p,
+int analyser_syntaxe (struct Liste_s *lignes_lexemes_p,
 		struct Table_s *table_def_instructions_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,
 		struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p);
 

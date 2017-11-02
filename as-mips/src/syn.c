@@ -22,11 +22,28 @@
 #include <syn.h>
 
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
-const char *NOMS_DATA[] = {".space", ".byte", ".word", ".asciiz"};
+const char *NOMS_DATA[] = {".space", ".byte", ".half", ".word", ".float", ".asciiz"};
 
 char *clefEtiquette(void *donnee_p)
 {
 	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->lexeme_p->data : NULL);
+}
+
+/**
+ * @param lexeme_p pointeur sur une donnée à détruire
+ * @return Rien
+ * @brief Cette fonction permet de détuire et libérer le contenu d'une donnée
+ *
+ * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
+ * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
+ */
+void detruit_donnee(void *donnee_p)
+{
+	if (donnee_p) {
+		if (((struct Donnee_s *)donnee_p)->type == D_ASCIIZ)
+			free(((struct Donnee_s *)donnee_p)->valeur.chaine);
+		free(donnee_p);
+	}
 }
 
 void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table_p)
@@ -68,6 +85,9 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 	switch(donnee_p->type) {
 	case D_BYTE:
 		printf("      %02x : byte", donnee_p->valeur.octetNS);
+		break;
+	case D_HALF:
+		printf("    %04x : half", donnee_p->valeur.demiNS);
 		break;
 	case D_WORD:
 		if (donnee_p->lexeme_p->nature==L_SYMBOLE) {
@@ -167,12 +187,12 @@ void affiche_table_etiquette(struct Table_s *table_p, char *titre)
 	printf("\n\n");
 }
 
-void aligner_decalage(uint32_t *decalage_p)
+void aligner_decalage(uint32_t *decalage_p, unsigned int nb_bits)
 {
-	const uint32_t masqueAlignement = 0x00000003; /* Les deux derniers bits doivent être à zéro pour avoir un aligement par mot de 32 bits */
+	uint32_t masqueAlignement = 0x00000001;
+	masqueAlignement = (masqueAlignement << nb_bits) - 1;
 	if (*decalage_p & masqueAlignement)
 		*decalage_p=(*decalage_p + masqueAlignement) & ~masqueAlignement;
-
 }
 
 int enregistrer_etiquette(
@@ -230,6 +250,7 @@ int lire_nombre(
 		return FAILURE;
 	} else {
 		if (((donnee_p->type==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
+			((donnee_p->type==D_HALF) && ((nombre>UINT16_MAX) || (nombre<INT16_MIN))) ||
 			((donnee_p->type==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
 			((donnee_p->type==D_SPACE) && (nombre<=0) && (nombre+*decalage_p>=UINT32_MAX))) {
 
@@ -242,6 +263,12 @@ int lire_nombre(
 				else
 					donnee_p->valeur.octet=(int8_t)nombre;
 				(*decalage_p)++;
+			} else if (donnee_p->type==D_HALF) {
+				if (nombre>=0)
+					donnee_p->valeur.demiNS=(uint16_t)nombre;
+				else
+					donnee_p->valeur.demi=(int16_t)nombre;
+				(*decalage_p)+=2;
 			} else if (donnee_p->type==D_WORD) {
 				if (nombre>=0)
 					donnee_p->valeur.motNS=(uint32_t)nombre;
@@ -288,8 +315,12 @@ int analyser_donnee(
 			case INIT:
 				if ((!strcmp(lexeme_p->data, NOMS_DATA[D_BYTE])))
 					type_donnee = D_BYTE;
+				else if ((!strcmp(lexeme_p->data, NOMS_DATA[D_HALF])))
+					type_donnee = D_HALF;
 				else if ((!strcmp(lexeme_p->data, NOMS_DATA[D_WORD])))
 					type_donnee = D_WORD;
+				else if ((!strcmp(lexeme_p->data, NOMS_DATA[D_FLOAT])))
+					type_donnee = D_FLOAT;
 				else if ((!strcmp(lexeme_p->data, NOMS_DATA[D_ASCIIZ])))
 					type_donnee = D_ASCIIZ;
 				else if ((!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE])))
@@ -299,20 +330,27 @@ int analyser_donnee(
 			case DONNEE:
 				if (((type_donnee != D_ASCIIZ) && (lexeme_p->nature == L_NOMBRE)) ||
 					((type_donnee == D_ASCIIZ) && (lexeme_p->nature == L_CHAINE)) ||
+					((type_donnee == D_BYTE) && (lexeme_p->nature == L_CAR)) ||
 					((type_donnee == D_WORD) && (lexeme_p->nature == L_SYMBOLE))) {
 
 					if (!(donnee_p = calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
 					donnee_p->type = type_donnee;
 
 					if (type_donnee == D_ASCIIZ) {
-						donnee_p->decalage =* decalage_p;
+						donnee_p->decalage = *decalage_p;
 						donnee_p->type = D_ASCIIZ;
 						donnee_p->lexeme_p = lexeme_p;
 						donnee_p->ligne = lexeme_p->ligne;
-						donnee_p->valeur.chaine=NULL; /* XXX Il faut lire... */
-
-						(*decalage_p)+=(donnee_p->valeur.chaine ? 1+strlen(donnee_p->valeur.chaine) : 0);
-					} else {
+						donnee_p->valeur.chaine = dqstr_unesc_str (lexeme_p->data);
+						(*decalage_p)+=(donnee_p->valeur.chaine ? str_unesc_len (lexeme_p->data) - 1 : 0);
+					} else if ((type_donnee == D_BYTE) && (lexeme_p->nature == L_CAR)) {
+						donnee_p->decalage = *decalage_p;
+						donnee_p->type = D_BYTE;
+						donnee_p->lexeme_p = lexeme_p;
+						donnee_p->ligne = lexeme_p->ligne;
+						donnee_p->valeur.car = sqstr_unesc_char (lexeme_p->data);
+						(*decalage_p)++;
+					} else{
 						code_retour = lire_nombre(lexeme_p, donnee_p, decalage_p, msg_err);
 						if (code_retour != SUCCESS) {
 							free(donnee_p);
@@ -683,7 +721,7 @@ int analyser_syntaxe(
 	struct Etiquette_s **mem_etiq_table = NULL;
 	size_t index_mem = 0;
 
-	int erreur=SUCCESS;
+	int code_erreur=SUCCESS;
 	int resultat=SUCCESS;
 
 	enum Etat_e {
@@ -707,27 +745,27 @@ int analyser_syntaxe(
 					etat=INIT;
 				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) {
 					if (section == S_TEXT)
-						erreur = enregistrer_etiquette(lexeme_p, section, &decalage_text, table_etiquettes_p, NULL, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_text, table_etiquettes_p, NULL, msg_err);
 					else if (section == S_DATA) {
-						erreur = enregistrer_etiquette(lexeme_p, section, &decalage_data, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
-						if ((erreur == SUCCESS) && (mem_etiq_table[index_mem]))
+						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_data, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
+						if ((code_erreur == SUCCESS) && (mem_etiq_table[index_mem]))
 							index_mem++;
 					}
 					else if (section == S_BSS)
-						erreur = enregistrer_etiquette(lexeme_p, section, &decalage_bss, table_etiquettes_p, NULL, msg_err);
-					if (erreur == FAIL_ALLOC) {
+						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_bss, table_etiquettes_p, NULL, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
 					}
-					else if (erreur == SUCCESS)
+					else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
 						etat = ERREUR;
 				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
-					erreur = analyser_instruction(lignes_lexemes_p, table_def_instructions_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
-					if (erreur == FAIL_ALLOC)
+					code_erreur = analyser_instruction(lignes_lexemes_p, table_def_instructions_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
+					if (code_erreur == FAIL_ALLOC)
 						return FAIL_ALLOC;
-					else if (erreur == SUCCESS)
+					else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
 						etat = ERREUR;
@@ -735,26 +773,56 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
-					if (erreur == FAIL_ALLOC) {
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
-					} else if (erreur == SUCCESS)
+					} else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
 						etat = ERREUR;
-				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) {
-					aligner_decalage(&decalage_data);
+				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_HALF]))) {
+					aligner_decalage(&decalage_data, 1);
 					for (index_mem = 0; mem_etiq_table[index_mem]; ) {
 						mem_etiq_table[index_mem]->decalage = decalage_data;
 						mem_etiq_table[index_mem++] = NULL;
 					}
 					index_mem = 0;
-					erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
-					if (erreur == FAIL_ALLOC) {
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
-					} else if (erreur == SUCCESS)
+					} else if (code_erreur == SUCCESS)
+						etat = INIT;
+					else
+						etat = ERREUR;
+				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) {
+					aligner_decalage(&decalage_data, 2);
+					for (index_mem = 0; mem_etiq_table[index_mem]; ) {
+						mem_etiq_table[index_mem]->decalage = decalage_data;
+						mem_etiq_table[index_mem++] = NULL;
+					}
+					index_mem = 0;
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
+						free(mem_etiq_table);
+						return FAIL_ALLOC;
+					} else if (code_erreur == SUCCESS)
+						etat = INIT;
+					else
+						etat = ERREUR;
+				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_FLOAT]))) {
+					aligner_decalage(&decalage_data, 2);
+					for (index_mem = 0; mem_etiq_table[index_mem]; ) {
+						mem_etiq_table[index_mem]->decalage = decalage_data;
+						mem_etiq_table[index_mem++] = NULL;
+					}
+					index_mem = 0;
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
+						free(mem_etiq_table);
+						return FAIL_ALLOC;
+					} else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
 						etat = ERREUR;
@@ -762,11 +830,11 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
-					if (erreur == FAIL_ALLOC) {
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
-					} else if (erreur == SUCCESS)
+					} else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
 						etat = ERREUR;
@@ -774,20 +842,20 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
-					if (erreur == FAIL_ALLOC) {
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
-					} else if (erreur == SUCCESS)
+					} else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
 						etat = ERREUR;
 				} else if ((section==S_BSS) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) {
-					erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, &decalage_bss, msg_err);
-					if (erreur == FAIL_ALLOC) {
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, &decalage_bss, msg_err);
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
-					} else if (erreur == SUCCESS)
+					} else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
 						etat = ERREUR;

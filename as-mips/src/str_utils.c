@@ -78,17 +78,19 @@ size_t str_unesc_len (char *str) {
 	int escape = FALSE;
 	char *car = str;
 	while (car && *car) {
-		if ((!escape) && (*car = ESCAPE_CHAR))
+		if ((!escape) && (*car == ESCAPE_CHAR))
 			escape = TRUE;
 		else {
 			escape = FALSE;
 			len++;
 		 }
+		car++;
 	}
 	return len;
 }
 
-char unesc_char (char esc) {
+char unesc_char (char esc)
+{
 	char *esc_trouve = strchr(ESCAPED_CHAR, esc);
 	if (esc_trouve)
 		return *(UNESCAPED_CHAR + (esc_trouve - ESCAPED_CHAR));
@@ -96,31 +98,38 @@ char unesc_char (char esc) {
 		return esc;
 }
 
-char str_squnesc_char (char *dqstr) {
+char sqstr_unesc_char (char *sqstr)
+{
 	char car = '\0';
-	if (dqstr && (*dqstr == SQ_CHAR)) {
-		dqstr++;
-		if (*dqstr != ESCAPE_CHAR)
-			car = *dqstr;
+	if (sqstr && (*sqstr == SQ_CHAR) && (*(sqstr+strlen(sqstr)-1) == SQ_CHAR)) {
+		sqstr++;
+		if (*sqstr != ESCAPE_CHAR)
+			car = *sqstr;
 		else {
-			dqstr++;
-			car = unesc_char (*dqstr);
+			sqstr++;
+			car = unesc_char (*sqstr);
 		}
 	}
 	return car;
 }
 
-char str_dqunesc_str (char *dqstr) {
-	char car = '\0';
-	if (dqstr && (*dqstr == SQ_CHAR)) {
-		dqstr++;
-		if (*dqstr != ESCAPE_CHAR)
-			car = *dqstr;
-		else {
-			dqstr++;
-			car = unesc_char (*dqstr);
+char *dqstr_unesc_str (char *dqstr)
+{
+	char *unesc_str = NULL;
+	size_t i;
+	size_t j=0;
+
+	if (dqstr && (*dqstr == DQ_CHAR) && (*(dqstr + strlen (dqstr) - 1) == DQ_CHAR)) {
+		unesc_str = calloc (str_unesc_len (dqstr) - 1, sizeof(*unesc_str));
+		if (!unesc_str)
+			return NULL;
+		for (i = 1 ; i < strlen (dqstr) - 1 ; i++) {
+			if (dqstr[i] == ESCAPE_CHAR)
+				unesc_str[j++] = unesc_char (dqstr[++i]);
+			else
+				unesc_str[j++] = dqstr[i];;
 		}
 	}
-	return car;
+	return unesc_str;
 }
 

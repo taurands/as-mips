@@ -71,9 +71,9 @@ int main (int argc, char *argv[])
     		break;
     	if ((code_retour = creer_liste (&liste_text_p, NULL)))
     		break;
-    	if ((code_retour = creer_liste (&liste_data_p, NULL)))
+    	if ((code_retour = creer_liste (&liste_data_p, (fonctionDestructeur *)detruit_donnee)))
     		break;
-    	if ((code_retour = creer_liste (&liste_bss_p, NULL)))
+    	if ((code_retour = creer_liste (&liste_bss_p, (fonctionDestructeur *)detruit_donnee)))
     		break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/
