@@ -23,6 +23,25 @@ enum Operandes_e {
 };
 
 /**
+ * @struct RemplacementPseudo_s
+ * @brief Structure permettant de stocker la définition du remplacement d'une pseudo instruction
+ */
+struct RemplacementPseudo_s {
+	char *syntaxe_remplacement;	/**< chaine de remplacement de pseudo instruction */
+	unsigned int num_param[2];	/**< indice du paramètre de la pseudo instruction à appeler (0 = chaine vide) */
+};
+
+/**
+ * @struct DefinitionPseudo_s
+ * @brief Structure permettant de stocker la définition d'une pseudo instruction
+ */
+struct DefinitionPseudo_s {
+	char* nom;									/**< nom de la pseudo instruction */
+	unsigned int nb_instr;						/**< nombre de lignes de remplacement pour la pseudo-instruction */
+	struct RemplacementPseudo_s **remplacement;	/**< Table pointant sur les lignes de remplacement */
+};
+
+/**
  * @struct DefinitionInstruction_s
  * @brief Structure permettant de stocker la définition d'une instruction
  */
@@ -41,12 +60,16 @@ struct DefinitionRegistre_s {
 	uint8_t valeur;					/**< valeur du registren */
 };
 
+char *clef_def_pseudo(void *donnee_p);
+void destruction_def_pseudo(void *donnee_p);
+
 char *clef_def_instruction(void *donnee_p);
 void destruction_def_instruction(void *donnee_p);
 
 char *clef_def_registre(void *donnee_p);
 void destruction_def_registre(void *donnee_p);
 
+int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier);
 int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichier);
 int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier);
 

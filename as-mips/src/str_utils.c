@@ -7,7 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#include <global.h>
 #include <str_utils.h>
+
+char ESCAPED_CHAR[] =   {'\'', '"', 'n',  'r',  't',  'f',  'v',  'a',  'b',  '\\', '0', '\0' };
+char UNESCAPED_CHAR[] = {'\'', '"', '\n', '\r', '\t', '\f', '\v', '\a', '\b', '\\', '\0'};
 
 /**
  * @param sourceStr pointeur sur la chaine à dupliquer
@@ -67,3 +72,55 @@ char *strextract (char *debut, char *fin) {
 		return extract;
 	}
 }
+
+size_t str_unesc_len (char *str) {
+	size_t len = 0;
+	int escape = FALSE;
+	char *car = str;
+	while (car && *car) {
+		if ((!escape) && (*car = ESCAPE_CHAR))
+			escape = TRUE;
+		else {
+			escape = FALSE;
+			len++;
+		 }
+	}
+	return len;
+}
+
+char unesc_char (char esc) {
+	char *esc_trouve = strchr(ESCAPED_CHAR, esc);
+	if (esc_trouve)
+		return *(UNESCAPED_CHAR + (esc_trouve - ESCAPED_CHAR));
+	else
+		return esc;
+}
+
+char str_squnesc_char (char *dqstr) {
+	char car = '\0';
+	if (dqstr && (*dqstr == SQ_CHAR)) {
+		dqstr++;
+		if (*dqstr != ESCAPE_CHAR)
+			car = *dqstr;
+		else {
+			dqstr++;
+			car = unesc_char (*dqstr);
+		}
+	}
+	return car;
+}
+
+char str_dqunesc_str (char *dqstr) {
+	char car = '\0';
+	if (dqstr && (*dqstr == SQ_CHAR)) {
+		dqstr++;
+		if (*dqstr != ESCAPE_CHAR)
+			car = *dqstr;
+		else {
+			dqstr++;
+			car = unesc_char (*dqstr);
+		}
+	}
+	return car;
+}
+

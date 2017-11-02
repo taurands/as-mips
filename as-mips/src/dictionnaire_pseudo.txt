@@ -1,0 +1,7 @@
+6
+NOP	1	SLL\20%s$0,\20%s$0,\20%s0	0	0	0
+MOVE	1	ADD\20%s,\20%s,\20%s$zero	1	2	0
+NEG	1	SUB\20%s,\20%s$zero,\20%s	1	0	2
+LI	1	ADDI\20%s,\20%s$zero,\20%s	1	0	2
+BLT	2	SLT\20%s$1,\20%s,\20%s	0	2	1	BNE\20%s$1,\20%s$zero,\20%s	0	0	3
+LWI	2	LUI\20%s$at,\20%s%s	0	2	0	LW\20%s,\20%s0(%s$at)	1	0	0

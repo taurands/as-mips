@@ -21,6 +21,33 @@ const char TYPE_OPS[]= {'R', 'N', 'B'}; /* lettres associés à enum Operandes_e
  * @brief Fourni le nom de l'instruction comme clef d'identification (fonction clef pour la table générique)
  *
  */
+char *clef_def_pseudo(void *donnee_p)
+{
+	/* XXX à modifier */
+	return (donnee_p && (struct DefinitionInstruction_s *)donnee_p) ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL;
+}
+
+/**
+ * @param donnee_p pointeur sur une structure de définition d'instruction
+ * @return rien
+ * @brief Détruit et libère la structure pointée (fonction de destruction pour la table générique)
+ *
+ */
+void destruction_def_pseudo(void *donnee_p)
+{
+	/* XXX à modifier */
+	if (donnee_p) {
+		free(((struct DefinitionInstruction_s *)donnee_p)->nom);
+		free(donnee_p);
+	}
+}
+
+/**
+ * @param donnee_p pointeur sur une structure de définition d'instruction
+ * @return chaine de caractère représentant le clef d'identification
+ * @brief Fourni le nom de l'instruction comme clef d'identification (fonction clef pour la table générique)
+ *
+ */
 char *clef_def_instruction(void *donnee_p)
 {
 	return (donnee_p && (struct DefinitionInstruction_s *)donnee_p) ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL;
@@ -63,6 +90,22 @@ void destruction_def_registre(void *donnee_p)
 		free(((struct DefinitionRegistre_s *)donnee_p)->nom);
 		free(donnee_p);
 	}
+}
+
+
+/**
+ * @param table_definition_pp Pointeur sur un pointeur de table de hachage générique
+ * @param nom_fichier chaine contenant le nom du fichier à charger
+ * @return SUCCESS si la table de definition des pseudo-instructions a pu être chargée correctement
+ * @brief Fonction de chargement de la définition des pseudo-instructions
+ *
+ */
+int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
+{
+	/* XXX à compléter en prenant exemple sur gestion des erreurs de charge_def_instruction */
+	int resultat = SUCCESS;
+
+	return resultat;
 }
 
 /**

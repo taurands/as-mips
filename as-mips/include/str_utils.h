@@ -7,6 +7,10 @@
 #ifndef _STR_UTILS_H_
 #define _STR_UTILS_H_
 
+#define ESCAPE_CHAR '\\'
+#define SQ_CHAR '\''
+#define DQ_CHAR '"'
+
 char *strdup (char* sourceStr);
 char *strlwr (char* sourceStr);
 char *strupr (char* sourceStr);
