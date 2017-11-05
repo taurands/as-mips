@@ -17,6 +17,7 @@
  * @brief Constantes de nature des sections du programme assembleur
  */
 enum Section_e {
+	S_UNDEF=-1,				/**< Etat lors du traitement des relocations où les étiquettes ne sont pas définies */
  	S_INIT=0,				/**< état initial lorsque l'on n'a pas encore rencontré une direction de section */
  	S_TEXT=1,				/**< dès que l'on a rencontré une directive de section ".text", cela correspond aux instructions du programme */
  	S_DATA=2,				/**< dès que l'on a rencontré une directive de section ".data", cela correspond aux données du programme */

@@ -46,11 +46,11 @@ MOVE $1, $2
 #LI $sp, nmbre
 #BLT $10, $11, 0x1356
 .data
-.word -32000
+.word -32000,titi,lol
 .byte 45
 .half 545
 .byte 0x1A,023
-.word 32000
+.word 32000, lol
 .word -1000,-0400,-0x1
 .space 15
 .byte '\n', '\'' , '"', '\"', '7'
