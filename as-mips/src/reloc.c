@@ -15,29 +15,6 @@
 #include <syn.h>
 #include <reloc.h>
 
-
-/**
- * @param lexeme_p pointeur sur une donnée à détruire
- * @return Rien
- * @brief Cette fonction permet de détuire et libérer le contenu d'une donnée
- *
- * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
- * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
- */
-void detruit_relocateur(void *relocateur_p)
-{
-	if (relocateur_p) {
-		if (((struct Relocateur_s *)relocateur_p)->etiquette_p) {
-			if (((struct Relocateur_s *)relocateur_p)->etiquette_p->lexeme_p) {
-				detruit_lexeme(((struct Relocateur_s *)relocateur_p)->etiquette_p->lexeme_p);
-			}
-			free(((struct Relocateur_s *)relocateur_p)->etiquette_p);
-		}
-		free(relocateur_p);
-	}
-}
-
-
 /**
  * @param liste_data_p Pointeur sur la liste des données de la section .data
  * @param liste_reloc_data_p Pointeur sur la liste des différentes relocations dans la section rel.data

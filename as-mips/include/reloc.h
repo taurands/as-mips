@@ -26,8 +26,6 @@ struct Relocateur_s {
 	struct Etiquette_s *etiquette_p;				/**< Pointeur sur la définition de l'étiquette associée */
 };
 
-void detruit_relocateur(void *relocateur_p);
-
 int relocation_data(struct Liste_s *liste_data_p, struct Liste_s *liste_reloc_data_p, struct Table_s *table_etiquettes_p);
 
 char *type_reloc_to_str(enum Reloc_e type_reloc);
