@@ -5,7 +5,6 @@
  */
 
 #include <stdlib.h>
-#include <inttypes.h>
 
 #include <global.h>
 #include <notify.h>
@@ -124,6 +123,7 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 
 	char *nom_instruction = NULL;
 	char car_nature;
+	char car_reloc;
 	int nb_operandes = 0;
 	int i = 0;
 	int nb_mots;
@@ -156,7 +156,6 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions d'instructions");
 			break;
 		}
-
 		while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
 			if (1 != fscanf(f_p,"%s", nom_instruction)) {
@@ -174,6 +173,13 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 				WARNING_MSG ("Pas de caractère de type syntaxique pour %s", nom_instruction);
 				break;
 			}
+
+			if (1 != fscanf(f_p,"%c", &car_reloc)) {
+				resultat = FAILURE;
+				WARNING_MSG ("Pas de caractère de type syntaxique pour %s", nom_instruction);
+				break;
+			}
+
 
 			if (!(def_instruction_p = calloc (1, sizeof(*def_instruction_p)))) {
 				resultat = FAIL_ALLOC;
@@ -196,6 +202,20 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 			else {
 				resultat = FAILURE;
 				WARNING_MSG("Type d'opérande inconnu pour l'instruction %s (ligne %d)", nom_instruction, i+1);
+				break;
+			}
+
+			if (car_reloc == 'A')
+				def_instruction_p->reloc=R_MIPS_AUCUN;
+			else if (car_reloc == 'H')
+				def_instruction_p->reloc=R_MIPS_HI16;
+			else if (car_reloc == 'L')
+				def_instruction_p->reloc=R_MIPS_LO16;
+			else if (car_reloc == '2')
+				def_instruction_p->reloc=R_MIPS_26;
+			else {
+				resultat = FAILURE;
+				WARNING_MSG("Type de relocation inconnu pour l'instruction %s (ligne %d)", nom_instruction, i+1);
 				break;
 			}
 

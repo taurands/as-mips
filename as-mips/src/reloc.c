@@ -11,6 +11,7 @@
 #include <global.h>
 #include <notify.h>
 #include <liste.h>
+#include <dico.h>
 #include <lex.h>
 #include <syn.h>
 #include <reloc.h>
@@ -61,6 +62,75 @@ int relocation_data(
 	return SUCCESS;
 }
 
+/**
+ * @param liste_text_p Pointeur sur la liste des données de la section .text
+ * @param liste_reloc_text_p Pointeur sur la liste des différentes relocations dans la section rel.text
+ * @param table_def_instructions_p Pointeur sur la table des définitions
+ * @return entier montrant l'échec ou non de la procédure
+ * @brief Remplissage de la liste rel.text
+ */
+int relocation_texte(
+		struct Liste_s *liste_text_p,
+		struct Liste_s *liste_reloc_text_p,
+		struct Table_s *table_etiquettes_p)
+{
+	struct Noeud_Liste_s *noeud_courant_p = NULL;
+	struct Instruction_s *instruction_p = NULL;
+	struct Relocateur_s *relocateur_p=NULL;
+
+	if (!liste_text_p || !liste_reloc_text_p || !table_etiquettes_p)
+			return FAILURE;
+	else if ((noeud_courant_p = debut_liste(liste_text_p)) && (instruction_p = noeud_courant_p->donnee_p)) {
+		do {
+			if (((instruction_p->definition_p->reloc == R_MIPS_26) || (instruction_p->definition_p->reloc == R_MIPS_HI16)) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)) {
+				relocateur_p = calloc(1,sizeof(*relocateur_p));
+				if (!relocateur_p) {
+					WARNING_MSG ("Impossible de créer un nouveau relocateur");
+					return FAIL_ALLOC;
+				}
+				relocateur_p->decalage = instruction_p->decalage;
+				relocateur_p->type_reloc = instruction_p->definition_p->reloc;
+				relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->data);
+				if (!relocateur_p->etiquette_p) {
+					relocateur_p->etiquette_p=calloc(1,sizeof(*(relocateur_p->etiquette_p)));
+					if (!relocateur_p->etiquette_p) {
+						WARNING_MSG ("Impossible de créer un nouveau relocateur");
+						return FAIL_ALLOC;
+					}
+					relocateur_p->etiquette_p->section=S_UNDEF;
+					relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-1];
+					ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+				}
+				ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
+			}
+
+			if ((instruction_p->definition_p->reloc == R_MIPS_LO16) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->nature == L_SYMBOLE)) {
+				relocateur_p = calloc(1,sizeof(*relocateur_p));
+				if (!relocateur_p) {
+					WARNING_MSG ("Impossible de créer un nouveau relocateur");
+					return FAIL_ALLOC;
+				}
+				relocateur_p->decalage = instruction_p->decalage;
+				relocateur_p->type_reloc = instruction_p->definition_p->reloc;
+				relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->data);
+				if (!relocateur_p->etiquette_p) {
+					relocateur_p->etiquette_p=calloc(1,sizeof(*(relocateur_p->etiquette_p)));
+					if (!relocateur_p->etiquette_p) {
+						WARNING_MSG ("Impossible de créer un nouveau relocateur");
+						return FAIL_ALLOC;
+					}
+					relocateur_p->etiquette_p->section=S_UNDEF;
+					relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-2];
+					ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+				}
+				ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
+			}
+
+
+		} while ((noeud_courant_p = suivant_liste(liste_text_p)) && (instruction_p = noeud_courant_p->donnee_p));
+	}
+	return SUCCESS;
+}
 
 /**
  * @param type_reloc défini le type de relocation
@@ -121,19 +191,19 @@ void affiche_relocateur(
  * @return Rien
  * @brief Affichage de la liste des relocateurs de rel.data
  */
-void affiche_liste_relocation_data(
-		struct Liste_s *liste_reloc_data_p)
+void affiche_liste_relocation(
+		struct Liste_s *liste_reloc_p)
 {
 	struct Noeud_Liste_s *noeud_liste_p = NULL;
 	struct Relocateur_s *relocateur_p = NULL;
 
-	if (!liste_reloc_data_p) {
+	if (!liste_reloc_p) {
 		printf("La liste rel.data n'existe pas !\n");
 	} else {
-		if (!(liste_reloc_data_p->nb_elts)) {
+		if (!(liste_reloc_p->nb_elts)) {
 			printf("La liste rel.data est vide\n");
 		} else {
-			for (noeud_liste_p = debut_liste (liste_reloc_data_p) ; (noeud_liste_p) ; noeud_liste_p = suivant_liste (liste_reloc_data_p)) {
+			for (noeud_liste_p = debut_liste (liste_reloc_p) ; (noeud_liste_p) ; noeud_liste_p = suivant_liste (liste_reloc_p)) {
 				relocateur_p = noeud_liste_p->donnee_p;
 				affiche_relocateur(relocateur_p);
 			}

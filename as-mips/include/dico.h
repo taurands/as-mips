@@ -7,6 +7,7 @@
 #ifndef _DICO_H_
 #define _DICO_H_
 
+#include <inttypes.h>
 #include <table.h>
 
 /**
@@ -20,6 +21,14 @@ enum Operandes_e {
  	I_OP_N=1,		/**< Pour cette instruction, les opérandes sont des registres séparés par des virgules
  							sauf le dernier qui est un nombre ou un symbole */
  	I_OP_B=2,		/**< Pour cette instruction, on attend "registre" "," "nombre" "(" "registre" ")" */
+};
+
+enum Reloc_e {
+	R_MIPS_AUCUN=-1,			/**< Pour les instructions ne nécessitant pas de relocation */
+ 	R_MIPS_32=0,				/**< Dans liste_data_p si .word et si opérande est un SYMBOLE */
+ 	R_MIPS_26=1,				/**< Dans liste_text_p si instruction = J ou JAL et argument = SYMBOLE */
+ 	R_MIPS_HI16=2,				/**< Dans liste_text_p si instruction = LWI ou SWI et argument = SYMBOLE */
+ 	R_MIPS_LO16=3,				/**< Dans liste_text_p si instruction = LWI ou SWI et argument = SYMBOLE */
 };
 
 /**
@@ -49,6 +58,7 @@ struct DefinitionInstruction_s {
 	char* nom;						/**< nom de l'instruction */
 	enum Operandes_e type_ops;		/**< nature de l'instruction */
 	unsigned int nb_ops;			/**< nombre d'opérandes de l'instruction */
+	enum Reloc_e reloc;				/**< Type de relocation */
 };
 
 /**

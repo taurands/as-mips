@@ -57,6 +57,7 @@ int main (int argc, char *argv[])
     struct Liste_s *liste_data_p=NULL;
     struct Liste_s *liste_bss_p=NULL;
     struct Liste_s *liste_reloc_data_p=NULL;
+    struct Liste_s *liste_reloc_text_p=NULL;
 
     if (argc != 2) {
         print_usage(argv[0]);
@@ -79,6 +80,8 @@ int main (int argc, char *argv[])
     		break;
     	if ((code_retour = creer_liste (&liste_reloc_data_p, NULL)))
     	    		break;
+    	if ((code_retour = creer_liste (&liste_reloc_text_p, NULL)))
+    	    	    break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/
         lex_load_file(nom_fichier_asm, liste_lexemes_p, &nb_lignes, &nb_etiquettes, &nb_instructions);
@@ -99,6 +102,7 @@ int main (int argc, char *argv[])
     	analyser_syntaxe(liste_lexemes_p, table_def_instructions_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
 
     	/* Effectue l'analyse des relocations */
+    	relocation_texte(liste_text_p, liste_reloc_text_p, table_etiquettes_p);
     	relocation_data(liste_data_p, liste_reloc_data_p, table_etiquettes_p);
 
     	/* affiche les résultats de l'analyse syntaxique */
@@ -106,7 +110,10 @@ int main (int argc, char *argv[])
     	affiche_liste_instructions(liste_text_p, table_etiquettes_p, "Table des instructions de .text");
     	affiche_liste_donnee(liste_data_p, table_etiquettes_p, "Table des données de la section .data");
     	affiche_liste_donnee(liste_bss_p, table_etiquettes_p, "Table des données de la section .bss");
-    	affiche_liste_relocation_data(liste_reloc_data_p);
+    	printf("rel.text\n");
+    	affiche_liste_relocation(liste_reloc_text_p);
+    	printf("rel.bss\n");
+    	affiche_liste_relocation(liste_reloc_data_p);
     } while (FALSE);
 
 
@@ -115,6 +122,7 @@ int main (int argc, char *argv[])
     detruire_table (&table_def_instructions_p);
     detruire_table (&table_def_registres_p);
 
+    detruire_liste (&liste_reloc_text_p);
     detruire_liste (&liste_reloc_data_p);
 	detruire_liste (&liste_text_p);
     detruire_liste (&liste_data_p);

@@ -9,13 +9,6 @@
 
 #include <stdint.h>
 
-enum Reloc_e {
- 	R_MIPS_32=0,				/**< Dans liste_data_p si .word et si opérande est un SYMBOLE */
- 	R_MIPS_26=1,				/**< Dans liste_text_p si instruction = J ou JAL et argument = SYMBOLE */
- 	R_MIPS_HI16=2,				/**< Dans liste_text_p si instruction = LWI ou SWI et argument = SYMBOLE */
- 	R_MIPS_LO16=3,				/**< Dans liste_text_p si instruction = LWI ou SWI et argument = SYMBOLE */
-};
-
 /**
  * @struct Relocateur_s
  * @brief Elément définissant une relocation
@@ -27,11 +20,12 @@ struct Relocateur_s {
 };
 
 int relocation_data(struct Liste_s *liste_data_p, struct Liste_s *liste_reloc_data_p, struct Table_s *table_etiquettes_p);
+int relocation_texte(struct Liste_s *liste_text_p, struct Liste_s *liste_reloc_text_p, struct Table_s *table_etiquettes_p);
 
 char *type_reloc_to_str(enum Reloc_e type_reloc);
 char *type_enum_to_str(enum Section_e section);
 
 void affiche_relocateur(struct Relocateur_s *relocateur_p);
-void affiche_liste_relocation_data(struct Liste_s *liste_reloc_data_p);
+void affiche_liste_relocation(struct Liste_s *liste_reloc_data_p);
 
 #endif /* _RELOC_H_ */
