@@ -213,6 +213,8 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 				def_instruction_p->reloc=R_MIPS_LO16;
 			else if (car_reloc == '2')
 				def_instruction_p->reloc=R_MIPS_26;
+			else if (car_reloc == 'P')
+				def_instruction_p->reloc=R_MIPS_PSEUDO;
 			else {
 				resultat = FAILURE;
 				WARNING_MSG("Type de relocation inconnu pour l'instruction %s (ligne %d)", nom_instruction, i+1);

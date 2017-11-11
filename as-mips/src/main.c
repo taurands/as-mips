@@ -106,13 +106,17 @@ int main (int argc, char *argv[])
     	relocation_data(liste_data_p, liste_reloc_data_p, table_etiquettes_p);
 
     	/* affiche les résultats de l'analyse syntaxique */
-    	affiche_table_etiquette(table_etiquettes_p, "Table des étiquettes");
-    	affiche_liste_instructions(liste_text_p, table_etiquettes_p, "Table des instructions de .text");
-    	affiche_liste_donnee(liste_data_p, table_etiquettes_p, "Table des données de la section .data");
-    	affiche_liste_donnee(liste_bss_p, table_etiquettes_p, "Table des données de la section .bss");
+    	printf("\t\t\t.text\n");
+    	affiche_liste_instructions(liste_text_p, table_etiquettes_p);
+    	printf("\t\t\t.data\n");
+    	affiche_liste_donnee(liste_data_p, table_etiquettes_p);
+    	printf("\t\t\t.bss\n");
+    	affiche_liste_donnee(liste_bss_p, table_etiquettes_p);
+    	printf(".symtab\n");
+    	affiche_table_etiquette(table_etiquettes_p);
     	printf("rel.text\n");
     	affiche_liste_relocation(liste_reloc_text_p);
-    	printf("rel.bss\n");
+    	printf("rel.data\n");
     	affiche_liste_relocation(liste_reloc_data_p);
     } while (FALSE);
 

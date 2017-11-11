@@ -145,6 +145,7 @@ char *type_reloc_to_str(enum Reloc_e type_reloc)
 		case R_MIPS_26:					return "R_MIPS_26";
 		case R_MIPS_HI16:				return "R_MIPS_HI16";
 		case R_MIPS_LO16:				return "R_MIPS_LO16";
+		case R_MIPS_PSEUDO:				return "R_MIPS_PSEUDO";
 		default :
 			ERROR_MSG("Erreur de résolution du nom du type de relocation... Il manque donc au moins un nom à rajouter pour %d", type_reloc);
 	}
@@ -163,6 +164,7 @@ char *type_enum_to_str(enum Section_e section)
 		case S_TEXT:					return ".text";
 		case S_DATA:					return ".data";
 		case S_BSS:						return ".bss";
+		case S_UNDEF:					return "undef";
 		default :
 			ERROR_MSG("Erreur de résolution du nom du type de relocation... Il manque donc au moins un nom à rajouter pour %d", section);
 	}

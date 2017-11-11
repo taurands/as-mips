@@ -17,11 +17,11 @@
  * @brief Constantes de nature des sections du programme assembleur
  */
 enum Section_e {
-	S_UNDEF=-1,				/**< Etat lors du traitement des relocations où les étiquettes ne sont pas définies */
  	S_INIT=0,				/**< état initial lorsque l'on n'a pas encore rencontré une direction de section */
  	S_TEXT=1,				/**< dès que l'on a rencontré une directive de section ".text", cela correspond aux instructions du programme */
  	S_DATA=2,				/**< dès que l'on a rencontré une directive de section ".data", cela correspond aux données du programme */
- 	S_BSS=3					/**< dès que l'on a rencontré une directive de section ".bss", cela correspond aux données du tas du programme */
+ 	S_BSS=3,				/**< dès que l'on a rencontré une directive de section ".bss", cela correspond aux données du tas du programme */
+	S_UNDEF=4				/**< Etat lors du traitement des relocations où les étiquettes ne sont pas définies */
 };
 
 /**
@@ -86,9 +86,9 @@ struct Donnee_s {
 char *clefEtiquette (void *donnee_p);
 void detruit_donnee (void *donnee_p);
 
-void affiche_table_etiquette (struct Table_s *table_p, char *titre);
-void affiche_liste_donnee (struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste);
-void affiche_liste_instructions (struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste);
+void affiche_table_etiquette (struct Table_s *table_p);
+void affiche_liste_donnee (struct Liste_s *liste_p, struct Table_s *table_p);
+void affiche_liste_instructions (struct Liste_s *liste_p, struct Table_s *table_p);
 
 int analyser_syntaxe (struct Liste_s *lignes_lexemes_p,
 		struct Table_s *table_def_instructions_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,

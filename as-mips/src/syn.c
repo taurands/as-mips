@@ -20,8 +20,9 @@
 #include <dico.h>
 #include <lex.h>
 #include <syn.h>
+#include <reloc.h>
 
-const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss"};
+const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss", "undef"};
 const char *NOMS_DATA[] = {".space", ".byte", ".half", ".word", ".float", ".asciiz"};
 
 char *clefEtiquette(void *donnee_p)
@@ -124,16 +125,15 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 	printf("\n");
 }
 
-void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste)
+void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p)
 {
 	struct Noeud_Liste_s* noeud_liste_p = NULL;
 	if (!liste_p) {
-		printf("%s n'existe pas !\n", titre_liste);
+		printf("La liste n'existe pas !\n");
 	} else {
 		if (!(liste_p->nb_elts)) {
-			printf("%s est vide\n", titre_liste);
+			printf("La liste est vide\n");
 		} else {
-			printf("%s\n", titre_liste);
 			for (noeud_liste_p=liste_p->debut_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
 				affiche_element_databss((struct Donnee_s *)noeud_liste_p->donnee_p, table_p);
 			}
@@ -142,16 +142,15 @@ void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p, char
 	printf("\n\n");
 }
 
-void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p, char *titre_liste)
+void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p)
 {
 	struct Noeud_Liste_s* noeud_liste_p=NULL;
 	if (!liste_p) {
-		printf("%s n'existe pas !\n", titre_liste);
+		printf("La liste n'existe pas !\n");
 	} else {
 		if (!(liste_p->nb_elts)) {
-			printf("%s est vide\n", titre_liste);
+			printf("La liste est vide\n");
 		} else {
-			printf("%s\n", titre_liste);
 			for (noeud_liste_p=liste_p->debut_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
 				str_instruction((struct Instruction_s *)noeud_liste_p->donnee_p, table_p);
 			}
@@ -160,18 +159,17 @@ void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p
 	printf("\n\n");
 }
 
-void affiche_table_etiquette(struct Table_s *table_p, char *titre)
+void affiche_table_etiquette(struct Table_s *table_p)
 {
 	size_t i, j;
 
 	struct Etiquette_s *etiquette_p=NULL;
 	if (!table_p) {
-		printf("%s n'existe pas !\n", titre);
+		printf("La table d'étiquette n'existe pas !\n");
 	} else {
 		if (!(table_p->nbElts)) {
-			printf("%s est vide\n", titre);
+			printf("La table d'étiquette est vide\n");
 		} else {
-			printf("%s\n", titre);
 			if (table_p) {
 				j=0;
 				for (i=0; i<table_p->nbEltsMax; i++)
@@ -179,7 +177,10 @@ void affiche_table_etiquette(struct Table_s *table_p, char *titre)
 						j++;
 						etiquette_p=table_p->table[i];
 
-						printf("%08x section %8s  %32s\n",etiquette_p->decalage, NOMS_SECTIONS[etiquette_p->section], etiquette_p->lexeme_p->data);
+						if (etiquette_p->section != S_UNDEF)
+							printf("%3d\t%-5s:%08x\t%s\n",etiquette_p->lexeme_p->ligne,type_enum_to_str(etiquette_p->section),etiquette_p->decalage,etiquette_p->lexeme_p->data);
+						else
+							printf("%3d\t[UNDEFINED]\t%s\n",etiquette_p->lexeme_p->ligne,etiquette_p->lexeme_p->data);
 					}
 			}
 		}

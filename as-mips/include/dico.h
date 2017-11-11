@@ -24,6 +24,7 @@ enum Operandes_e {
 };
 
 enum Reloc_e {
+	R_MIPS_PSEUDO=-2,			/**< Pour identifier les pseudos-instructions */
 	R_MIPS_AUCUN=-1,			/**< Pour les instructions ne nécessitant pas de relocation */
  	R_MIPS_32=0,				/**< Dans liste_data_p si .word et si opérande est un SYMBOLE */
  	R_MIPS_26=1,				/**< Dans liste_text_p si instruction = J ou JAL et argument = SYMBOLE */
@@ -51,6 +52,17 @@ struct DefinitionPseudo_s {
 };
 
 /**
+ * @struct CodeOperande_s
+ * @brief Structure permettant de stocker la méthode d'encodage d'un opérande
+ */
+struct CodeOperande_s {
+	unsigned int nb_bits;	/**< Nombre de bit utilisé pour le codage de l'opérande. 0 si pas d'opérande */
+	int	signe;				/**< 0 indique un opérande non signé. 1 indique un opérande signé */
+	int shift;				/**< Nombre de bits à décaler (positif à droite, négatif à gauche) */
+	unsigned int dest_bit;	/**< Bit de destination pour le bit de poids faible */
+};
+
+/**
  * @struct DefinitionInstruction_s
  * @brief Structure permettant de stocker la définition d'une instruction
  */
@@ -59,6 +71,8 @@ struct DefinitionInstruction_s {
 	enum Operandes_e type_ops;		/**< nature de l'instruction */
 	unsigned int nb_ops;			/**< nombre d'opérandes de l'instruction */
 	enum Reloc_e reloc;				/**< Type de relocation */
+	uint32_t opcode;				/**< Code opération vierge */
+	struct CodeOperande_s codes[3];	/**< Information pour l'encodage des opérandes */
 };
 
 /**
