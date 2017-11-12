@@ -4,8 +4,7 @@
 
 .set noreorder
 .text
-    LUI $at, lunchtime
-    LW $t0, lunchtime($at)
+    Lw $t0, lunchtime
     LW $6, -0x200($7)
     ADDI $t1,$zero,8
 

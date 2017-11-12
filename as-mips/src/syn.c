@@ -488,6 +488,7 @@ int analyser_instruction(
 	struct Lexeme_s *lexeme_p = NULL;
 	struct DefinitionInstruction_s *def_p = NULL;
 	struct Instruction_s *instruction_p = NULL;
+	struct Instruction_s *instr_supl_p = NULL;
 
 	enum Etat_e {
 		ERREUR,
@@ -692,17 +693,56 @@ int analyser_instruction(
 		} while ((etat != ERREUR) && (etat != EOL) && (noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
 
 		/* XXX tester le null, fin ligne, ... */
-		if (def_p->type_ops==I_OP_B) {
+		if ((etat == EOL) && (instruction_p) && (def_p->type_ops == I_OP_B)) {
 			if (!instruction_p->operandes[1]) {
-				creer_lexeme(&instruction_p->operandes[1],"0", L_NOMBRE, instruction_p->ligne);
+				creer_lexeme(&(instruction_p->operandes[1]),"0", L_NOMBRE, instruction_p->ligne);
 				ajouter_fin_liste(lexemes_supl_p,instruction_p->operandes[1]);
 			}
 			if (!instruction_p->operandes[2]) {
-				creer_lexeme(&instruction_p->operandes[2],"$zero", L_REGISTRE, instruction_p->ligne);
+				creer_lexeme(&(instruction_p->operandes[2]),"$zero", L_REGISTRE, instruction_p->ligne);
 				ajouter_fin_liste(lexemes_supl_p,instruction_p->operandes[2]);
 			}
-		}
-		if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, instruction_p))) {
+			if (instruction_p->operandes[1]->nature == L_SYMBOLE) {
+				/* Insertion d'une instruction LUI $at, symbole */
+				instr_supl_p = calloc (1, sizeof(*instr_supl_p));
+				instr_supl_p->definition_p=donnee_table(table_def_instructions_p, "LUI");
+				instr_supl_p->ligne = instruction_p->ligne;
+				instr_supl_p->decalage = *decalage_p;
+				creer_lexeme(&(instr_supl_p->operandes[0]), "$at", L_REGISTRE, instruction_p->ligne);
+				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[0]);
+
+				creer_lexeme(&(instr_supl_p->operandes[1]), instruction_p->operandes[1]->data, L_SYMBOLE, instruction_p->ligne);
+				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[1]);
+
+				ajouter_fin_liste(liste_p, instr_supl_p);
+				(*decalage_p)+=4;
+
+				/* Insertion d'une instruction LW/SW registre, symbole($at) */
+				instr_supl_p = calloc (1, sizeof(*instr_supl_p));
+				instr_supl_p->definition_p = donnee_table(table_def_instructions_p, instruction_p->definition_p->nom);
+				instr_supl_p->ligne = instruction_p->ligne;
+				instr_supl_p->decalage = *decalage_p;
+				creer_lexeme(&(instr_supl_p->operandes[0]), instruction_p->operandes[0]->data, L_REGISTRE, instruction_p->ligne);
+				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[0]);
+				creer_lexeme(&(instr_supl_p->operandes[1]), instruction_p->operandes[1]->data, L_SYMBOLE, instruction_p->ligne);
+				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[1]);
+				creer_lexeme(&(instr_supl_p->operandes[2]), "$at", L_REGISTRE, instruction_p->ligne);
+				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[2]);
+				ajouter_fin_liste(liste_p, instr_supl_p);
+				(*decalage_p)+=4;
+
+				free(instruction_p);
+				return SUCCESS;
+			} else {
+				ajouter_fin_liste(liste_p, instruction_p);
+				instruction_p=NULL;
+				(*decalage_p)+=4;
+				return SUCCESS;
+
+			}
+
+
+		} else if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, instruction_p))) {
 			instruction_p=NULL;
 			(*decalage_p)+=4;
 			return SUCCESS;
