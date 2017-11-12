@@ -26,6 +26,15 @@ SRL $26, $27, titi
 SRL $26, $27, 30
 SLT $28,$29,$30
 LW $31, 0x60($10)
+LW $31, lunchtime($10)
+LW $1, 100
+LW $1, lunchtime
+LW $1, ($2)
+LW $31, 0x60($10) #commentaire
+LW $31, lunchtime($10) #commentaire
+LW $1, 100 #commentaire
+LW $1, lunchtime #commentaire
+LW $1, ($2) #commentaire
 SW $zero, 45($a0)
 LUI $t1, 12
 tata:MFHI $s2
@@ -50,7 +59,7 @@ MOVE $1, $2
 .byte 45
 .half 545
 .byte 0x1A,023
-.word 32000, lol
+lunchtime:.word 32000, lol
 .word -1000,-0400,-0x1
 .space 15
 .byte '\n', '\'' , '"', '\"', '7'

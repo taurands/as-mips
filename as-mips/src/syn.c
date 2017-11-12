@@ -477,6 +477,7 @@ int analyser_donnee(
  */
 int analyser_instruction(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
+		struct Liste_s *lexemes_supl_p,				/**< Pointeur sur la liste des lexemes à rajouter si nécessaire */
 		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
 		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
 		struct Liste_s *liste_p,				/**< Pointeur sur la liste des instructions de la section .text */
@@ -629,18 +630,27 @@ int analyser_instruction(
 				}
 				break;
 			case I_B_OFFS:
-				if ((lexeme_p->nature != L_NOMBRE) && (lexeme_p->nature != L_SYMBOLE)) {
+				if ((lexeme_p->nature != L_NOMBRE) && (lexeme_p->nature != L_SYMBOLE) && (lexeme_p->nature != L_PARENTHESE_OUVRANTE)) {
 					etat = ERREUR;
 					strcpy(msg_err, "n'est ni un nombre, ni un registre");
+				} else if (lexeme_p->nature == L_PARENTHESE_OUVRANTE) {
+					instruction_p->operandes[1] = NULL;
+					etat = I_B_BASE;
 				} else {
 					instruction_p->operandes[1] = lexeme_p;
 					etat = I_B_PO;
 				}
 				break;
 			case I_B_PO:
-				if (lexeme_p->nature != L_PARENTHESE_OUVRANTE) {
+				if ((lexeme_p->nature != L_PARENTHESE_OUVRANTE) && (lexeme_p->nature != L_COMMENTAIRE) && (lexeme_p->nature != L_FIN_LIGNE)) {
 					etat = ERREUR;
 					strcpy(msg_err, "n'est pas une parenthèse ouvrante");
+				} else if (lexeme_p->nature == L_COMMENTAIRE) {
+					instruction_p->operandes[2] = NULL;
+					etat = SUITE;
+				} else if (lexeme_p->nature == L_FIN_LIGNE) {
+					instruction_p->operandes[2] = NULL;
+					etat = EOL;
 				} else {
 					etat = I_B_BASE;
 				}
@@ -702,6 +712,7 @@ int analyser_instruction(
  */
 int analyser_syntaxe(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
+		struct Liste_s *lexemes_supl_p,				/**< Pointeur sur la liste de lexèmes supplémentaires */
 		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
 		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
 		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
@@ -763,7 +774,7 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
-					code_erreur = analyser_instruction(lignes_lexemes_p, table_def_instructions_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
+					code_erreur = analyser_instruction(lignes_lexemes_p, lexemes_supl_p, table_def_instructions_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
 					if (code_erreur == FAIL_ALLOC)
 						return FAIL_ALLOC;
 					else if (code_erreur == SUCCESS)

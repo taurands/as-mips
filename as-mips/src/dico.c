@@ -104,6 +104,34 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 	/* XXX à compléter en prenant exemple sur gestion des erreurs de charge_def_instruction */
 	int resultat = SUCCESS;
 
+	FILE *f_p = NULL;
+	struct PseudoInstruction_s *pseudo_instruction_p = NULL;
+
+	char *nom_pseudo_instruction = NULL;
+	char car_nature;
+	int nb_operandes = 0;
+
+
+	do {
+		if (!(nom_pseudo_instruction = calloc(STRLEN, sizeof(char)))) {
+			resultat = FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'instruction");
+			break;
+		}
+
+		f_p = fopen(nom_fichier,"r"); /* Ouverture du dictionnaire de pseudo instruction */
+		if (!f_p) {
+			resultat = FAILURE;
+			WARNING_MSG ("Impossible d'ouvrir le fichier %s de définition d'instruction", nom_fichier);
+			break;
+		}
+	} while (FALSE);
+
+	if (f_p)
+		fclose(f_p);
+
+	free (pseudo_instruction_p);
+	free (nom_pseudo_instruction);
 	return resultat;
 }
 

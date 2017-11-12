@@ -90,7 +90,7 @@ void affiche_table_etiquette (struct Table_s *table_p);
 void affiche_liste_donnee (struct Liste_s *liste_p, struct Table_s *table_p);
 void affiche_liste_instructions (struct Liste_s *liste_p, struct Table_s *table_p);
 
-int analyser_syntaxe (struct Liste_s *lignes_lexemes_p,
+int analyser_syntaxe (struct Liste_s *lignes_lexemes_p, struct Liste_s *lexemes_supl_p,
 		struct Table_s *table_def_instructions_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,
 		struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p);
 

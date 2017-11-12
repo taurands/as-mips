@@ -53,6 +53,7 @@ int main (int argc, char *argv[])
     struct Table_s *table_def_registres_p=NULL;
     struct Table_s *table_etiquettes_p=NULL;
     struct Liste_s *liste_lexemes_p=NULL;
+    struct Liste_s *liste_lexemes_supl_p=NULL;
     struct Liste_s *liste_text_p=NULL;
     struct Liste_s *liste_data_p=NULL;
     struct Liste_s *liste_bss_p=NULL;
@@ -72,6 +73,8 @@ int main (int argc, char *argv[])
     do { /* Do While pour permettre de sortir proprement en cas de problème d'allocation mémoire */
     	if ((code_retour = creer_liste (&liste_lexemes_p, (fonctionDestructeur *)detruit_lexeme)))
     		break;
+    	if ((code_retour = creer_liste (&liste_lexemes_supl_p, (fonctionDestructeur *)detruit_lexeme)))
+    	    break;
     	if ((code_retour = creer_liste (&liste_text_p, NULL)))
     		break;
     	if ((code_retour = creer_liste (&liste_data_p, (fonctionDestructeur *)detruit_donnee)))
@@ -99,7 +102,7 @@ int main (int argc, char *argv[])
     		break;
 
     	/* effectue l'analyse syntaxique */
-    	analyser_syntaxe(liste_lexemes_p, table_def_instructions_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
+    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
 
     	/* Effectue l'analyse des relocations */
     	relocation_texte(liste_text_p, liste_reloc_text_p, table_etiquettes_p);
@@ -131,6 +134,7 @@ int main (int argc, char *argv[])
 	detruire_liste (&liste_text_p);
     detruire_liste (&liste_data_p);
     detruire_liste (&liste_bss_p);
+    detruire_liste (&liste_lexemes_supl_p);
 	detruire_liste (&liste_lexemes_p);
 
 	exit (code_retour);

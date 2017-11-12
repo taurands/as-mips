@@ -82,7 +82,8 @@ int relocation_texte(
 			return FAILURE;
 	else if ((noeud_courant_p = debut_liste(liste_text_p)) && (instruction_p = noeud_courant_p->donnee_p)) {
 		do {
-			if (((instruction_p->definition_p->reloc == R_MIPS_26) || (instruction_p->definition_p->reloc == R_MIPS_HI16)) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)) {
+			if (((instruction_p->definition_p->reloc == R_MIPS_26) || (instruction_p->definition_p->reloc == R_MIPS_HI16)) &&
+				 (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)) {
 				relocateur_p = calloc(1,sizeof(*relocateur_p));
 				if (!relocateur_p) {
 					WARNING_MSG ("Impossible de créer un nouveau relocateur");
@@ -104,7 +105,8 @@ int relocation_texte(
 				ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
 			}
 
-			if ((instruction_p->definition_p->reloc == R_MIPS_LO16) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->nature == L_SYMBOLE)) {
+			if ((instruction_p->definition_p->reloc == R_MIPS_LO16) &&
+				(instruction_p->operandes[instruction_p->definition_p->nb_ops-2]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->nature == L_SYMBOLE)) {
 				relocateur_p = calloc(1,sizeof(*relocateur_p));
 				if (!relocateur_p) {
 					WARNING_MSG ("Impossible de créer un nouveau relocateur");
