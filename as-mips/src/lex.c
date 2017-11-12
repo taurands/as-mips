@@ -68,6 +68,24 @@ enum Etat_lex_e {
 const char *FIN_SPECIAL = "\"'nrtfvab\\0";
 const char *REMPLACEMENT_SPECIAL = "\"'\n\r\t\f\v\a\b\\\0";
 
+int creer_lexeme(struct Lexeme_s **lexeme_pp, char *data, enum Nature_lexeme_e nature, int ligne)
+{
+	if (lexeme_pp) {
+		(*lexeme_pp)=calloc(1, sizeof(**lexeme_pp));
+		if (!*lexeme_pp)
+			return FAIL_ALLOC;
+
+		(*lexeme_pp)->ligne=ligne;
+		(*lexeme_pp)->nature=nature;
+		(*lexeme_pp)->data=strdup(data);
+		if ((data) && !(*lexeme_pp)->data)
+			return FAIL_ALLOC;
+		else
+			return SUCCESS;
+	} else
+		return FAILURE;
+}
+
 /**
  * @param etat etat de la machine à états finis lexicale
  * @return chaine de caractères contenant le nom de l'état

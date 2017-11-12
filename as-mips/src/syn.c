@@ -692,6 +692,16 @@ int analyser_instruction(
 		} while ((etat != ERREUR) && (etat != EOL) && (noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
 
 		/* XXX tester le null, fin ligne, ... */
+		if (def_p->type_ops==I_OP_B) {
+			if (!instruction_p->operandes[1]) {
+				creer_lexeme(&instruction_p->operandes[1],"0", L_NOMBRE, instruction_p->ligne);
+				ajouter_fin_liste(lexemes_supl_p,instruction_p->operandes[1]);
+			}
+			if (!instruction_p->operandes[2]) {
+				creer_lexeme(&instruction_p->operandes[2],"$zero", L_REGISTRE, instruction_p->ligne);
+				ajouter_fin_liste(lexemes_supl_p,instruction_p->operandes[2]);
+			}
+		}
 		if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, instruction_p))) {
 			instruction_p=NULL;
 			(*decalage_p)+=4;
