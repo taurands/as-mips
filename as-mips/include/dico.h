@@ -90,10 +90,10 @@ struct RemplacementInstruction_s {
 
 
 /**
- * @struct PseudoInstruction_s
+ * @struct DefinitionPseudoInstruction_s
  * @brief Structure permettant de stocker une pseudo instruction
  */
-struct PseudoInstruction_s {
+struct DefinitionPseudoInstruction_s {
 	char* nom;						/**< nom de la pseudo instruction */
 	enum Operandes_e type_ops;		/**< nature de la pseudo instruction */
 	unsigned int nb_ops;			/**< nombre d'opérandes de la pseudo instruction */
@@ -114,6 +114,9 @@ void destruction_def_pseudo(void *donnee_p);
 
 char *clef_def_instruction(void *donnee_p);
 void destruction_def_instruction(void *donnee_p);
+
+char *clef_def_pseudo_instruction(void *donnee_p);
+void destruction_def_pseudo_instruction(void *donnee_p);
 
 char *clef_def_registre(void *donnee_p);
 void destruction_def_registre(void *donnee_p);

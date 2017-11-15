@@ -67,6 +67,33 @@ void destruction_def_instruction(void *donnee_p)
 }
 
 /**
+ * @param donnee_p pointeur sur une structure de définition de pseudo instruction
+ * @return chaine de caractère représentant le clef d'identification
+ * @brief Fourni le nom de de la pseudo instruction comme clef d'identification (fonction clef pour la table générique)
+ *
+ */
+char *clef_def_pseudo_instruction(void *donnee_p)
+{
+	return (donnee_p && (struct DefinitionPseudoInstruction_s *)donnee_p) ? ((struct DefinitionPseudoInstruction_s *)donnee_p)->nom : NULL;
+}
+
+
+
+/**
+ * @param donnee_p pointeur sur une structure de définition de pseudo instruction
+ * @return rien
+ * @brief Détruit et libère la structure pointée (fonction de destruction pour la table générique)
+ *
+ */
+void destruction_def_pseudo_instruction(void *donnee_p)
+{
+	if (donnee_p) {
+		free(((struct DefinitionPseudoInstruction_s *)donnee_p)->nom);
+		free(donnee_p);
+	}
+}
+
+/**
  * @param donnee_p pointeur sur une structure de définition de registre
  * @return chaine de caractère représentant le clef d'identification
  * @brief Fourni le nom du registre comme clef d'identification (fonction clef pour la table générique)
@@ -105,11 +132,19 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 	int resultat = SUCCESS;
 
 	FILE *f_p = NULL;
-	struct PseudoInstruction_s *pseudo_instruction_p = NULL;
+	struct DefinitionPseudoInstruction_s *definition_pseudo_instruction_p = NULL;
 
 	char *nom_pseudo_instruction = NULL;
 	char car_nature;
 	int nb_operandes = 0;
+	int nombre_instructions=0;
+	char* instruction_spl = NULL;
+	int arg1;
+	int arg2;
+	int arg3;
+	int nb_mots = 0;
+	int i=0;
+	int j=0;
 
 
 	do {
@@ -125,12 +160,84 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 			WARNING_MSG ("Impossible d'ouvrir le fichier %s de définition d'instruction", nom_fichier);
 			break;
 		}
+
+		if (1 != fscanf(f_p,"%u",&nb_mots)) { /* Lecture de la première ligne du dictionnaire */
+			resultat = FAILURE;
+			WARNING_MSG ("Nombre d'instructions du dictionnaire introuvable dans %s", nom_fichier);
+			break;
+		} else if (nb_mots < 1) {
+			resultat = FAILURE;
+			WARNING_MSG ("Le dictionnaire %s doit contenir au moins une instruction", nom_fichier);
+			break;
+		}
+
+		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_pseudo_instruction, destruction_def_pseudo_instruction))) {
+			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions d'instructions");
+			break;
+		}
+
+		while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
+
+			if (1 != fscanf(f_p,"%s", nom_pseudo_instruction)) {
+				resultat = FAILURE;
+				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+				break;
+			}
+			if (1 != fscanf(f_p,"%d", &nb_operandes)) {
+				resultat = FAILURE;
+				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nombre d'arguments de l'instruction en cours");
+				break;
+			}
+			if (1 != fscanf(f_p,"%c", &car_nature)) {
+				resultat = FAILURE;
+				WARNING_MSG ("Pas de caractère de type syntaxique pour %s", nom_pseudo_instruction);
+				break;
+			}
+			if (1 != fscanf(f_p,"%d", &nombre_instructions)) {
+				resultat = FAILURE;
+				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+				break;
+			}
+			if (!(definition_pseudo_instruction_p = calloc (1, sizeof(*definition_pseudo_instruction_p)))) {
+				resultat = FAIL_ALLOC;
+				WARNING_MSG ("Plus assez de mémoire pour créer une nouvelle définition d'instruction");
+				break;
+			}
+			if (!(definition_pseudo_instruction_p->nom = strdup(nom_pseudo_instruction)) && nom_pseudo_instruction) {
+				resultat = FAIL_ALLOC;
+				WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'instruction");
+				break;
+			}
+
+			for (j=0; j<nombre_instructions;j++) {
+				if (1 != fscanf(f_p,"%s", instruction_spl)) {
+					resultat = FAILURE;
+					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+					break;
+				}
+				if (1 != fscanf(f_p,"%d", &arg1)) {
+					resultat = FAILURE;
+					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+					break;
+				}
+				if (1 != fscanf(f_p,"%d", &arg2)) {
+					resultat = FAILURE;
+					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+					break;
+				}
+				if (1 != fscanf(f_p,"%d", &arg3)) {
+					resultat = FAILURE;
+					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+					break;
+				}
+			}
+		}
 	} while (FALSE);
 
 	if (f_p)
 		fclose(f_p);
 
-	free (pseudo_instruction_p);
+	free (definition_pseudo_instruction_p);
 	free (nom_pseudo_instruction);
 	return resultat;
 }
