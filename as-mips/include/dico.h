@@ -85,9 +85,7 @@ struct DefinitionInstruction_s {
  */
 struct RemplacementInstruction_s {
 	char* instruction;						/**< instruction à remplacer */
-	char* arg1;								/**< indique le contenu différenciation double cote ou non */
-	char* arg2;								/**< indique le contenu différenciation double cote ou non */
-	char* arg3;								/**< indique le contenu différenciation double cote ou non */
+	char* arg[3];							/**< indique le contenu différenciation double cote ou non */
 };
 
 

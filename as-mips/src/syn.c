@@ -479,8 +479,9 @@ int analyser_instruction(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
 		struct Liste_s *lexemes_supl_p,				/**< Pointeur sur la liste des lexemes à rajouter si nécessaire */
 		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
+		struct Table_s *table_def_pseudo_p,			/**< Pointeur sur la table "dico" des pseudo instructions */
 		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
-		struct Liste_s *liste_p,				/**< Pointeur sur la liste des instructions de la section .text */
+		struct Liste_s *liste_p,					/**< Pointeur sur la liste des instructions de la section .text */
 		uint32_t *decalage_p,
 		char *msg_err)
 {
@@ -489,6 +490,11 @@ int analyser_instruction(
 	struct DefinitionInstruction_s *def_p = NULL;
 	struct Instruction_s *instruction_p = NULL;
 	struct Instruction_s *instr_supl_p = NULL;
+	struct DefinitionPseudoInstruction_s *def_pseudo_p = NULL;
+
+	long nb;
+	unsigned int i;
+	unsigned int j;
 
 	enum Etat_e {
 		ERREUR,
@@ -742,7 +748,35 @@ int analyser_instruction(
 			}
 
 
+		} else if ((etat == EOL) && (instruction_p->definition_p->reloc == R_MIPS_PSEUDO)) {
+			def_pseudo_p = donnee_table(table_def_pseudo_p, instruction_p->definition_p->nom);
+			for (i=0;i<def_pseudo_p->nb_instruction;i++) {
+				instr_supl_p = calloc (1, sizeof(*instr_supl_p));
+				instr_supl_p->definition_p = donnee_table(table_def_instructions_p, def_pseudo_p->rempl[i].instruction);
+				instr_supl_p->ligne = instruction_p->ligne;
+				instr_supl_p->decalage = *decalage_p;
+
+				for (j=0;j<3;j++) {
+					if (def_pseudo_p->rempl[i].arg[j][0] != DQ_CHAR) {
+						nb=strtol(def_pseudo_p->rempl[i].arg[j],NULL,0);
+						if (nb>0) {
+							instr_supl_p->operandes[j] = instruction_p->operandes[nb-1];
+						} else {
+							instr_supl_p->operandes[j] = NULL;
+						}
+					} else {
+						creer_lexeme(&(instr_supl_p->operandes[j]), def_pseudo_p->rempl[i].arg[j]+1, (def_pseudo_p->rempl[i].arg[j][1] == '$' ? L_REGISTRE : L_NOMBRE), instruction_p->ligne);
+						ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[j]);
+						instr_supl_p->operandes[j]->data[strlen(instr_supl_p->operandes[j]->data)-1] = '\0';
+					}
+				}
+				ajouter_fin_liste(liste_p, instr_supl_p);
+				(*decalage_p)+=4;
+			}
+		free (instruction_p);
+		return SUCCESS;
 		} else if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, instruction_p))) {
+
 			instruction_p=NULL;
 			(*decalage_p)+=4;
 			return SUCCESS;
@@ -764,6 +798,7 @@ int analyser_syntaxe(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
 		struct Liste_s *lexemes_supl_p,				/**< Pointeur sur la liste de lexèmes supplémentaires */
 		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
+		struct Table_s *table_def_pseudo_p,			/**< Pointeur sur la table "dico" des pseudos instructions */
 		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
 		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
 		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
@@ -824,7 +859,7 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
-					code_erreur = analyser_instruction(lignes_lexemes_p, lexemes_supl_p, table_def_instructions_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
+					code_erreur = analyser_instruction(lignes_lexemes_p, lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
 					if (code_erreur == FAIL_ALLOC)
 						return FAIL_ALLOC;
 					else if (code_erreur == SUCCESS)

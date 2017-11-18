@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
     		break;
 
     	/* effectue l'analyse syntaxique */
-    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
+    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
 
     	/* Effectue l'analyse des relocations */
     	relocation_texte(liste_text_p, liste_reloc_text_p, table_etiquettes_p);

@@ -13,7 +13,7 @@ boucle:
     NOP
     addi $t1 , $t1 , 1
     J boucle
-    NOP
+    BLT $at, $sp, boucle
 byebye:
     JAL viteviteauru
 

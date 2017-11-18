@@ -92,9 +92,9 @@ void destruction_def_pseudo_instruction(void *donnee_p)
 	if (donnee_p) {
 		for (i=0;i<dpi_p->nb_instruction;i++) {
 			free(dpi_p->rempl[i].instruction);
-			free(dpi_p->rempl[i].arg1);
-			free(dpi_p->rempl[i].arg2);
-			free(dpi_p->rempl[i].arg3);
+			free(dpi_p->rempl[i].arg[0]);
+			free(dpi_p->rempl[i].arg[1]);
+			free(dpi_p->rempl[i].arg[2]);
 		}
 		free(dpi_p->nom);
 		free(dpi_p);
@@ -263,17 +263,17 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'instruction de remplacement");
 					break;
 				}
-				if (!(definition_pseudo_instruction_p->rempl[j].arg1 = strdup(arg1)) && arg1) {
+				if (!(definition_pseudo_instruction_p->rempl[j].arg[0] = strdup(arg1)) && arg1) {
 					resultat = FAIL_ALLOC;
 					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 1");
 					break;
 				}
-				if (!(definition_pseudo_instruction_p->rempl[j].arg2 = strdup(arg2)) && arg2) {
+				if (!(definition_pseudo_instruction_p->rempl[j].arg[1] = strdup(arg2)) && arg2) {
 					resultat = FAIL_ALLOC;
 					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 2");
 					break;
 				}
-				if (!(definition_pseudo_instruction_p->rempl[j].arg3 = strdup(arg3)) && arg3) {
+				if (!(definition_pseudo_instruction_p->rempl[j].arg[2] = strdup(arg3)) && arg3) {
 					resultat = FAIL_ALLOC;
 					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 3");
 					break;
