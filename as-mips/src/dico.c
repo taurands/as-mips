@@ -218,6 +218,11 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nombre d'instructions de la pseudo instruction en cours");
 				break;
 			}
+			if ((nb_instructions<1) || (nb_instructions>NB_INSTR_PSEUDO_MAX)) {
+				resultat = FAILURE;
+				WARNING_MSG ("Le nombre d'instruction de remplacement de la pseudo instruction est au delà des limites acceptables");
+				break;
+			}
 			if (!(definition_pseudo_instruction_p = calloc (1, sizeof(*definition_pseudo_instruction_p)))) {
 				resultat = FAIL_ALLOC;
 				WARNING_MSG ("Plus assez de mémoire pour créer une nouvelle définition de pseudo instruction");

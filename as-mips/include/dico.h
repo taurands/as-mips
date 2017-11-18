@@ -8,8 +8,10 @@
 #define _DICO_H_
 
 #include <inttypes.h>
+#include <global.h>
 #include <table.h>
 #include <syn.h>
+
 
 /**
  * @enum Operandes_e
@@ -96,7 +98,7 @@ struct RemplacementInstruction_s {
 struct DefinitionPseudoInstruction_s {
 	char* nom;						/**< nom de la pseudo instruction */
 	unsigned int nb_instruction;	/**< nombre d'instruction de la pseudo instruction */
-	struct RemplacementInstruction_s rempl[2];	/**< Information pour le remplacement des instructions */
+	struct RemplacementInstruction_s rempl[NB_INSTR_PSEUDO_MAX];	/**< Information pour le remplacement des instructions */
 };
 
 /**

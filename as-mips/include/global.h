@@ -44,6 +44,7 @@
  */
 #define STRLEN          256
 
+#define NB_INSTR_PSEUDO_MAX 2
 /*!
   \brief INTERNALS: Value for boolean FALSE.
  */
