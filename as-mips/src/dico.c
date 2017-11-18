@@ -87,9 +87,17 @@ char *clef_def_pseudo_instruction(void *donnee_p)
  */
 void destruction_def_pseudo_instruction(void *donnee_p)
 {
+	int i;
+	struct DefinitionPseudoInstruction_s *dpi_p = donnee_p;
 	if (donnee_p) {
-		free(((struct DefinitionPseudoInstruction_s *)donnee_p)->nom);
-		free(donnee_p);
+		for (i=0;i<dpi_p->nb_instruction;i++) {
+			free(dpi_p->rempl[i].instruction);
+			free(dpi_p->rempl[i].arg1);
+			free(dpi_p->rempl[i].arg2);
+			free(dpi_p->rempl[i].arg3);
+		}
+		free(dpi_p->nom);
+		free(dpi_p);
 	}
 }
 
@@ -135,13 +143,11 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 	struct DefinitionPseudoInstruction_s *definition_pseudo_instruction_p = NULL;
 
 	char *nom_pseudo_instruction = NULL;
-	char car_nature;
-	int nb_operandes = 0;
-	int nombre_instructions=0;
-	char* instruction_spl = NULL;
-	int arg1;
-	int arg2;
-	int arg3;
+	int nb_instructions = 0;
+	char *instruction_spl = NULL;
+	char *arg1 = NULL;
+	char *arg2 = NULL;
+	char *arg3 = NULL;
 	int nb_mots = 0;
 	int i=0;
 	int j=0;
@@ -150,29 +156,53 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 	do {
 		if (!(nom_pseudo_instruction = calloc(STRLEN, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
-			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'instruction");
+			WARNING_MSG ("Plus assez de mémoire pour créer un nom de pseudo instruction");
+			break;
+		}
+
+		if (!(instruction_spl = calloc(STRLEN, sizeof(char)))) {
+			resultat = FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'instruction supplémentaire");
+			break;
+		}
+
+		if (!(arg1 = calloc(STRLEN, sizeof(char)))) {
+			resultat = FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 1 d'instruction");
+			break;
+		}
+
+		if (!(arg2 = calloc(STRLEN, sizeof(char)))) {
+			resultat = FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 2 d'instruction");
+			break;
+		}
+
+		if (!(arg3 = calloc(STRLEN, sizeof(char)))) {
+			resultat = FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 3 d'instruction");
 			break;
 		}
 
 		f_p = fopen(nom_fichier,"r"); /* Ouverture du dictionnaire de pseudo instruction */
 		if (!f_p) {
 			resultat = FAILURE;
-			WARNING_MSG ("Impossible d'ouvrir le fichier %s de définition d'instruction", nom_fichier);
+			WARNING_MSG ("Impossible d'ouvrir le fichier %s de définition de pseudo instruction", nom_fichier);
 			break;
 		}
 
 		if (1 != fscanf(f_p,"%u",&nb_mots)) { /* Lecture de la première ligne du dictionnaire */
 			resultat = FAILURE;
-			WARNING_MSG ("Nombre d'instructions du dictionnaire introuvable dans %s", nom_fichier);
+			WARNING_MSG ("Nombre de pseudo instructions du dictionnaire introuvable dans %s", nom_fichier);
 			break;
 		} else if (nb_mots < 1) {
 			resultat = FAILURE;
-			WARNING_MSG ("Le dictionnaire %s doit contenir au moins une instruction", nom_fichier);
+			WARNING_MSG ("Le dictionnaire %s doit contenir au moins une pseudo instruction", nom_fichier);
 			break;
 		}
 
 		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_pseudo_instruction, destruction_def_pseudo_instruction))) {
-			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions d'instructions");
+			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions de pseudo instructions");
 			break;
 		}
 
@@ -180,65 +210,93 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 
 			if (1 != fscanf(f_p,"%s", nom_pseudo_instruction)) {
 				resultat = FAILURE;
-				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de la pseudo instruction en cours");
 				break;
 			}
-			if (1 != fscanf(f_p,"%d", &nb_operandes)) {
+			if (1 != fscanf(f_p,"%d", &nb_instructions)) {
 				resultat = FAILURE;
-				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nombre d'arguments de l'instruction en cours");
-				break;
-			}
-			if (1 != fscanf(f_p,"%c", &car_nature)) {
-				resultat = FAILURE;
-				WARNING_MSG ("Pas de caractère de type syntaxique pour %s", nom_pseudo_instruction);
-				break;
-			}
-			if (1 != fscanf(f_p,"%d", &nombre_instructions)) {
-				resultat = FAILURE;
-				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nombre d'instructions de la pseudo instruction en cours");
 				break;
 			}
 			if (!(definition_pseudo_instruction_p = calloc (1, sizeof(*definition_pseudo_instruction_p)))) {
 				resultat = FAIL_ALLOC;
-				WARNING_MSG ("Plus assez de mémoire pour créer une nouvelle définition d'instruction");
+				WARNING_MSG ("Plus assez de mémoire pour créer une nouvelle définition de pseudo instruction");
 				break;
 			}
 			if (!(definition_pseudo_instruction_p->nom = strdup(nom_pseudo_instruction)) && nom_pseudo_instruction) {
 				resultat = FAIL_ALLOC;
-				WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'instruction");
+				WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de la pseudo instruction");
 				break;
 			}
 
-			for (j=0; j<nombre_instructions;j++) {
+			definition_pseudo_instruction_p->nb_instruction=nb_instructions;
+
+			for (j=0; ((resultat == SUCCESS) && (j<nb_instructions));j++) {
 				if (1 != fscanf(f_p,"%s", instruction_spl)) {
 					resultat = FAILURE;
 					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
 					break;
 				}
-				if (1 != fscanf(f_p,"%d", &arg1)) {
+				if (1 != fscanf(f_p,"%s", arg1)) {
 					resultat = FAILURE;
-					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 1 en cours");
 					break;
 				}
-				if (1 != fscanf(f_p,"%d", &arg2)) {
+				if (1 != fscanf(f_p,"%s", arg2)) {
 					resultat = FAILURE;
-					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 2 en cours");
 					break;
 				}
-				if (1 != fscanf(f_p,"%d", &arg3)) {
+				if (1 != fscanf(f_p,"%s", arg3)) {
 					resultat = FAILURE;
-					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
+					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 3 en cours");
+					break;
+				}
+
+				if (!(definition_pseudo_instruction_p->rempl[j].instruction = strdup(instruction_spl)) && instruction_spl) {
+					resultat = FAIL_ALLOC;
+					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'instruction de remplacement");
+					break;
+				}
+				if (!(definition_pseudo_instruction_p->rempl[j].arg1 = strdup(arg1)) && arg1) {
+					resultat = FAIL_ALLOC;
+					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 1");
+					break;
+				}
+				if (!(definition_pseudo_instruction_p->rempl[j].arg2 = strdup(arg2)) && arg2) {
+					resultat = FAIL_ALLOC;
+					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 2");
+					break;
+				}
+				if (!(definition_pseudo_instruction_p->rempl[j].arg3 = strdup(arg3)) && arg3) {
+					resultat = FAIL_ALLOC;
+					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 3");
 					break;
 				}
 			}
+
+			if ((resultat = ajouter_table(*table_definition_pp, definition_pseudo_instruction_p))) {
+				WARNING_MSG ("Le dictionnaire de pseudo instructions contient l'instruction %s en double", definition_pseudo_instruction_p->nom);
+				destruction_def_pseudo_instruction(definition_pseudo_instruction_p);
+				definition_pseudo_instruction_p = NULL;
+				break;
+			}
+			else
+				definition_pseudo_instruction_p = NULL;
+			i++;
 		}
 	} while (FALSE);
 
 	if (f_p)
 		fclose(f_p);
 
-	free (definition_pseudo_instruction_p);
+	free (arg3);
+	free (arg2);
+	free (arg1);
+	free (instruction_spl);
 	free (nom_pseudo_instruction);
+	free (definition_pseudo_instruction_p);
+
 	return resultat;
 }
 

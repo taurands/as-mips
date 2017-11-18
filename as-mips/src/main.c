@@ -19,6 +19,7 @@
 #include <reloc.h>
 
 char NOM_DICO_INSTRUCTIONS[] = "src/dictionnaire_instructions.txt";
+char NOM_DICO_PSEUDO[] = "src/dictionnaire_pseudo.txt";
 char NOM_DICO_REGISTRES[] = "src/dictionnaire_registres.txt";
 
 /**
@@ -50,6 +51,7 @@ int main (int argc, char *argv[])
     char *nom_fichier_asm = NULL;
     
     struct Table_s *table_def_instructions_p=NULL;
+    struct Table_s *table_def_pseudo_p=NULL;
     struct Table_s *table_def_registres_p=NULL;
     struct Table_s *table_etiquettes_p=NULL;
     struct Liste_s *liste_lexemes_p=NULL;
@@ -98,6 +100,8 @@ int main (int argc, char *argv[])
     		break;
     	if ((code_retour = charge_def_instruction(&table_def_instructions_p, NOM_DICO_INSTRUCTIONS)))
     		break;
+    	if ((code_retour = charge_def_pseudo(&table_def_pseudo_p, NOM_DICO_PSEUDO)))
+    		break;
     	if ((code_retour = charge_def_registre(&table_def_registres_p, NOM_DICO_REGISTRES)))
     		break;
 
@@ -126,6 +130,7 @@ int main (int argc, char *argv[])
 
     /* ---------------- Libération de la mémoire allouée -------------------*/
 	detruire_table (&table_etiquettes_p);
+    detruire_table (&table_def_pseudo_p);
     detruire_table (&table_def_instructions_p);
     detruire_table (&table_def_registres_p);
 

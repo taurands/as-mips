@@ -83,9 +83,9 @@ struct DefinitionInstruction_s {
  */
 struct RemplacementInstruction_s {
 	char* instruction;						/**< instruction à remplacer */
-	int arg1;								/**< indique la position de l'argument de la pseudo pour l'argument de l'instruction de remplacement */
-	int arg2;								/**< indique la position de l'argument de la pseudo pour l'argument de l'instruction de remplacement */
-	int arg3;								/**< indique la position de l'argument de la pseudo pour l'argument de l'instruction de remplacement */
+	char* arg1;								/**< indique le contenu différenciation double cote ou non */
+	char* arg2;								/**< indique le contenu différenciation double cote ou non */
+	char* arg3;								/**< indique le contenu différenciation double cote ou non */
 };
 
 
@@ -95,8 +95,7 @@ struct RemplacementInstruction_s {
  */
 struct DefinitionPseudoInstruction_s {
 	char* nom;						/**< nom de la pseudo instruction */
-	enum Operandes_e type_ops;		/**< nature de la pseudo instruction */
-	unsigned int nb_ops;			/**< nombre d'opérandes de la pseudo instruction */
+	unsigned int nb_instruction;	/**< nombre d'instruction de la pseudo instruction */
 	struct RemplacementInstruction_s rempl[2];	/**< Information pour le remplacement des instructions */
 };
 

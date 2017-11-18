@@ -1,6 +1,6 @@
 5
-NOP	0R	1	SLL\20%s$0,\20%s$0,\20%s0	0	0	0
-MOVE	2R	1	ADD\20%s,\20%s,\20%s$zero	1	2	0
-NEG	2R	1	SUB\20%s,\20%s$zero,\20%s	1	0	2
-LI	2I	1	ADDI\20%s,\20%s$zero,\20%s	1	0	2
-BLT	3I	2	SLT\20%s$1,\20%s,\20%s	0	2	1	BNE\20%s$1,\20%s$zero,\20%s	0	0	3
+NOP	1	SLL	"$zero"	"$zero"	"0"
+MOVE	1	ADD	1	2	"$zero"
+NEG	1	SUB	1	"$zero"	2
+LI	1	ADDI	1	"$zero"	2
+BLT	2	SLT	"$1"	2	1	BNE	"$1"	"$zero"	3
