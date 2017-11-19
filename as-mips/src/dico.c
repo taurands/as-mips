@@ -320,16 +320,30 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 	struct DefinitionInstruction_s *def_instruction_p = NULL;
 
 	char *nom_instruction = NULL;
+	char *str_hexa = NULL;
 	char car_nature;
 	char car_reloc;
 	int nb_operandes = 0;
 	int i = 0;
+	int j = 0;
 	int nb_mots;
+	int opcode_init;
+	int nb_bits;
+	int signe;
+	int shift;
+	int dest_bit;
+	int LEN_HEXA = 10;
 
 	do {
-		if (!(nom_instruction = calloc(STRLEN, sizeof(char)))) {
+		if (!(nom_instruction = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
 			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'instruction");
+			break;
+		}
+
+		if (!(str_hexa = calloc(LEN_HEXA+1,sizeof(char)))) {
+			resultat = FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer la string contenant opcode_init");
 			break;
 		}
 
@@ -378,7 +392,6 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 				break;
 			}
 
-
 			if (!(def_instruction_p = calloc (1, sizeof(*def_instruction_p)))) {
 				resultat = FAIL_ALLOC;
 				WARNING_MSG ("Plus assez de mémoire pour créer une nouvelle définition d'instruction");
@@ -419,13 +432,62 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 				break;
 			}
 
+			def_instruction_p->nb_ops=nb_operandes;
+
+			if (def_instruction_p->reloc != R_MIPS_PSEUDO) {
+				if (1 != fscanf(f_p, "%s", str_hexa)) {
+						resultat = FAILURE;
+						WARNING_MSG ("Pas de caractère de type syntaxique pour %s", nom_instruction);
+						break;
+				}
+				opcode_init = strtol(str_hexa, NULL, 16); /* Conversion de la chaine en int hexa */
+				def_instruction_p->opcode =opcode_init;
+
+				for (j=0;j<nb_operandes;j++){
+
+
+					if (1 != fscanf(f_p, "%d", &nb_bits)) {
+						resultat = FAILURE;
+						WARNING_MSG ("Pas de caractère de type int pour %s", nom_instruction);
+						break;
+					}
+
+
+					if (1 != fscanf(f_p, "%d", &signe)) {
+						resultat = FAILURE;
+						WARNING_MSG ("Pas de caractère de type int pour %s", nom_instruction);
+						break;
+					}
+
+					if (1 != fscanf(f_p, "%d", &shift)) {
+						resultat = FAILURE;
+						WARNING_MSG ("Pas de caractère de type int pour %s", nom_instruction);
+						break;
+					}
+
+					if (1 != fscanf(f_p, "%d", &dest_bit)) {
+						resultat = FAILURE;
+						WARNING_MSG ("Pas de caractère de type int pour %s", nom_instruction);
+						break;
+					}
+
+					/* Remplissage des structures operandes */
+
+					def_instruction_p->codes[j].nb_bits=nb_bits;
+					def_instruction_p->codes[j].signe=signe;
+					def_instruction_p->codes[j].shift=shift;
+					def_instruction_p->codes[j].dest_bit=dest_bit;
+				}
+			}
+
 			if ((resultat = ajouter_table(*table_definition_pp, def_instruction_p))) {
 				WARNING_MSG ("Le dictionnaire d'instructions contient l'instruction %s en double", def_instruction_p->nom);
 				free(def_instruction_p->nom);
 				break;
 			}
-			else
+			else {
 				def_instruction_p = NULL;
+			}
 			i++;
 		}
 	} while (FALSE);
@@ -433,6 +495,7 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 	if (f_p)
 		fclose(f_p);
 
+	free (str_hexa);
 	free (def_instruction_p);
 	free (nom_instruction);
 	return resultat;
