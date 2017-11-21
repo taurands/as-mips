@@ -46,6 +46,7 @@ struct Instruction_s {
 	struct DefinitionInstruction_s *definition_p;	/**< Définition de l'instruction */
 	unsigned int ligne;								/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	uint32_t decalage;								/**< Décalage de l'instruction */
+	uint32_t op_code;								/**< Code opération de l'instruction */
 	struct Lexeme_s *operandes[3];					/**< Lexème de l'opérande 1 */
 };
 

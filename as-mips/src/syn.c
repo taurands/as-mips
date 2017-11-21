@@ -51,30 +51,36 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
 {
 	int i;
 
-	printf("%5d %08x XXXXXXXX %8s %8s %8s %8s",
+	printf("%3d %08x ",
 			instruction_p->ligne,
-			instruction_p->decalage,
+			instruction_p->decalage);
+	if (instruction_p->definition_p) {
+		printf("%08x %s %s %s %s",
+			instruction_p->op_code,
 			instruction_p->definition_p->nom,
-			instruction_p->operandes[0] ? instruction_p->operandes[0]->data : "    ",
+			instruction_p->operandes[0] ? instruction_p->operandes[0]->data : "",
 			instruction_p->operandes[1] ? instruction_p->operandes[1]->data : "    ",
 			instruction_p->operandes[2] ? instruction_p->operandes[2]->data : "    ");
 
-	for (i=0 ; i<3 ; i++)
-		if (instruction_p->operandes[i] && (instruction_p->operandes[i]->nature==L_SYMBOLE)){
-			if (!donnee_table(table_p, instruction_p->operandes[i]->data)){
-				printf("    0xXXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm inconnu dans la table des étiquettes",
-						0x1B, STYLE_BOLD, COLOR_RED,
-						instruction_p->operandes[i]->data,
-						0x1B, STYLE_BOLD, 0);
-			} else {
-				printf("    0x%08x : symbole %c[%d;%dm%s%c[%d;%dm en section %s",
-						((struct Etiquette_s *)donnee_table(table_p, instruction_p->operandes[i]->data))->decalage,
-						0x1B, STYLE_BOLD, COLOR_GREEN,
-						instruction_p->operandes[i]->data,
-						0x1B, STYLE_BOLD, 0,
-						NOMS_SECTIONS[((struct Etiquette_s *)donnee_table(table_p, instruction_p->operandes[i]->data))->section]);
+		for (i=0 ; i<3 ; i++)
+			if (instruction_p->operandes[i] && (instruction_p->operandes[i]->nature==L_SYMBOLE)){
+				if (!donnee_table(table_p, instruction_p->operandes[i]->data)){
+					printf("    0xXXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm inconnu dans la table des étiquettes",
+							0x1B, STYLE_BOLD, COLOR_RED,
+							instruction_p->operandes[i]->data,
+							0x1B, STYLE_BOLD, 0);
+				} else {
+					printf("    0x%08x : symbole %c[%d;%dm%s%c[%d;%dm en section %s",
+							((struct Etiquette_s *)donnee_table(table_p, instruction_p->operandes[i]->data))->decalage,
+							0x1B, STYLE_BOLD, COLOR_GREEN,
+							instruction_p->operandes[i]->data,
+							0x1B, STYLE_BOLD, 0,
+							NOMS_SECTIONS[((struct Etiquette_s *)donnee_table(table_p, instruction_p->operandes[i]->data))->section]);
+				}
 			}
-		}
+	} else
+		printf("%*s %s", 8, "", "");
+
 	printf("\n");
 }
 
@@ -82,7 +88,7 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
 void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 {
 	/* printf("nom directive %s  numero de ligne %d  decalage %d",donnee_p->lexeme_p->data, donnee_p->ligne, donnee_p->decalage); */
-	printf("%5d %08x ", donnee_p->ligne, donnee_p->decalage);
+	printf("%3d %08x ", donnee_p->ligne, donnee_p->decalage);
 	switch(donnee_p->type) {
 	case D_BYTE:
 		printf("      %02x : byte", donnee_p->valeur.octetNS);
