@@ -809,7 +809,7 @@ int analyser_syntaxe(
 	uint32_t decalage_data=0;
 	uint32_t decalage_bss=0;
 
-	char msg_err[2*STRLEN];
+	char msg_err[2*STRLEN+1];
 
 	struct Noeud_Liste_s *noeud_courant_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;

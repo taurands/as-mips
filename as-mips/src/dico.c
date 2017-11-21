@@ -154,31 +154,31 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 
 
 	do {
-		if (!(nom_pseudo_instruction = calloc(STRLEN, sizeof(char)))) {
+		if (!(nom_pseudo_instruction = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
 			WARNING_MSG ("Plus assez de mémoire pour créer un nom de pseudo instruction");
 			break;
 		}
 
-		if (!(instruction_spl = calloc(STRLEN, sizeof(char)))) {
+		if (!(instruction_spl = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
 			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'instruction supplémentaire");
 			break;
 		}
 
-		if (!(arg1 = calloc(STRLEN, sizeof(char)))) {
+		if (!(arg1 = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
 			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 1 d'instruction");
 			break;
 		}
 
-		if (!(arg2 = calloc(STRLEN, sizeof(char)))) {
+		if (!(arg2 = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
 			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 2 d'instruction");
 			break;
 		}
 
-		if (!(arg3 = calloc(STRLEN, sizeof(char)))) {
+		if (!(arg3 = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
 			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 3 d'instruction");
 			break;
@@ -512,7 +512,7 @@ int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 {
 	int erreur = SUCCESS;
 
-	char *nom_reg=calloc(STRLEN, sizeof(char));
+	char *nom_reg=calloc(STRLEN+1, sizeof(char));
 	int valeur=0;
 	int i=0;
 	int nb_mots;

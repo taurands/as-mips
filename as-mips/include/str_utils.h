@@ -11,6 +11,9 @@
 #define SQ_CHAR '\''
 #define DQ_CHAR '"'
 
+#define xSTR(x) # x
+#define STR(x) xSTR(x)
+
 char *strdup (char* sourceStr);
 char *strlwr (char* sourceStr);
 char *strupr (char* sourceStr);

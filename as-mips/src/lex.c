@@ -523,8 +523,8 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned 
 {
 
     FILE        *fp   = NULL;
-    char         line[STRLEN]; /* original source line */
-    char         res[2*STRLEN]; /* standardised source line, can be longeur due to some possible added spaces*/
+    char         line[STRLEN+1]; /* original source line */
+    char         res[2*STRLEN+1]; /* standardised source line, can be longeur due to some possible added spaces*/
     
     fp = fopen( nom_fichier, "r" );
     if ( NULL == fp ) {
@@ -535,7 +535,7 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned 
 
     while(!feof(fp)) {
         /*read source code line-by-line */
-        if ( NULL != fgets( line, STRLEN-1, fp ) ) {
+        if ( NULL != fgets (line, STRLEN, fp) ) {
             if (strlen(line)) if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';  /* remove final '\n' */
             (*nb_lignes_p)++;
 
