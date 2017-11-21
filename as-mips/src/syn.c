@@ -59,6 +59,12 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
 			instruction_p->op_code,
 			instruction_p->source ? instruction_p->source : "");
 
+		printf("%s %s %s %s",
+		instruction_p->definition_p->nom,
+		instruction_p->operandes[0] ? instruction_p->operandes[0]->data : "",
+		instruction_p->operandes[1] ? instruction_p->operandes[1]->data : "",
+		instruction_p->operandes[2] ? instruction_p->operandes[2]->data : "");
+
 		for (i=0 ; i<3 ; i++)
 			if (instruction_p->operandes[i] && (instruction_p->operandes[i]->nature==L_SYMBOLE)){
 				if (!donnee_table(table_p, instruction_p->operandes[i]->data)){
