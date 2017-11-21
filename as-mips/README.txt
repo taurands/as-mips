@@ -12,6 +12,7 @@ Le répertoire est organisé ainsi :
 │   └── miam.s 
 ├── src
 │   ├── main.c
+│   ├── reloc.c
 │   ├── syn.c
 │   ├── lex.c
 │   ├── dico.c
@@ -19,8 +20,10 @@ Le répertoire est organisé ainsi :
 │   ├── liste.c
 │   ├── str_utils.c
 │   ├── dictionnaire_registres.txt
-│   └── dictionnaire_instructions.txt
+│   ├── dictionnaire_instructions.txt
+│   └── dictionnaire_pseudo.txt
 ├── include
+│   ├── reloc.h
 │   ├── syn.h
 │   ├── lex.h
 │   ├── dico.h
@@ -32,6 +35,7 @@ Le répertoire est organisé ainsi :
 │   └── global.h
 ├── doc
 │   └── livrables
+│       ├── Livrable 3 - 2A SICOM - BERTRAND - TAURAND.pdf
 │       ├── Livrable 2 - 2A SICOM - BERTRAND - TAURAND.pdf
 │       └── Livrable 1 - 2A SICOM - BERTRAND - TAURAND.pdf
 ├── README.txt
