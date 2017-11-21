@@ -48,6 +48,7 @@ struct Instruction_s {
 	uint32_t decalage;								/**< Décalage de l'instruction */
 	uint32_t op_code;								/**< Code opération de l'instruction */
 	struct Lexeme_s *operandes[3];					/**< Lexème de l'opérande 1 */
+	char *source;									/**< Pointeur sur le texte source de cette instruction */
 };
 
 /**

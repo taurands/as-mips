@@ -129,6 +129,7 @@ int main (int argc, char *argv[])
 
 
     /* ---------------- Libération de la mémoire allouée -------------------*/
+
 	detruire_table (&table_etiquettes_p);
     detruire_table (&table_def_pseudo_p);
     detruire_table (&table_def_instructions_p);

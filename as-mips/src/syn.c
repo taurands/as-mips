@@ -55,12 +55,9 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
 			instruction_p->ligne,
 			instruction_p->decalage);
 	if (instruction_p->definition_p) {
-		printf("%08x %s %s %s %s",
+		printf("%08x %-40s",
 			instruction_p->op_code,
-			instruction_p->definition_p->nom,
-			instruction_p->operandes[0] ? instruction_p->operandes[0]->data : "",
-			instruction_p->operandes[1] ? instruction_p->operandes[1]->data : "    ",
-			instruction_p->operandes[2] ? instruction_p->operandes[2]->data : "    ");
+			instruction_p->source ? instruction_p->source : "");
 
 		for (i=0 ; i<3 ; i++)
 			if (instruction_p->operandes[i] && (instruction_p->operandes[i]->nature==L_SYMBOLE)){
@@ -720,6 +717,7 @@ int analyser_instruction(
 				instr_supl_p->definition_p=donnee_table(table_def_instructions_p, "LUI");
 				instr_supl_p->ligne = instruction_p->ligne;
 				instr_supl_p->decalage = *decalage_p;
+				instr_supl_p->source = lexeme_p->data;
 				creer_lexeme(&(instr_supl_p->operandes[0]), "$at", L_REGISTRE, instruction_p->ligne);
 				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[0]);
 
@@ -746,6 +744,7 @@ int analyser_instruction(
 				free(instruction_p);
 				return SUCCESS;
 			} else {
+				instruction_p->source = lexeme_p->data;
 				ajouter_fin_liste(liste_p, instruction_p);
 				instruction_p=NULL;
 				(*decalage_p)+=4;
@@ -761,8 +760,10 @@ int analyser_instruction(
 				instr_supl_p->definition_p = donnee_table(table_def_instructions_p, def_pseudo_p->rempl[i].instruction);
 				instr_supl_p->ligne = instruction_p->ligne;
 				instr_supl_p->decalage = *decalage_p;
+				if (i == 0)
+					instr_supl_p->source = lexeme_p->data;
 
-				for (j=0;j<3;j++) {
+				for (j=0; j<3; j++) {
 					if (def_pseudo_p->rempl[i].arg[j][0] != DQ_CHAR) {
 						nb=strtol(def_pseudo_p->rempl[i].arg[j],NULL,0);
 						if (nb>0) {
@@ -782,6 +783,7 @@ int analyser_instruction(
 		free (instruction_p);
 		return SUCCESS;
 		} else if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, instruction_p))) {
+			instruction_p->source = lexeme_p->data;
 
 			instruction_p=NULL;
 			(*decalage_p)+=4;
