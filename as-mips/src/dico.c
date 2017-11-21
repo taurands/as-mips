@@ -208,7 +208,7 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 
 		while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
-			if (1 != fscanf(f_p,"%s", nom_pseudo_instruction)) {
+			if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_pseudo_instruction)) {
 				resultat = FAILURE;
 				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de la pseudo instruction en cours");
 				break;
@@ -237,22 +237,22 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 			definition_pseudo_instruction_p->nb_instruction=nb_instructions;
 
 			for (j=0; ((resultat == SUCCESS) && (j<nb_instructions));j++) {
-				if (1 != fscanf(f_p,"%s", instruction_spl)) {
+				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", instruction_spl)) {
 					resultat = FAILURE;
 					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
 					break;
 				}
-				if (1 != fscanf(f_p,"%s", arg1)) {
+				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", arg1)) {
 					resultat = FAILURE;
 					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 1 en cours");
 					break;
 				}
-				if (1 != fscanf(f_p,"%s", arg2)) {
+				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", arg2)) {
 					resultat = FAILURE;
 					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 2 en cours");
 					break;
 				}
-				if (1 != fscanf(f_p,"%s", arg3)) {
+				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", arg3)) {
 					resultat = FAILURE;
 					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 3 en cours");
 					break;
@@ -370,7 +370,7 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 		}
 		while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
-			if (1 != fscanf(f_p,"%s", nom_instruction)) {
+			if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_instruction)) {
 				resultat = FAILURE;
 				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
 				break;
@@ -435,7 +435,7 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 			def_instruction_p->nb_ops=nb_operandes;
 
 			if (def_instruction_p->reloc != R_MIPS_PSEUDO) {
-				if (1 != fscanf(f_p, "%s", str_hexa)) {
+				if (1 != fscanf(f_p, "%10s", str_hexa)) {
 						resultat = FAILURE;
 						WARNING_MSG ("Pas de caractère de type syntaxique pour %s", nom_instruction);
 						break;
@@ -528,7 +528,7 @@ int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
-		if (1 != fscanf(f_p,"%s", nom_reg)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nom du registre en cours");
+		if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_reg)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nom du registre en cours");
 		if (1 != fscanf(f_p,"%d", &valeur)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas la valeur du registre en cours");
 
 		def_registre_p=malloc(sizeof(*def_registre_p));
