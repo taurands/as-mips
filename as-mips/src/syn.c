@@ -47,6 +47,13 @@ void detruit_donnee(void *donnee_p)
 	}
 }
 
+/**
+ * @param instruction_p pointeur sur une instruction à lire
+ * @param table_p pointeur sur une table d'instructions
+ * @return Rien
+ * @brief Cette fonction permet d'afficher une instruction
+ *
+ */
 void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table_p)
 {
 	int i;
@@ -87,7 +94,13 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
 	printf("\n");
 }
 
-/* Fonction permettant d’afficher les éléments d’une donnée des setions .data ou .bss */
+/**
+ * @param donnee_p pointeur sur un element de .data ou .bss à lire
+ * @param table_p pointeur sur une table de donnees
+ * @return Rien
+ * @brief Cette fonction permet d'afficher un element des sections .data ou .bss
+ *
+ */
 void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 {
 	/* printf("nom directive %s  numero de ligne %d  decalage %d",donnee_p->lexeme_p->data, donnee_p->ligne, donnee_p->decalage); */
@@ -134,6 +147,13 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 	printf("\n");
 }
 
+/**
+ * @param liste_p pointeur sur une liste générique des éléments de .data ou .bss à lire
+ * @param table_p pointeur sur une table de donnees
+ * @return Rien
+ * @brief Cette fonction permet d'afficher la liste des éléments des sections .data ou .bss
+ *
+ */
 void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p)
 {
 	struct Noeud_Liste_s* noeud_liste_p = NULL;
@@ -151,6 +171,13 @@ void affiche_liste_donnee(struct Liste_s *liste_p, struct Table_s *table_p)
 	printf("\n\n");
 }
 
+/**
+ * @param liste_p pointeur sur une liste générique d'instructions
+ * @param table_p pointeur sur une table d'instructions
+ * @return Rien
+ * @brief Cette fonction permet d'afficher la liste des instructions de la section .text
+ *
+ */
 void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p)
 {
 	struct Noeud_Liste_s* noeud_liste_p=NULL;
@@ -168,6 +195,12 @@ void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p
 	printf("\n\n");
 }
 
+/**
+ * @param table_p pointeur sur la table d'étiquette à remplir
+ * @return Rien
+ * @brief Cette fonction permet d'ajouter une étiquette à une table d'étiquette
+ *
+ */
 void affiche_table_etiquette(struct Table_s *table_p)
 {
 	size_t i, j;
@@ -197,6 +230,13 @@ void affiche_table_etiquette(struct Table_s *table_p)
 	printf("\n\n");
 }
 
+/**
+ * @param decalage_p pointeur sur la valeur à décaler
+ * @param nb_bits nombre de bits de décalage
+ * @return Rien
+ * @brief Cette fonction permet d'efectuer un décalage de nb_bits sur une adresse
+ *
+ */
 void aligner_decalage(uint32_t *decalage_p, unsigned int nb_bits)
 {
 	uint32_t masqueAlignement = 0x00000001;
@@ -205,6 +245,17 @@ void aligner_decalage(uint32_t *decalage_p, unsigned int nb_bits)
 		*decalage_p=(*decalage_p + masqueAlignement) & ~masqueAlignement;
 }
 
+/**
+ * @param lexeme_p pointeur sur le lexeme correspondant
+ * @param section section où est définie l'étiquette
+ * @param decalage_p decalage mémoire par rapport au début de section où est définie l'étiquette
+ * @param tableEtiquettes_p pointeur sur la table où sera ajouter l'étiquette
+ * @param mem_etiq_pp pointeur de pointeur permettant de garder en mémoire l'étiquette intacte
+ * @param msg_err message d'erreur le cas échant
+ * @return SUCCESS si l'étiquette à bien été ajoutée à la table d'étiquette
+ * @brief Cette fonction permet de remplir tous les champs d'une étiquette et d'ajouter l'étiquette à la table d'étiquettes
+ *
+ */
 int enregistrer_etiquette(
 		struct Lexeme_s *lexeme_p,
 		enum Section_e section,
@@ -241,6 +292,15 @@ int enregistrer_etiquette(
 	}
 }
 
+/**
+ * @param lexeme_p pointeur sur le lexeme (nombre) à lire
+ * @param donnee_p pointeur sur la donnée qui sera crée
+ * @param decalage_p pointeur sur la valeur du decalage mémoire par rapport au début de section
+ * @param msg_err message d'erreur le cas échant
+ * @return SUCCESS si le nombre a pu être évalué
+ * @brief Cette fonction permet de créer une donnée à partir d'un nombre
+ *
+ */
 int lire_nombre(
 		struct Lexeme_s *lexeme_p,
 		struct Donnee_s *donnee_p,
@@ -294,9 +354,18 @@ int lire_nombre(
 	return SUCCESS;
 }
 
+/**
+ * @param lignes_lexemes_p pointeur sur la liste de lxèmes obtenu après analyse lexicale
+ * @param liste_p pointeur sur une liste de données qui sera rempli
+ * @param decalage_p pointeur sur la valeur du decalage mémoire par rapport au début de section
+ * @param msg_err message d'erreur le cas échant
+ * @return SUCCESS si le remplissage de la liste liste_p s'est bien déroulé
+ * @brief Cette fonction permet de remplir la liste de données par analyse sur la liste de lexèmes
+ *
+ */
 int analyser_donnee(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
-		struct Liste_s *liste_p,					/**< Pointeur sur la liste des instructions de la section .text */
+		struct Liste_s *liste_p,					/**< Pointeur sur la liste des donnees de la section .data ou .bss */
 		uint32_t *decalage_p,
 		char *msg_err)
 {
@@ -482,6 +551,20 @@ int analyser_donnee(
  *		COMMENT -> ERREUR [label = "sinon"]
  *	}
  *  @enddot
+ *
+ */
+
+/**
+ * @param lignes_lexemes_p pointeur sur la liste de lxèmes obtenu après analyse lexicale
+ * @param lexemes_supl_p pointeur sur la liste des lexemes à rajouter si nécessaire
+ * @param table_def_instructions_p pointeur sur la table "dico" des instructions
+ * @param table_def_pseudo_p pointeur sur la table "dico" des pseudo instructions
+ * @param table_def_registres_p pointeur sur la table "dico" des registres
+ * @param liste_p pointeur sur une liste de données qui sera rempli
+ * @param decalage_p pointeur sur la valeur du decalage mémoire par rapport au début de section
+ * @param msg_err message d'erreur le cas échant
+ * @return SUCCESS si le remplissage de la liste liste_p s'est bien déroulé
+ * @brief Cette fonction permet de remplir la liste des instructions par analyse sur la liste de lexèmes
  *
  */
 int analyser_instruction(
@@ -804,7 +887,16 @@ int analyser_instruction(
 }
 
 /**
- * @return XXX
+ * @param lignes_lexemes_p pointeur sur la liste des lexèmes
+ * @param lexemes_supl_p pointeur sur la liste de lexèmes supplémentaires
+ * @param table_def_instructions_p pointeur sur la table "dico" des instructions
+ * @param table_def_pseudo_p pointeur sur la table "dico" des pseudos instructions
+ * @param table_def_registres_p pointeur sur la table "dico" des registres
+ * @param table_etiquettes_p pointeur sur la table des étiquettes
+ * @param liste_text_p pointeur sur la liste des instructions de la section .text
+ * @param liste_data_p pointeur sur la liste des données de la section .data
+ * @param liste_bss_p pointeur sur la liste des réservations des .space de la section .bss
+ * @return SUCCESS si l'analyse syntaxique s'est bien déroulée
  * @brief effectue l'analyse syntaxique de premier niveau d'une liste de lexemes
  *
  */
