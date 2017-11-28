@@ -103,42 +103,43 @@ void str_instruction(struct Instruction_s * instruction_p, struct Table_s *table
  */
 void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 {
+	unsigned int i,j;
+	struct Etiquette_s *etiquette_p = NULL;
+
 	/* printf("nom directive %s  numero de ligne %d  decalage %d",donnee_p->lexeme_p->data, donnee_p->ligne, donnee_p->decalage); */
-	printf("%3d %08x ", donnee_p->ligne, donnee_p->decalage);
+	if (!(donnee_p->decalage & 3) || (donnee_p->type == D_ASCIIZ)|| (donnee_p->type == D_SPACE)) {
+		printf("%3d %08X ", donnee_p->ligne, donnee_p->decalage);
+	}
 	switch(donnee_p->type) {
 	case D_BYTE:
-		printf("      %02x : byte", donnee_p->valeur.octetNS);
+		printf("%02X", donnee_p->valeur.octetNS);
 		break;
 	case D_HALF:
-		printf("    %04x : half", donnee_p->valeur.demiNS);
+		printf("%04X", donnee_p->valeur.demiNS);
 		break;
 	case D_WORD:
 		if (donnee_p->lexeme_p->nature==L_SYMBOLE) {
-			if (table_p) {
-				if (!donnee_table(table_p, donnee_p->lexeme_p->data)) {
-					printf("XXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm est inconnu dans la table des étiquettes",
-							0x1B, STYLE_BOLD, COLOR_RED,
-							donnee_p->lexeme_p->data,
-							0x1B, STYLE_BOLD, 0);
-				} else {
-					printf("%08x : symbole %c[%d;%dm%s%c[%d;%dm en section %s",
-							((struct Etiquette_s *)donnee_table(table_p, donnee_p->lexeme_p->data))->decalage,
-							0x1B, STYLE_BOLD, COLOR_GREEN,
-							donnee_p->lexeme_p->data,
-							0x1B, STYLE_BOLD, 0,
-							NOMS_SECTIONS[((struct Etiquette_s *)donnee_table(table_p, donnee_p->lexeme_p->data))->section]);
-				}
+			if (table_p && (etiquette_p = donnee_table(table_p, donnee_p->lexeme_p->data))) {
+				printf("%08X", etiquette_p->decalage);
 			} else
-				printf("0xXXXXXXXX : symbole %s", donnee_p->lexeme_p->data);
+				printf("00000000");
 		} else {
-			printf("%08x : word", donnee_p->valeur.motNS);
+			printf("%08X", donnee_p->valeur.motNS);
 		}
 		break;
 	case D_ASCIIZ:
-		printf("\"%s\" : asciiz", donnee_p->valeur.chaine);
+		for (i=0; i<str_unesc_len(donnee_p->lexeme_p->data)-1; ) {
+			j = (unsigned char)(donnee_p->valeur.chaine[i++]);
+			printf("%02X",j);
+			if (!(i&3)  && (i<str_unesc_len(donnee_p->lexeme_p->data)))
+				printf("\n%3d %08X ", donnee_p->ligne, donnee_p->decalage+i);
+		}
 		break;
 	case D_SPACE:
-		printf("%08x : space (nombre d'octets réservés)", donnee_p->valeur.nbOctets);
+		if (donnee_p->valeur.nbOctets>4)
+			printf("0000...");
+		else
+			printf("00?");
 		break;
 	default:
 		printf("type non défini\n");

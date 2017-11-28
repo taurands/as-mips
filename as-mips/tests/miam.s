@@ -22,4 +22,5 @@ lunchtime : .word 12
 	.word menu
 
 .bss
+.space 5,2
 menu:.space 24
