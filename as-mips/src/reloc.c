@@ -82,8 +82,8 @@ int relocation_texte(
 			return FAILURE;
 	else if ((noeud_courant_p = debut_liste(liste_text_p)) && (instruction_p = noeud_courant_p->donnee_p)) {
 		do {
-			if (((instruction_p->definition_p->reloc == R_MIPS_26) || (instruction_p->definition_p->reloc == R_MIPS_HI16)) &&
-				 (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)) {
+			if ((((instruction_p->definition_p->reloc == R_MIPS_26) || (instruction_p->definition_p->reloc == R_MIPS_HI16))) &&
+				(((instruction_p->operandes[instruction_p->definition_p->nb_ops-1]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)))) {
 				relocateur_p = calloc(1,sizeof(*relocateur_p));
 				if (!relocateur_p) {
 					WARNING_MSG ("Impossible de créer un nouveau relocateur");
@@ -105,30 +105,50 @@ int relocation_texte(
 				ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
 			}
 
-			if ((instruction_p->definition_p->reloc == R_MIPS_LO16) &&
-				(instruction_p->operandes[instruction_p->definition_p->nb_ops-2]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->nature == L_SYMBOLE)) {
-				relocateur_p = calloc(1,sizeof(*relocateur_p));
-				if (!relocateur_p) {
-					WARNING_MSG ("Impossible de créer un nouveau relocateur");
-					return FAIL_ALLOC;
-				}
-				relocateur_p->decalage = instruction_p->decalage;
-				relocateur_p->type_reloc = instruction_p->definition_p->reloc;
-				relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->data);
-				if (!relocateur_p->etiquette_p) {
-					relocateur_p->etiquette_p=calloc(1,sizeof(*(relocateur_p->etiquette_p)));
-					if (!relocateur_p->etiquette_p) {
+			if (instruction_p->definition_p->reloc == R_MIPS_LO16) {
+				if ((instruction_p->operandes[instruction_p->definition_p->nb_ops-2]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->nature == L_SYMBOLE)){
+					relocateur_p = calloc(1,sizeof(*relocateur_p));
+					if (!relocateur_p) {
 						WARNING_MSG ("Impossible de créer un nouveau relocateur");
 						return FAIL_ALLOC;
 					}
-					relocateur_p->etiquette_p->section=S_UNDEF;
-					relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-2];
-					ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+					relocateur_p->decalage = instruction_p->decalage;
+					relocateur_p->type_reloc = instruction_p->definition_p->reloc;
+					relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->data);
+					if (!relocateur_p->etiquette_p) {
+						relocateur_p->etiquette_p=calloc(1,sizeof(*(relocateur_p->etiquette_p)));
+						if (!relocateur_p->etiquette_p) {
+							WARNING_MSG ("Impossible de créer un nouveau relocateur");
+							return FAIL_ALLOC;
+						}
+						relocateur_p->etiquette_p->section=S_UNDEF;
+						relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-2];
+						ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+					}
+					ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
 				}
-				ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
+				if ((instruction_p->operandes[instruction_p->definition_p->nb_ops-1]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)){
+					relocateur_p = calloc(1,sizeof(*relocateur_p));
+					if (!relocateur_p) {
+						WARNING_MSG ("Impossible de créer un nouveau relocateur");
+						return FAIL_ALLOC;
+					}
+					relocateur_p->decalage = instruction_p->decalage;
+					relocateur_p->type_reloc = instruction_p->definition_p->reloc;
+					relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->data);
+					if (!relocateur_p->etiquette_p) {
+						relocateur_p->etiquette_p=calloc(1,sizeof(*(relocateur_p->etiquette_p)));
+						if (!relocateur_p->etiquette_p) {
+							WARNING_MSG ("Impossible de créer un nouveau relocateur");
+							return FAIL_ALLOC;
+						}
+						relocateur_p->etiquette_p->section=S_UNDEF;
+						relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-1];
+						ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+					}
+					ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
+				}
 			}
-
-
 		} while ((noeud_courant_p = suivant_liste(liste_text_p)) && (instruction_p = noeud_courant_p->donnee_p));
 	}
 	return SUCCESS;

@@ -88,6 +88,8 @@ struct Donnee_s {
 char *clefEtiquette (void *donnee_p);
 void detruit_donnee (void *donnee_p);
 
+char *type_donnee_to_str(enum Donnee_e donnee);
+
 void affiche_table_etiquette (struct Table_s *table_p);
 void affiche_liste_donnee (struct Liste_s *liste_p, struct Table_s *table_p);
 void affiche_liste_instructions (struct Liste_s *liste_p, struct Table_s *table_p);

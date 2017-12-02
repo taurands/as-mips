@@ -17,6 +17,7 @@
 #include <dico.h>
 #include <table.h>
 #include <reloc.h>
+#include <listage.h>
 
 char NOM_DICO_INSTRUCTIONS[] = "src/dictionnaire_instructions.txt";
 char NOM_DICO_PSEUDO[] = "src/dictionnaire_pseudo.txt";
@@ -61,6 +62,7 @@ int main (int argc, char *argv[])
     struct Liste_s *liste_bss_p=NULL;
     struct Liste_s *liste_reloc_data_p=NULL;
     struct Liste_s *liste_reloc_text_p=NULL;
+    struct Liste_s *liste_lignes_source_p=NULL;
 
     if (argc != 2) {
         print_usage(argv[0]);
@@ -87,9 +89,11 @@ int main (int argc, char *argv[])
     	    		break;
     	if ((code_retour = creer_liste (&liste_reloc_text_p, NULL)))
     	    	    break;
+    	if ((code_retour = creer_liste (&liste_lignes_source_p, (fonctionDestructeur *)detruit_listage)))
+    	    	    break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/
-        lex_load_file(nom_fichier_asm, liste_lexemes_p, &nb_lignes, &nb_etiquettes, &nb_instructions);
+        lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_instructions);
 
         /* ---------------- print the lexical analysis -------------------*/
         DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nb_lignes, nb_etiquettes, nb_instructions);
@@ -113,12 +117,15 @@ int main (int argc, char *argv[])
     	relocation_data(liste_data_p, liste_reloc_data_p, table_etiquettes_p);
 
     	/* affiche les résultats de l'analyse syntaxique */
+    	/*
     	printf("\t\t\t.text\n");
     	affiche_liste_instructions(liste_text_p, table_etiquettes_p);
     	printf("\t\t\t.data\n");
     	affiche_liste_donnee(liste_data_p, table_etiquettes_p);
     	printf("\t\t\t.bss\n");
     	affiche_liste_donnee(liste_bss_p, table_etiquettes_p);
+    	*/
+    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p);
     	printf(".symtab\n");
     	affiche_table_etiquette(table_etiquettes_p);
     	printf("rel.text\n");
@@ -135,6 +142,7 @@ int main (int argc, char *argv[])
     detruire_table (&table_def_instructions_p);
     detruire_table (&table_def_registres_p);
 
+    detruire_liste (&liste_lignes_source_p);
     detruire_liste (&liste_reloc_text_p);
     detruire_liste (&liste_reloc_data_p);
 	detruire_liste (&liste_text_p);

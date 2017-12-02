@@ -31,7 +31,7 @@ char *clefEtiquette(void *donnee_p)
 }
 
 /**
- * @param lexeme_p pointeur sur une donnée à détruire
+ * @param donnee_p pointeur sur une donnée à détruire
  * @return Rien
  * @brief Cette fonction permet de détuire et libérer le contenu d'une donnée
  *
@@ -45,6 +45,28 @@ void detruit_donnee(void *donnee_p)
 			free(((struct Donnee_s *)donnee_p)->valeur.chaine);
 		free(donnee_p);
 	}
+}
+
+/**
+ * @param donnee défini le type de donnée d'une donnée
+ * @return chaine de caractères contenant le nom du type de donnée
+ * @brief Cette fonction permet de donner le nom correspondant à un type de donnée
+ *
+ */
+char *type_donnee_to_str(enum Donnee_e donnee)
+{
+	switch(donnee) {
+		case D_UNDEF:					return "undef";
+		case D_SPACE:					return ".space";
+		case D_BYTE:						return ".byte";
+		case D_HALF:						return ".half";
+		case D_WORD:						return ".word";
+		case D_FLOAT:						return ".float";
+		case D_ASCIIZ:						return ".asciiz";
+		default :
+			ERROR_MSG("Erreur de résolution du nom du type de donnee... Il manque donc au moins un nom à rajouter pour %d", donnee);
+	}
+	return NULL;
 }
 
 /**
@@ -124,14 +146,14 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p)
 			} else
 				printf("00000000");
 		} else {
-			printf("%08X", donnee_p->valeur.motNS);
+			printf("%08X %s %s", donnee_p->valeur.motNS, type_donnee_to_str(donnee_p->type), donnee_p->lexeme_p->data);
 		}
 		break;
 	case D_ASCIIZ:
 		for (i=0; i<str_unesc_len(donnee_p->lexeme_p->data)-1; ) {
 			j = (unsigned char)(donnee_p->valeur.chaine[i++]);
 			printf("%02X",j);
-			if (!(i&3)  && (i<str_unesc_len(donnee_p->lexeme_p->data)))
+			if (!(i&3)  && (i<str_unesc_len(donnee_p->lexeme_p->data)-1))
 				printf("\n%3d %08X ", donnee_p->ligne, donnee_p->decalage+i);
 		}
 		break;

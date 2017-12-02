@@ -18,6 +18,7 @@
 #include <lex.h>
 #include <liste.h>
 #include <table.h>
+#include <listage.h>
 
 /**
  * @enum Etat_lex_e
@@ -519,12 +520,13 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
  * @brief Cette fonction charge le fichier assembleur et effectue sont analyse lexicale
  *
  */
-void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
+void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
 {
 
     FILE        *fp   = NULL;
     char         line[STRLEN+1]; /* original source line */
     char         res[2*STRLEN+1]; /* standardised source line, can be longeur due to some possible added spaces*/
+    struct Listage_s *listage_p = NULL;
     
     fp = fopen( nom_fichier, "r" );
     if ( NULL == fp ) {
@@ -538,6 +540,11 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, unsigned 
         if ( NULL != fgets (line, STRLEN, fp) ) {
             if (strlen(line)) if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';  /* remove final '\n' */
             (*nb_lignes_p)++;
+            listage_p = calloc(1, sizeof(*listage_p));
+            listage_p->ligne = *nb_lignes_p;
+            listage_p->source = strdup(line);
+            ajouter_fin_liste (liste_lignes_source_p, listage_p);
+            listage_p = NULL;
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
