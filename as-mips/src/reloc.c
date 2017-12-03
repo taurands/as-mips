@@ -180,7 +180,7 @@ char *type_reloc_to_str(enum Reloc_e type_reloc)
  * @brief Cette fonction permet de donner le nom correspondant à la section
  *
  */
-char *type_enum_to_str(enum Section_e section)
+char *type_section_to_str(enum Section_e section)
 {
 	switch(section) {
 		case S_TEXT:					return ".text";
@@ -203,7 +203,7 @@ void affiche_relocateur(
 		struct Relocateur_s * relocateur_p)						/**< Pointeur sur un relocateur */
 {
 	if (relocateur_p->etiquette_p->section != S_UNDEF) {
-		printf("%08x\t%s\t%-5s:%08x\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),type_enum_to_str(relocateur_p->etiquette_p->section),relocateur_p->etiquette_p->decalage,relocateur_p->etiquette_p->lexeme_p->data);
+		printf("%08x\t%s\t%-5s:%08x\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),type_section_to_str(relocateur_p->etiquette_p->section),relocateur_p->etiquette_p->decalage,relocateur_p->etiquette_p->lexeme_p->data);
 	} else {
 		printf("%08x\t%s\t[UNDEFINED]\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),relocateur_p->etiquette_p->lexeme_p->data);
 	}

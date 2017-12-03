@@ -33,6 +33,7 @@ enum Reloc_e {
  	R_MIPS_26=1,				/**< Dans liste_text_p si instruction = J ou JAL et argument = SYMBOLE */
  	R_MIPS_HI16=2,				/**< Dans liste_text_p si instruction = LWI ou SWI et argument = SYMBOLE */
  	R_MIPS_LO16=3,				/**< Dans liste_text_p si instruction = LWI ou SWI et argument = SYMBOLE */
+ 	R_MIPS_REL=4,				/**< Dans liste_text_p si instruction = BRANCH... et argument = SYMBOLE */
 };
 
 /**

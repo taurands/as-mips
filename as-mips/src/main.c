@@ -125,7 +125,7 @@ int main (int argc, char *argv[])
     	printf("\t\t\t.bss\n");
     	affiche_liste_donnee(liste_bss_p, table_etiquettes_p);
     	*/
-    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p);
+    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, table_etiquettes_p);
     	printf(".symtab\n");
     	affiche_table_etiquette(table_etiquettes_p);
     	printf("rel.text\n");

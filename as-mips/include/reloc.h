@@ -23,7 +23,7 @@ int relocation_data(struct Liste_s *liste_data_p, struct Liste_s *liste_reloc_da
 int relocation_texte(struct Liste_s *liste_text_p, struct Liste_s *liste_reloc_text_p, struct Table_s *table_etiquettes_p);
 
 char *type_reloc_to_str(enum Reloc_e type_reloc);
-char *type_enum_to_str(enum Section_e section);
+char *type_section_to_str(enum Section_e section);
 
 void affiche_relocateur(struct Relocateur_s *relocateur_p);
 void affiche_liste_relocation(struct Liste_s *liste_reloc_data_p);
