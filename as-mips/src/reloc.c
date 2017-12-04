@@ -224,15 +224,12 @@ void affiche_liste_relocation(
 	if (!liste_reloc_p) {
 		printf("La liste rel.data n'existe pas !\n");
 	} else {
-		if (!(liste_reloc_p->nb_elts)) {
-			printf("La liste rel.data est vide\n");
-		} else {
+		if (liste_reloc_p->nb_elts) {
 			for (noeud_liste_p = debut_liste (liste_reloc_p) ; (noeud_liste_p) ; noeud_liste_p = suivant_liste (liste_reloc_p)) {
 				relocateur_p = noeud_liste_p->donnee_p;
 				affiche_relocateur(relocateur_p);
 			}
 		}
 	}
-	printf("\n\n");
 }
 

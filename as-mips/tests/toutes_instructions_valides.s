@@ -69,3 +69,4 @@ lunchtime:.word 32000, lol
 .bss
 titi:.space 12
 .space 05,0xF
+.space 1, 2, 3, 4, 5

@@ -578,7 +578,10 @@ int analyser_instruction(
 					etat = I_B_BASE;
 				} else {
 					instruction_p->operandes[1] = lexeme_p;
-					etat = I_B_PO;
+					if (lexeme_p->nature == L_SYMBOLE)
+						etat = SUITE;
+					else
+						etat = I_B_PO;
 				}
 				break;
 			case I_B_PO:
@@ -912,7 +915,7 @@ int analyser_syntaxe(
 				} else if ((lexeme_p->nature==L_DIRECTIVE) && ((!strcmp(lexeme_p->data, NOMS_SECTIONS[S_BSS])))) {
 					section = S_BSS;
 					etat = SUITE;
-				} else if ((section==S_INIT) && (lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".set")))
+				} else if ((lexeme_p->nature==L_DIRECTIVE) && (!strcmp(lexeme_p->data, ".set")))
 					etat=OPTION;
 				else {
 					etat=ERREUR;

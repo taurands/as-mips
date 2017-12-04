@@ -132,8 +132,14 @@ void affiche_element_databss(struct Donnee_s *donnee_p, struct Table_s *table_p,
 	case D_SPACE:
 		if (donnee_p->valeur.nbOctets>4)
 			printf("0000...  ");
-		else
-			printf("00?      ");
+		else if (donnee_p->valeur.nbOctets == 4)
+			printf("00000000 ");
+		else if (donnee_p->valeur.nbOctets == 3)
+			printf("000000   ");
+		else if (donnee_p->valeur.nbOctets == 2)
+			printf("0000     ");
+		else if (donnee_p->valeur.nbOctets == 1)
+			printf("00       ");
 		break;
 	default:
 		printf("type non défini\n");
@@ -204,9 +210,8 @@ void affiche_table_etiquette(struct Table_s *table_p)
 	if (!table_p) {
 		printf("La table d'étiquette n'existe pas !\n");
 	} else {
-		if (!(table_p->nbElts)) {
-			printf("La table d'étiquette est vide\n");
-		} else {
+    	printf("\n.symtab\n");
+		if (table_p->nbElts) {
 			if (table_p) {
 				j=0;
 				for (i=0; i<table_p->nbEltsMax; i++)
@@ -222,7 +227,6 @@ void affiche_table_etiquette(struct Table_s *table_p)
 			}
 		}
 	}
-	printf("\n\n");
 }
 
 /**
@@ -233,7 +237,7 @@ void affiche_table_etiquette(struct Table_s *table_p)
  * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
  * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
-void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p, struct Table_s *table_etiquettes_p)
+void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p, struct Table_s *table_etiquettes_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_reloc_data_p)
 {
 	struct Noeud_Liste_s *noeud_listage_p = NULL;
 	struct Noeud_Liste_s *noeud_instruction_p = NULL;
@@ -286,5 +290,12 @@ void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *lis
 			noeud_listage_p = suivant_liste (liste_lignes_source_p);
 
 		}
+    	affiche_table_etiquette(table_etiquettes_p);
+    	printf("\nrel.text\n");
+    	affiche_liste_relocation(liste_reloc_text_p);
+    	printf("\nrel.data\n");
+    	affiche_liste_relocation(liste_reloc_data_p);
+    	printf("\n");
+
 	}
 }

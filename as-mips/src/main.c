@@ -96,8 +96,10 @@ int main (int argc, char *argv[])
         lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_instructions);
 
         /* ---------------- print the lexical analysis -------------------*/
+        /*
         DEBUG_MSG("Le fichier source comporte %u lignes, %u étiquettes et %u instructions", nb_lignes, nb_etiquettes, nb_instructions);
     	visualisation_liste_lexemes(liste_lexemes_p);
+    	*/
 
     	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
     	if ((code_retour = creer_table(&table_etiquettes_p, nb_etiquettes, clefEtiquette, NULL)))
@@ -125,13 +127,7 @@ int main (int argc, char *argv[])
     	printf("\t\t\t.bss\n");
     	affiche_liste_donnee(liste_bss_p, table_etiquettes_p);
     	*/
-    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, table_etiquettes_p);
-    	printf(".symtab\n");
-    	affiche_table_etiquette(table_etiquettes_p);
-    	printf("rel.text\n");
-    	affiche_liste_relocation(liste_reloc_text_p);
-    	printf("rel.data\n");
-    	affiche_liste_relocation(liste_reloc_data_p);
+    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
     } while (FALSE);
 
 

@@ -23,6 +23,6 @@ void affiche_table_etiquette (struct Table_s *table_p);
 void affiche_liste_donnee (struct Liste_s *liste_p, struct Table_s *table_p);
 void affiche_liste_instructions (struct Liste_s *liste_p, struct Table_s *table_p);
 
-void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p, struct Table_s *table_etiquettes_p);
+void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p, struct Table_s *table_etiquettes_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_reloc_data_p);
 
 #endif /* _LISTAGE_H_ */
