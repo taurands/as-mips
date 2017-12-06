@@ -20,7 +20,7 @@ toto: tata:    JAL viteviteauru
 
 .data
 lunchtime : .word 12
-	.word menu
+	.word menu, quid
 
 .bss
 .space 5,2
