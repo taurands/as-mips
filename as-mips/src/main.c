@@ -63,6 +63,7 @@ int main (int argc, char *argv[])
     struct Liste_s *liste_reloc_data_p=NULL;
     struct Liste_s *liste_reloc_text_p=NULL;
     struct Liste_s *liste_lignes_source_p=NULL;
+    struct Liste_s *liste_etiquette_p=NULL;
 
     if (argc != 2) {
         print_usage(argv[0]);
@@ -86,11 +87,13 @@ int main (int argc, char *argv[])
     	if ((code_retour = creer_liste (&liste_bss_p, (fonctionDestructeur *)detruit_donnee)))
     		break;
     	if ((code_retour = creer_liste (&liste_reloc_data_p, NULL)))
-    	    		break;
+    		break;
     	if ((code_retour = creer_liste (&liste_reloc_text_p, NULL)))
-    	    	    break;
+    		break;
     	if ((code_retour = creer_liste (&liste_lignes_source_p, (fonctionDestructeur *)detruit_listage)))
-    	    	    break;
+    		break;
+    	if ((code_retour = creer_liste (&liste_etiquette_p, (fonctionDestructeur *)detruit_etiquette)))
+    		break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/
         lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_instructions);
@@ -112,11 +115,11 @@ int main (int argc, char *argv[])
     		break;
 
     	/* effectue l'analyse syntaxique */
-    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
+    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, liste_etiquette_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
 
     	/* Effectue l'analyse des relocations */
-    	relocation_texte(liste_text_p, liste_reloc_text_p, table_etiquettes_p);
-    	relocation_data(liste_data_p, liste_reloc_data_p, table_etiquettes_p);
+    	relocation_texte(liste_text_p, liste_reloc_text_p, liste_etiquette_p, table_etiquettes_p);
+    	relocation_data(liste_data_p, liste_reloc_data_p, liste_etiquette_p, table_etiquettes_p);
 
     	/* affiche les résultats de l'analyse syntaxique */
     	/*
@@ -127,17 +130,19 @@ int main (int argc, char *argv[])
     	printf("\t\t\t.bss\n");
     	affiche_liste_donnee(liste_bss_p, table_etiquettes_p);
     	*/
-    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
+    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
     } while (FALSE);
 
 
     /* ---------------- Libération de la mémoire allouée -------------------*/
+
 
 	detruire_table (&table_etiquettes_p);
     detruire_table (&table_def_pseudo_p);
     detruire_table (&table_def_instructions_p);
     detruire_table (&table_def_registres_p);
 
+    detruire_liste (&liste_etiquette_p);
     detruire_liste (&liste_lignes_source_p);
     detruire_liste (&liste_reloc_text_p);
     detruire_liste (&liste_reloc_data_p);

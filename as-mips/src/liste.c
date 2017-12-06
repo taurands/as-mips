@@ -87,26 +87,33 @@ int ajouter_debut_liste(struct Liste_s *liste_p, void *donnee_p)
 		return FAILURE;
 }
 
+/**
+ * @param liste_p pointeur sur une liste générique simplement chaînée
+ * @param donnee_p Pointeur sur la donnée à insérer
+ * @return FAILURE si la liste n'existe pas, FAIL_ALLOC en cas d'impossibilité d'allocation mémoire ou SUCCESS si la donnée est bien insérée
+ * @brief Insère un nouvel élément après l'élément courant de la liste
+ */
 int ajouter_courant_liste (struct Liste_s *liste_p, void *donnee_p)
 {
 	struct Noeud_Liste_s *noeud_p = NULL;
 
 	if (liste_p) {
 		if (!liste_p->courant_p)
-			return ajouter_fin_liste (v, donnee_p);
+			return ajouter_fin_liste (liste_p, donnee_p);
 		else {
 			noeud_p=malloc(sizeof(*noeud_p));
 			if (!noeud_p)
 				return FAIL_ALLOC;
 
 			noeud_p->donnee_p = donnee_p;
-			noeud_p->suivant_p = liste_p->debut_p;
-			liste_p->debut_p = noeud_p;
+			noeud_p->suivant_p = liste_p->courant_p->suivant_p;
+			liste_p->courant_p->suivant_p = noeud_p;
 			liste_p->courant_p = noeud_p;
 
-			/* Cas où la liste était vide et que ce sera le premier élément */
-			if (!liste_p->fin_p)
-				liste_p->fin_p = liste_p->debut_p;
+
+			/* Cas où l'on est le dernier élément de la liste */
+			if (!liste_p->courant_p->suivant_p)
+				liste_p->fin_p = liste_p->courant_p;
 			liste_p->nb_elts++;
 			return SUCCESS;
 		}

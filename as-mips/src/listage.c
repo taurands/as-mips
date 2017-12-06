@@ -196,13 +196,13 @@ void affiche_liste_instructions(struct Liste_s *liste_p, struct Table_s *table_p
 	printf("\n\n");
 }
 
-/**
+/** XXX a supprimer lorsque la nouvelle fonction marche
  * @param table_p pointeur sur la table d'étiquette à remplir
  * @return Rien
  * @brief Cette fonction permet d'ajouter une étiquette à une table d'étiquette
  *
  */
-void affiche_table_etiquette(struct Table_s *table_p)
+void affiche_table_etiquette_old(struct Table_s *table_p)
 {
 	size_t i, j;
 
@@ -230,6 +230,32 @@ void affiche_table_etiquette(struct Table_s *table_p)
 }
 
 /**
+ * @param table_p pointeur sur la table d'étiquette à remplir
+ * @return Rien
+ * @brief Cette fonction permet d'ajouter une étiquette à une table d'étiquette
+ *
+ */
+void affiche_table_etiquette(struct Liste_s *liste_etiquette_p)
+{
+	struct Etiquette_s *etiquette_p = NULL;
+	struct Noeud_Liste_s *noeud_p = NULL;
+	if (!liste_etiquette_p) {
+		printf("La table d'étiquette n'existe pas !\n");
+	} else {
+    	printf("\n.symtab\n");
+    	noeud_p = debut_liste (liste_etiquette_p);
+    	while (noeud_p) {
+    		etiquette_p = noeud_p->donnee_p;
+    		if (etiquette_p->section != S_UNDEF)
+    			printf("%3d\t%-5s:%08x\t%s\n",etiquette_p->lexeme_p->ligne,type_section_to_str(etiquette_p->section),etiquette_p->decalage,etiquette_p->lexeme_p->data);
+    		else
+    			printf("%3d\t[UNDEFINED]\t%s\n",etiquette_p->lexeme_p->ligne,etiquette_p->lexeme_p->data);
+    		noeud_p = suivant_liste (liste_etiquette_p);
+    	}
+	}
+}
+
+/**
  * @param donnee_p pointeur sur un listage à détruire
  * @return Rien
  * @brief Cette fonction permet de détuire et libérer le contenu d'un listage
@@ -237,7 +263,7 @@ void affiche_table_etiquette(struct Table_s *table_p)
  * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
  * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
-void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p, struct Table_s *table_etiquettes_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_reloc_data_p)
+void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_reloc_data_p)
 {
 	struct Noeud_Liste_s *noeud_listage_p = NULL;
 	struct Noeud_Liste_s *noeud_instruction_p = NULL;
@@ -290,7 +316,7 @@ void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *lis
 			noeud_listage_p = suivant_liste (liste_lignes_source_p);
 
 		}
-    	affiche_table_etiquette(table_etiquettes_p);
+    	affiche_table_etiquette(liste_etiquette_p);
     	printf("\nrel.text\n");
     	affiche_liste_relocation(liste_reloc_text_p);
     	printf("\nrel.data\n");

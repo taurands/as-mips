@@ -87,11 +87,12 @@ struct Donnee_s {
 
 char *clefEtiquette (void *donnee_p);
 void detruit_donnee (void *donnee_p);
+void detruit_etiquette(void *donnee_p);
 
 char *type_donnee_to_str(enum Donnee_e donnee);
 
 int analyser_syntaxe (struct Liste_s *lignes_lexemes_p, struct Liste_s *lexemes_supl_p,
-		struct Table_s *table_def_instructions_p, struct Table_s *table_def_pseudo_p, struct Table_s *table_def_registres_p, struct Table_s *table_etiquettes_p,
+		struct Table_s *table_def_instructions_p, struct Table_s *table_def_pseudo_p, struct Table_s *table_def_registres_p, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p,
 		struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p);
 
 #endif /* _SYN_H_ */

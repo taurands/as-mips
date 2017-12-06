@@ -48,6 +48,15 @@ void detruit_donnee(void *donnee_p)
 }
 
 /**
+ * @param donnee_p pointeur sur une étiquette à détruire
+ * @return Rien
+ * @brief Cette fonction permet de détuire le pointeur sur l'étiquette mais pas l'étiquette qui sera détruite dans la table d'étiquette
+ */
+void detruit_etiquette(void *donnee_p)
+{
+}
+
+/**
  * @param donnee défini le type de donnée d'une donnée
  * @return chaine de caractères contenant le nom du type de donnée
  * @brief Cette fonction permet de donner le nom correspondant à un type de donnée
@@ -101,6 +110,7 @@ int enregistrer_etiquette(
 		struct Lexeme_s *lexeme_p,
 		enum Section_e section,
 		uint32_t *decalage_p,
+		struct Liste_s *liste_etiquette_p,
 		struct Table_s *tableEtiquettes_p,
 		struct Etiquette_s **mem_etiq_pp,
 		char *msg_err)
@@ -119,6 +129,7 @@ int enregistrer_etiquette(
 	etiquetteCourante_p->decalage = *decalage_p;
 	etiquetteCourante_p->ligne = lexeme_p->ligne;
 
+	ajouter_courant_liste (liste_etiquette_p, etiquetteCourante_p);
 	erreur = ajouter_table(tableEtiquettes_p, etiquetteCourante_p);
 	if (SUCCESS== erreur) {
 		INFO_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElts, (*lexeme_pp)->data, *decalage_p);
@@ -750,6 +761,7 @@ int analyser_syntaxe(
 		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
 		struct Table_s *table_def_pseudo_p,			/**< Pointeur sur la table "dico" des pseudos instructions */
 		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
+		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
 		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
 		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
 		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
@@ -792,14 +804,14 @@ int analyser_syntaxe(
 					etat=INIT;
 				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) {
 					if (section == S_TEXT)
-						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_text, table_etiquettes_p, NULL, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_text, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 					else if (section == S_DATA) {
-						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_data, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_data, liste_etiquette_p, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
 						if ((code_erreur == SUCCESS) && (mem_etiq_table[index_mem]))
 							index_mem++;
 					}
 					else if (section == S_BSS)
-						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_bss, table_etiquettes_p, NULL, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_bss, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;

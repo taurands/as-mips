@@ -26,11 +26,16 @@
 int relocation_data(
 		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
 		struct Liste_s *liste_reloc_data_p,			/**< Pointeur sur la liste des différentes relocations dans la section rel.data */
+		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes rangées dans l'ordre des numéros de ligne */
 		struct Table_s *table_etiquettes_p)			/**< Pointeur sur la table des etiquettes */
 {
 	struct Noeud_Liste_s *noeud_courant_p = NULL;
+	struct Noeud_Liste_s *noeud_etiquette_p = NULL;
+	struct Noeud_Liste_s *noeud_etiquette_suivant_p = NULL;
 	struct Donnee_s *donnee_p = NULL;
 	struct Relocateur_s *relocateur_p=NULL;
+	struct Etiquette_s *etiquette_courante_p = NULL;
+	struct Etiquette_s *etiquette_suivante_p = NULL;
 
 	if (!liste_data_p || !liste_reloc_data_p)
 			return FAILURE;
@@ -54,6 +59,13 @@ int relocation_data(
 					relocateur_p->etiquette_p->section=S_UNDEF;
 					relocateur_p->etiquette_p->lexeme_p=donnee_p->lexeme_p;
 					ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+
+					noeud_etiquette_p = debut_liste (liste_etiquette_p);
+					while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
+						  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+						noeud_etiquette_p = suivant_liste (liste_etiquette_p);
+					}
+					ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);
 				}
 				ajouter_fin_liste(liste_reloc_data_p, relocateur_p);
 			}
@@ -72,11 +84,16 @@ int relocation_data(
 int relocation_texte(
 		struct Liste_s *liste_text_p,
 		struct Liste_s *liste_reloc_text_p,
+		struct Liste_s *liste_etiquette_p,
 		struct Table_s *table_etiquettes_p)
 {
 	struct Noeud_Liste_s *noeud_courant_p = NULL;
+	struct Noeud_Liste_s *noeud_etiquette_p = NULL;
+	struct Noeud_Liste_s *noeud_etiquette_suivant_p = NULL;
 	struct Instruction_s *instruction_p = NULL;
 	struct Relocateur_s *relocateur_p=NULL;
+	struct Etiquette_s *etiquette_courante_p = NULL;
+	struct Etiquette_s *etiquette_suivante_p = NULL;
 
 	if (!liste_text_p || !liste_reloc_text_p || !table_etiquettes_p)
 			return FAILURE;
@@ -101,6 +118,13 @@ int relocation_texte(
 					relocateur_p->etiquette_p->section=S_UNDEF;
 					relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-1];
 					ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+
+					noeud_etiquette_p = debut_liste (liste_etiquette_p);
+					while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
+						  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+						noeud_etiquette_p = suivant_liste (liste_etiquette_p);
+					}
+					ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);
 				}
 				ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
 			}
@@ -124,6 +148,13 @@ int relocation_texte(
 						relocateur_p->etiquette_p->section=S_UNDEF;
 						relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-2];
 						ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+
+						noeud_etiquette_p = debut_liste (liste_etiquette_p);
+						while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
+							  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+							noeud_etiquette_p = suivant_liste (liste_etiquette_p);
+						}
+						ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);
 					}
 					ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
 				}
@@ -145,6 +176,13 @@ int relocation_texte(
 						relocateur_p->etiquette_p->section=S_UNDEF;
 						relocateur_p->etiquette_p->lexeme_p=instruction_p->operandes[instruction_p->definition_p->nb_ops-1];
 						ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
+
+						noeud_etiquette_p = debut_liste (liste_etiquette_p);
+						while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
+							  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+							noeud_etiquette_p = suivant_liste (liste_etiquette_p);
+						}
+						ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);
 					}
 					ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
 				}
