@@ -61,8 +61,8 @@ int relocation_data(
 					ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
 
 					noeud_etiquette_p = debut_liste (liste_etiquette_p);
-					while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
-						  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+					while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne) &&
+						  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne)) {
 						noeud_etiquette_p = suivant_liste (liste_etiquette_p);
 					}
 					ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);
@@ -120,8 +120,8 @@ int relocation_texte(
 					ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
 
 					noeud_etiquette_p = debut_liste (liste_etiquette_p);
-					while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
-						  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+					while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne) &&
+						  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne)) {
 						noeud_etiquette_p = suivant_liste (liste_etiquette_p);
 					}
 					ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);
@@ -150,8 +150,8 @@ int relocation_texte(
 						ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
 
 						noeud_etiquette_p = debut_liste (liste_etiquette_p);
-						while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
-							  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+						while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne) &&
+							  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne)) {
 							noeud_etiquette_p = suivant_liste (liste_etiquette_p);
 						}
 						ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);
@@ -178,8 +178,8 @@ int relocation_texte(
 						ajouter_table(table_etiquettes_p, relocateur_p->etiquette_p);
 
 						noeud_etiquette_p = debut_liste (liste_etiquette_p);
-						while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->ligne) &&
-							  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne < relocateur_p->etiquette_p->ligne)) {
+						while (noeud_etiquette_p && (etiquette_courante_p = noeud_etiquette_p->donnee_p) && (etiquette_courante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne) &&
+							  (noeud_etiquette_suivant_p = noeud_etiquette_p->suivant_p) && (etiquette_suivante_p = noeud_etiquette_suivant_p->donnee_p) && (etiquette_suivante_p->ligne <= relocateur_p->etiquette_p->lexeme_p->ligne)) {
 							noeud_etiquette_p = suivant_liste (liste_etiquette_p);
 						}
 						ajouter_courant_liste (liste_etiquette_p, relocateur_p->etiquette_p);

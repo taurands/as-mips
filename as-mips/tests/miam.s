@@ -15,7 +15,8 @@ boucle:
     J boucle
     BLT $at, $sp, boucle
 byebye:
-toto:    JAL viteviteauru
+toto: tata:    JAL viteviteauru
+	JAL encoreunindefini
 
 .data
 lunchtime : .word 12
