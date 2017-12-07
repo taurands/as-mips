@@ -25,8 +25,8 @@
 void detruit_listage (void *donnee_p)
 {
 	if (donnee_p) {
-		if (((struct Listage_s *)donnee_p)->source)
-			free(((struct Listage_s *)donnee_p)->source);
+		if (((struct Ligne_Chaine_s *)donnee_p)->chaine)
+			free(((struct Ligne_Chaine_s *)donnee_p)->chaine);
 		free(donnee_p);
 	}
 }
@@ -235,22 +235,28 @@ void affiche_table_etiquette_old(struct Table_s *table_p)
  * @brief Cette fonction permet d'ajouter une étiquette à une table d'étiquette
  *
  */
-void affiche_table_etiquette(struct Liste_s *liste_etiquette_p)
+void affiche_table_etiquette(struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p)
 {
 	struct Etiquette_s *etiquette_p = NULL;
 	struct Noeud_Liste_s *noeud_p = NULL;
-	if (!liste_etiquette_p) {
+	struct Ligne_Chaine_s *sym_tab_elt_p;
+
+	if (!liste_etiquette_p || !table_etiquettes_p) {
 		printf("La table d'étiquette n'existe pas !\n");
 	} else {
-    	printf("\n.symtab\n");
     	noeud_p = debut_liste (liste_etiquette_p);
     	while (noeud_p) {
-    		etiquette_p = noeud_p->donnee_p;
-    		if (etiquette_p->section != S_UNDEF)
-    			printf("%3d\t%-5s:%08x\t%s\n",etiquette_p->lexeme_p->ligne,type_section_to_str(etiquette_p->section),etiquette_p->decalage,etiquette_p->lexeme_p->data);
-    		else
-    			printf("%3d\t[UNDEFINED]\t%s\n",etiquette_p->lexeme_p->ligne,etiquette_p->lexeme_p->data);
-    		noeud_p = suivant_liste (liste_etiquette_p);
+    		sym_tab_elt_p = noeud_p->donnee_p;
+    		etiquette_p = sym_tab_elt_p ? donnee_table (table_etiquettes_p, sym_tab_elt_p->chaine) : NULL;
+    		if (etiquette_p && (etiquette_p->lexeme_p->ligne == sym_tab_elt_p->ligne)) {
+    			if (etiquette_p->section != S_UNDEF)
+    				printf("%3d\t%-5s:%08x\t%s\n",etiquette_p->lexeme_p->ligne,type_section_to_str(etiquette_p->section),etiquette_p->decalage,etiquette_p->lexeme_p->data);
+    			else
+    				printf("%3d\t[UNDEFINED]\t%s\n",etiquette_p->lexeme_p->ligne,etiquette_p->lexeme_p->data);
+    		} else {
+    			DEBUG_MSG("Ignore %d %s", sym_tab_elt_p ? sym_tab_elt_p->ligne : -1, sym_tab_elt_p ? sym_tab_elt_p->chaine : "");
+    		}
+			noeud_p = suivant_liste (liste_etiquette_p);
     	}
 	}
 }
@@ -269,7 +275,7 @@ void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *lis
 	struct Noeud_Liste_s *noeud_instruction_p = NULL;
 	struct Noeud_Liste_s *noeud_data_p = NULL;
 	struct Noeud_Liste_s *noeud_bss_p = NULL;
-	struct Listage_s *listage_p = NULL;
+	struct Ligne_Chaine_s *listage_p = NULL;
 	struct Instruction_s *instruction_p = NULL;
 	struct Donnee_s *donnee_data_p = NULL;
 	struct Donnee_s *donnee_bss_p = NULL;
@@ -294,7 +300,7 @@ void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *lis
 			if (noeud_instruction_p && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
 				printf("%3d %08x ",listage_p->ligne, instruction_p->decalage);
 				if (instruction_p->definition_p)
-					printf("%08x %s\n", instruction_p->op_code, listage_p->source ? listage_p->source : "");
+					printf("%08x %s\n", instruction_p->op_code, listage_p->chaine ? listage_p->chaine : "");
 				while ((noeud_instruction_p  = suivant_liste (liste_text_p)) && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
 					if (noeud_instruction_p && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
 									printf("%3d %08x ",listage_p->ligne, instruction_p->decalage);
@@ -304,19 +310,20 @@ void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *lis
 				}
 
 			} else if (noeud_data_p && (donnee_data_p = noeud_data_p->donnee_p) && (donnee_data_p->ligne == listage_p->ligne)) {
-				affiche_element_databss (donnee_data_p, table_etiquettes_p, listage_p->source ? listage_p->source : "");
+				affiche_element_databss (donnee_data_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "");
 				while ((noeud_data_p = suivant_liste (liste_data_p)) && (donnee_data_p = noeud_data_p->donnee_p) && (donnee_data_p->ligne == listage_p->ligne))
 					affiche_element_databss (donnee_data_p, table_etiquettes_p, "");
 			} else if (noeud_bss_p && (donnee_bss_p = noeud_bss_p->donnee_p) && (donnee_bss_p->ligne == listage_p->ligne)) {
-				affiche_element_databss (donnee_bss_p, table_etiquettes_p, listage_p->source ? listage_p->source : "");
+				affiche_element_databss (donnee_bss_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "");
 				while ((noeud_bss_p = suivant_liste (liste_bss_p)) && (donnee_bss_p = noeud_bss_p->donnee_p) && (donnee_bss_p->ligne == listage_p->ligne))
 					affiche_element_databss (donnee_bss_p, table_etiquettes_p, "");
 			} else
-				printf ("%3d                   %s\n",listage_p->ligne, listage_p->source ? listage_p->source : "");
+				printf ("%3d                   %s\n",listage_p->ligne, listage_p->chaine ? listage_p->chaine : "");
 			noeud_listage_p = suivant_liste (liste_lignes_source_p);
 
 		}
-    	affiche_table_etiquette(liste_etiquette_p);
+    	printf("\n.symtab\n");
+    	affiche_table_etiquette(liste_etiquette_p, table_etiquettes_p);
     	printf("\nrel.text\n");
     	affiche_liste_relocation(liste_reloc_text_p);
     	printf("\nrel.data\n");

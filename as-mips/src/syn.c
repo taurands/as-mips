@@ -21,6 +21,7 @@
 #include <lex.h>
 #include <syn.h>
 #include <reloc.h>
+#include <listage.h>
 
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss", "undef"};
 const char *NOMS_DATA[] = {".space", ".byte", ".half", ".word", ".float", ".asciiz"};
@@ -45,15 +46,6 @@ void detruit_donnee(void *donnee_p)
 			free(((struct Donnee_s *)donnee_p)->valeur.chaine);
 		free(donnee_p);
 	}
-}
-
-/**
- * @param donnee_p pointeur sur une étiquette à détruire
- * @return Rien
- * @brief Cette fonction permet de détuire le pointeur sur l'étiquette mais pas l'étiquette qui sera détruite dans la table d'étiquette
- */
-void detruit_etiquette(void *donnee_p)
-{
 }
 
 /**
@@ -109,7 +101,7 @@ void aligner_decalage(uint32_t *decalage_p, unsigned int nb_bits)
 int enregistrer_etiquette(
 		struct Lexeme_s *lexeme_p,
 		enum Section_e section,
-		uint32_t *decalage_p,
+		uint32_t decalage,
 		struct Liste_s *liste_etiquette_p,
 		struct Table_s *tableEtiquettes_p,
 		struct Etiquette_s **mem_etiq_pp,
@@ -117,30 +109,50 @@ int enregistrer_etiquette(
 {
 	int erreur=SUCCESS;
 	struct Etiquette_s *etiquetteCourante_p = NULL;
+	struct Ligne_Chaine_s *sym_tab_elt_p;
 
-	etiquetteCourante_p = calloc (1, sizeof(*etiquetteCourante_p));
-	if (!etiquetteCourante_p) {
-		WARNING_MSG ("Impossible de créer une nouvelle étiquette");
-		return FAIL_ALLOC;
-	}
-
-	etiquetteCourante_p->lexeme_p = lexeme_p;
-	etiquetteCourante_p->section = section;
-	etiquetteCourante_p->decalage = *decalage_p;
-	etiquetteCourante_p->ligne = lexeme_p->ligne;
-
-	ajouter_courant_liste (liste_etiquette_p, etiquetteCourante_p);
-	erreur = ajouter_table(tableEtiquettes_p, etiquetteCourante_p);
-	if (SUCCESS== erreur) {
-		INFO_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElts, (*lexeme_pp)->data, *decalage_p);
-		if (section == S_DATA)
-			*mem_etiq_pp = etiquetteCourante_p;
-		return SUCCESS;
-	} else {
+	if ((etiquetteCourante_p = donnee_table (tableEtiquettes_p, lexeme_p->data)) && (etiquetteCourante_p->section != S_UNDEF)) {
 		sprintf(msg_err, "est une étiquette déjà présente ligne %d", ((struct Etiquette_s *)donnee_table(tableEtiquettes_p, etiquetteCourante_p->lexeme_p->data))->ligne);
-		free(etiquetteCourante_p);
-		etiquetteCourante_p=NULL;
 		return FAILURE;
+	} else {
+		if (etiquetteCourante_p && (section == S_UNDEF)) { /* On essaie d'ajouter un symbole pas encore etiquette mais déjà présent */
+			return SUCCESS;
+		} else if (etiquetteCourante_p) { /* On rajoute l'étiquette d'un symbole déjà rencontré */
+			etiquetteCourante_p->lexeme_p = lexeme_p;
+			etiquetteCourante_p->section = section;
+			etiquetteCourante_p->decalage = decalage;
+			etiquetteCourante_p->ligne = lexeme_p->ligne;
+
+			sym_tab_elt_p = calloc (1, sizeof(*sym_tab_elt_p));
+			sym_tab_elt_p->chaine = lexeme_p->data;
+			sym_tab_elt_p->ligne = lexeme_p->ligne;
+			ajouter_fin_liste (liste_etiquette_p, sym_tab_elt_p);
+			return SUCCESS;
+		} else {
+			etiquetteCourante_p = calloc (1, sizeof(*etiquetteCourante_p));
+			if (!etiquetteCourante_p) {
+				WARNING_MSG ("Impossible de créer une nouvelle étiquette");
+				return FAIL_ALLOC;
+			}
+			etiquetteCourante_p->lexeme_p = lexeme_p;
+			etiquetteCourante_p->section = section;
+			etiquetteCourante_p->decalage = decalage;
+			etiquetteCourante_p->ligne = lexeme_p->ligne;
+
+			sym_tab_elt_p = calloc (1, sizeof(*sym_tab_elt_p));
+			sym_tab_elt_p->chaine = lexeme_p->data;
+			sym_tab_elt_p->ligne = lexeme_p->ligne;
+			ajouter_fin_liste (liste_etiquette_p, sym_tab_elt_p);
+
+			erreur = ajouter_table(tableEtiquettes_p, etiquetteCourante_p);
+			if (SUCCESS== erreur) {
+				INFO_MSG("Insertion de l'étiquette %zu : %s au decalage %u", tableEtiquettes_p->nbElts, (*lexeme_pp)->data, *decalage_p);
+				if (section == S_DATA)
+					*mem_etiq_pp = etiquetteCourante_p;
+				return SUCCESS;
+			} else
+				return FAILURE;
+		}
 	}
 }
 
@@ -156,54 +168,81 @@ int enregistrer_etiquette(
 int lire_nombre(
 		struct Lexeme_s *lexeme_p,
 		struct Donnee_s *donnee_p,
+		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
+		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
 		uint32_t *decalage_p,
 		char *msg_err)
 {
 	long int nombre;
+	struct Ligne_Chaine_s *sym_tab_elt_p;
+	struct Etiquette_s *etiquetteCourante_p = NULL;
 
 	donnee_p->decalage = *decalage_p;
 	donnee_p->lexeme_p = lexeme_p;
 	donnee_p->ligne = lexeme_p->ligne;
 
-	errno = 0; /* remet le code d'erreur à 0 */
-	nombre = strtol(lexeme_p->data, NULL, 0); /* Convertit la chaine en nombre, avec base automatique */
-	if (errno) {
-		strcpy(msg_err, "n'a pas pu être évalué numériquement");
-		return FAILURE;
-	} else {
-		if (((donnee_p->type==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
-			((donnee_p->type==D_HALF) && ((nombre>UINT16_MAX) || (nombre<INT16_MIN))) ||
-			((donnee_p->type==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
-			((donnee_p->type==D_SPACE) && (nombre<=0) && (nombre+*decalage_p>=UINT32_MAX))) {
+	if ((lexeme_p->nature == L_SYMBOLE) && ((donnee_p->type==D_WORD))) {
+		donnee_p->valeur.mot=0;
+		(*decalage_p)+=4;
 
-			strcpy(msg_err, "est au delà des valeurs permises");
+		if (!(etiquetteCourante_p = donnee_table (table_etiquettes_p, lexeme_p->data))) {
+			sym_tab_elt_p = calloc (1, sizeof(*sym_tab_elt_p));
+			sym_tab_elt_p->chaine = lexeme_p->data;
+			sym_tab_elt_p->ligne = lexeme_p->ligne;
+			ajouter_fin_liste (liste_etiquette_p, sym_tab_elt_p);
+
+			etiquetteCourante_p = calloc (1, sizeof(*etiquetteCourante_p));
+			etiquetteCourante_p->lexeme_p = lexeme_p;
+			etiquetteCourante_p->section = S_UNDEF;
+			etiquetteCourante_p->decalage = 0;
+			etiquetteCourante_p->ligne = lexeme_p->ligne;
+
+			ajouter_table (table_etiquettes_p, etiquetteCourante_p);
+		}
+
+		return SUCCESS;
+	} else {
+		errno = 0; /* remet le code d'erreur à 0 */
+		nombre = strtol(lexeme_p->data, NULL, 0); /* Convertit la chaine en nombre, avec base automatique */
+		DEBUG_MSG ("%s %ld errno=%d", lexeme_p->data, nombre, errno);
+		if (errno) {
+			strcpy(msg_err, "n'a pas pu être évalué numériquement");
 			return FAILURE;
 		} else {
-			if (donnee_p->type==D_BYTE) {
-				if (nombre>=0)
-					donnee_p->valeur.octetNS=(uint8_t)nombre;
-				else
-					donnee_p->valeur.octet=(int8_t)nombre;
-				(*decalage_p)++;
-			} else if (donnee_p->type==D_HALF) {
-				if (nombre>=0)
-					donnee_p->valeur.demiNS=(uint16_t)nombre;
-				else
-					donnee_p->valeur.demi=(int16_t)nombre;
-				(*decalage_p)+=2;
-			} else if (donnee_p->type==D_WORD) {
-				if (nombre>=0)
-					donnee_p->valeur.motNS=(uint32_t)nombre;
-				else
-					donnee_p->valeur.mot=(int32_t)nombre;
-				(*decalage_p)+=4;
-			} else { /* typeDonnee==D_SPACE */
-				donnee_p->valeur.nbOctets=(uint32_t)nombre;
-				(*decalage_p)+=donnee_p->valeur.nbOctets;
+			if (((donnee_p->type==D_BYTE) && ((nombre>UINT8_MAX) || (nombre<INT8_MIN))) ||
+					((donnee_p->type==D_HALF) && ((nombre>UINT16_MAX) || (nombre<INT16_MIN))) ||
+					((donnee_p->type==D_WORD) && ((nombre>UINT32_MAX) || (nombre<INT32_MIN))) ||
+					((donnee_p->type==D_SPACE) && (nombre<=0) && (nombre+*decalage_p>=UINT32_MAX))) {
+
+				strcpy(msg_err, "est au delà des valeurs permises");
+				return FAILURE;
+			} else {
+				if (donnee_p->type==D_BYTE) {
+					if (nombre>=0)
+						donnee_p->valeur.octetNS=(uint8_t)nombre;
+					else
+						donnee_p->valeur.octet=(int8_t)nombre;
+					(*decalage_p)++;
+				} else if (donnee_p->type==D_HALF) {
+					if (nombre>=0)
+						donnee_p->valeur.demiNS=(uint16_t)nombre;
+					else
+						donnee_p->valeur.demi=(int16_t)nombre;
+					(*decalage_p)+=2;
+				} else if (donnee_p->type==D_WORD) {
+					if (nombre>=0)
+						donnee_p->valeur.motNS=(uint32_t)nombre;
+					else
+						donnee_p->valeur.mot=(int32_t)nombre;
+					(*decalage_p)+=4;
+				} else { /* typeDonnee==D_SPACE */
+					donnee_p->valeur.nbOctets=(uint32_t)nombre;
+					(*decalage_p)+=donnee_p->valeur.nbOctets;
+				}
 			}
 		}
+		return SUCCESS;
 	}
-	return SUCCESS;
 }
 
 /**
@@ -218,6 +257,8 @@ int lire_nombre(
 int analyser_donnee(
 		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
 		struct Liste_s *liste_p,					/**< Pointeur sur la liste des donnees de la section .data ou .bss */
+		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
+		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
 		uint32_t *decalage_p,
 		char *msg_err)
 {
@@ -264,7 +305,8 @@ int analyser_donnee(
 					((type_donnee == D_BYTE) && (lexeme_p->nature == L_CAR)) ||
 					((type_donnee == D_WORD) && (lexeme_p->nature == L_SYMBOLE))) {
 
-					if (!(donnee_p = calloc(1, sizeof(*donnee_p)))) ERROR_MSG("Impossible de créer une donnée");
+					if (!(donnee_p = calloc(1, sizeof(*donnee_p))))
+						ERROR_MSG("Impossible de créer une donnée");
 					donnee_p->type = type_donnee;
 
 					if (type_donnee == D_ASCIIZ) {
@@ -281,8 +323,8 @@ int analyser_donnee(
 						donnee_p->ligne = lexeme_p->ligne;
 						donnee_p->valeur.car = sqstr_unesc_char (lexeme_p->data);
 						(*decalage_p)++;
-					} else{
-						code_retour = lire_nombre(lexeme_p, donnee_p, decalage_p, msg_err);
+					} else {
+						code_retour = lire_nombre(lexeme_p, donnee_p, liste_etiquette_p, table_etiquettes_p, decalage_p, msg_err);
 						if (code_retour != SUCCESS) {
 							free(donnee_p);
 							return code_retour;
@@ -426,6 +468,8 @@ int analyser_instruction(
 		struct Table_s *table_def_pseudo_p,			/**< Pointeur sur la table "dico" des pseudo instructions */
 		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
 		struct Liste_s *liste_p,					/**< Pointeur sur la liste des instructions de la section .text */
+		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
+		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
 		uint32_t *decalage_p,
 		char *msg_err)
 {
@@ -556,6 +600,8 @@ int analyser_instruction(
 					strcpy(msg_err, "n'est ni un nombre, ni un registre");
 				} else {
 					instruction_p->operandes[def_p->nb_ops-1] = lexeme_p;
+					if ((lexeme_p->nature == L_SYMBOLE) && !(donnee_table (table_etiquettes_p, lexeme_p->data)))
+						enregistrer_etiquette(lexeme_p, S_UNDEF, 0, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 					etat = SUITE;
 				}
 				break;
@@ -589,9 +635,11 @@ int analyser_instruction(
 					etat = I_B_BASE;
 				} else {
 					instruction_p->operandes[1] = lexeme_p;
-					if (lexeme_p->nature == L_SYMBOLE)
+					if (lexeme_p->nature == L_SYMBOLE) {
+						if (!(donnee_table (table_etiquettes_p, lexeme_p->data)))
+							enregistrer_etiquette(lexeme_p, S_UNDEF, 0, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 						etat = SUITE;
-					else
+					} else
 						etat = I_B_PO;
 				}
 				break;
@@ -804,14 +852,14 @@ int analyser_syntaxe(
 					etat=INIT;
 				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) {
 					if (section == S_TEXT)
-						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_text, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, decalage_text, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 					else if (section == S_DATA) {
-						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_data, liste_etiquette_p, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, decalage_data, liste_etiquette_p, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
 						if ((code_erreur == SUCCESS) && (mem_etiq_table[index_mem]))
 							index_mem++;
 					}
 					else if (section == S_BSS)
-						code_erreur = enregistrer_etiquette(lexeme_p, section, &decalage_bss, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, decalage_bss, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -821,7 +869,8 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
-					code_erreur = analyser_instruction(lignes_lexemes_p, lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, liste_text_p, &decalage_text, msg_err);
+					code_erreur = analyser_instruction(lignes_lexemes_p, lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p,
+							liste_text_p, liste_etiquette_p, table_etiquettes_p, &decalage_text, msg_err);
 					if (code_erreur == FAIL_ALLOC)
 						return FAIL_ALLOC;
 					else if (code_erreur == SUCCESS)
@@ -832,7 +881,7 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -847,7 +896,7 @@ int analyser_syntaxe(
 						mem_etiq_table[index_mem++] = NULL;
 					}
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -862,7 +911,7 @@ int analyser_syntaxe(
 						mem_etiq_table[index_mem++] = NULL;
 					}
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -877,7 +926,7 @@ int analyser_syntaxe(
 						mem_etiq_table[index_mem++] = NULL;
 					}
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -889,7 +938,7 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -901,7 +950,7 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -910,7 +959,7 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_BSS) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) {
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, &decalage_bss, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, &decalage_bss, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;

@@ -526,7 +526,7 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Li
     FILE        *fp   = NULL;
     char         line[STRLEN+1]; /* original source line */
     char         res[2*STRLEN+1]; /* standardised source line, can be longeur due to some possible added spaces*/
-    struct Listage_s *listage_p = NULL;
+    struct Ligne_Chaine_s *listage_p = NULL;
     
     fp = fopen( nom_fichier, "r" );
     if ( NULL == fp ) {
@@ -542,7 +542,7 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Li
             (*nb_lignes_p)++;
             listage_p = calloc(1, sizeof(*listage_p));
             listage_p->ligne = *nb_lignes_p;
-            listage_p->source = strdup(line);
+            listage_p->chaine = strdup(line);
             ajouter_fin_liste (liste_lignes_source_p, listage_p);
             listage_p = NULL;
 

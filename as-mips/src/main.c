@@ -92,7 +92,7 @@ int main (int argc, char *argv[])
     		break;
     	if ((code_retour = creer_liste (&liste_lignes_source_p, (fonctionDestructeur *)detruit_listage)))
     		break;
-    	if ((code_retour = creer_liste (&liste_etiquette_p, (fonctionDestructeur *)detruit_etiquette)))
+    	if ((code_retour = creer_liste (&liste_etiquette_p, NULL)))
     		break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/

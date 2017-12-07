@@ -3,6 +3,11 @@
 
 
 .set noreorder
+.data
+.word dollar, menu, quid
+.word dollar, menu, quid
+.word dollar, menu, quid
+
 .text
     NOP
     Lw $t0, lunchtime
