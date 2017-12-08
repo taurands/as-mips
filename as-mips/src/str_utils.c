@@ -133,3 +133,13 @@ char *dqstr_unesc_str (char *dqstr)
 	return unesc_str;
 }
 
+void replace_or_add_extension(char *nom_fichier, char *nouvelle_extension)
+{
+	char *ext = strrchr (nom_fichier, '.');
+	if (!(ext) || (strchr(ext, '/'))) { /* pas de point trouvé dans le nom ou caractère '/' apparait après le dernier point du nom : il n'y a pas d'extension*/
+		strcpy (nom_fichier + strlen (nom_fichier), nouvelle_extension);
+	} else {
+		strcpy (ext, nouvelle_extension);
+	}
+
+}

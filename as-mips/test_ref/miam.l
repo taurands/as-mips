@@ -4,9 +4,9 @@
   4                   
   5                   .set noreorder
   6                   .text
-  7 00000000 3C010000     Lw $t0 , lunchtime
-  7 00000004 8C280000 
-  8 00000008 8CE6FE00     LW $6, -0x200($7)
+  7 00000000 3C200000     Lw $t0 , lunchtime
+  7 00000004 83200000
+  8 00000008 FFFFFE00     LW $6, -0x200($7)
   9 0000000C 20090008     ADDI $t1,$zero,8
  10                   
  11                   boucle:

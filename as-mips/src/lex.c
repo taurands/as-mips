@@ -407,7 +407,7 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
  * @return Rien, si ce n'est la liste de lexème mise à jour ainsi les nombres d'étiquettes et d'instructions
  * @brief Cette fonction fait l'analyse lexicale d'un ligne ayant subi une "standardisation" (pre-processing)
  */
-void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
+void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
 {
 	struct Lexeme_s *lexeme_p;
 
@@ -482,7 +482,9 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
 					etat=INSTRUCTION;
 					token=strupr(token);
 					(*nb_instructions_p)++;
-				}
+				} else if (etat==SYMBOLE)
+					(*nb_symboles_p)++;
+
 				if (etat==DIRECTIVE) {
 					token=strlwr(token);
 				}
@@ -520,13 +522,13 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
  * @brief Cette fonction charge le fichier assembleur et effectue sont analyse lexicale
  *
  */
-void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p)
+void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
 {
 
     FILE        *fp   = NULL;
     char         line[STRLEN+1]; /* original source line */
     char         res[2*STRLEN+1]; /* standardised source line, can be longeur due to some possible added spaces*/
-    struct Listage_s *listage_p = NULL;
+    struct Ligne_Chaine_s *listage_p = NULL;
     
     fp = fopen( nom_fichier, "r" );
     if ( NULL == fp ) {
@@ -542,13 +544,13 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Li
             (*nb_lignes_p)++;
             listage_p = calloc(1, sizeof(*listage_p));
             listage_p->ligne = *nb_lignes_p;
-            listage_p->source = strdup(line);
+            listage_p->chaine = strdup(line);
             ajouter_fin_liste (liste_lignes_source_p, listage_p);
             listage_p = NULL;
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
-                lex_read_line( res, liste_lexemes_p, *nb_lignes_p, nb_etiquettes_p, nb_instructions_p );
+                lex_read_line( res, liste_lexemes_p, *nb_lignes_p, nb_etiquettes_p, nb_symboles_p, nb_instructions_p );
             }
         }       
     }

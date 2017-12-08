@@ -3,10 +3,16 @@
 
 
 .set noreorder
+.data
+.word dollar, menu, quid
+.word dollar, menu, quid
+.word dollar, menu, quid
+
 .text
     NOP
     Lw $t0, lunchtime
     LW $6, -0x200($7)
+    SW $t1, menu
     ADDI $t1,$zero,8
 
 boucle:

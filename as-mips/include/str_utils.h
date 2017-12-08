@@ -24,4 +24,6 @@ char unesc_char (char esc);
 char sqstr_unesc_char (char *sqstr);
 char *dqstr_unesc_str (char *dqstr);
 
+void replace_or_add_extension(char *nom_fichier, char *nouvelle_extension);
+
 #endif /* _STR_UTILS_H_ */
