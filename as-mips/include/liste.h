@@ -7,7 +7,7 @@
 #ifndef _LISTE_H_
 #define _LISTE_H_
 
-/* a common function used to free malloc'd objects */
+/* fonction de libération de la mémoire allouée aux éléments de la liste */
 typedef void (fonctionDestructeur)(void *);
 
 /**
@@ -24,10 +24,10 @@ struct Noeud_Liste_s {
  * @brief Liste simplemement chaînée générique
  */
 struct Liste_s {
-	size_t nb_elts;						/**< Nombre d'éléments de la liste. 0 si la liste est vide */
-	struct Noeud_Liste_s *courant_p;			/**< Pointeur sur l'élément courant de la liste générique simple. NULL si la liste est vide */
-	struct Noeud_Liste_s *debut_p;		/**< Pointeur sur le premier élément de la liste générique simple. NULL si la liste est vide */
-	struct Noeud_Liste_s *fin_p;		/**< Pointeur sur le dernier élément de la liste générique simple. NULL si la liste est vide */
+	size_t nb_elts;							/**< Nombre d'éléments de la liste. 0 si la liste est vide */
+	struct Noeud_Liste_s *courant_p;		/**< Pointeur sur l'élément courant de la liste générique simple. NULL si la liste est vide */
+	struct Noeud_Liste_s *debut_p;			/**< Pointeur sur le premier élément de la liste générique simple. NULL si la liste est vide */
+	struct Noeud_Liste_s *fin_p;			/**< Pointeur sur le dernier élément de la liste générique simple. NULL si la liste est vide */
 	fonctionDestructeur *fnDestructeur_p;	/**< Pointeur sur la fonction de destruction d'un élément de liste. NULL s'il n'y a pas de destructeur associé */
 };
 
