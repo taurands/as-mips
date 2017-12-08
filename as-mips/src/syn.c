@@ -25,6 +25,87 @@
 const char *NOMS_SECTIONS[] = {"initial", ".text", ".data", ".bss", "undef"};
 const char *NOMS_DATA[] = {".space", ".byte", ".half", ".word", ".float", ".asciiz"};
 
+
+/**
+ * @param instruction_p  Pointeur sur l'instruction dont on va remplir le code opérande défini le type de donnée d'une donnée
+ * @param table_etiquettes_p Pointeur sur la table d'étiquette
+ * @param table_def_registres_p Pointeur sur la table des définitions de registres
+ * @return entier indiquant le bon déroulement ou non de la procédure
+ * @brief Cette fonction permet de d'encoder le code opérande de l'instruction
+ *
+ */
+int encodage_instruction(struct Instruction_s *instruction_p,
+				struct Table_s *table_etiquettes_p,
+				struct Table_s *table_def_registres_p,
+				struct Table_s *table_def_instructions_p)
+{
+
+	struct DefinitionInstruction_s *def_instruction_p = NULL;
+	struct DefinitionRegistre_s *def_registre_p = NULL;
+	struct Etiquette_s *etiquette_p = NULL;
+
+	int j=0;
+	int borne_sup,borne_inf;
+	long val_operande;
+	uint32_t code_operande = 0x00000000;
+
+	def_instruction_p = donnee_table (table_def_instructions_p,instruction_p->definition_p->nom);
+	code_operande |= def_instruction_p->opcode;
+
+	for (j=0;j<instruction_p->definition_p->nb_ops;j++){
+
+
+		if (instruction_p->operandes[j]->nature == L_NOMBRE){
+			val_operande = strtol(instruction_p->operandes[j]->data,NULL,0);
+			if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
+				ERROR_MSG("L'opérande %d de l'instruction %s  à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
+
+			borne_sup = 1 << def_instruction_p->codes[j].nb_bits;
+			borne_inf = -(1 << def_instruction_p->codes[j].nb_bits);
+			if ((val_operande >= borne_sup) || (val_operande < borne_inf))
+				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
+			code_operande |= val_operande << def_instruction_p->codes[j].dest_bit;
+		}
+
+		if (instruction_p->operandes[j]->nature == L_SYMBOLE){
+			etiquette_p = donnee_table (table_etiquettes_p, instruction_p->operandes[j]->data);
+			if (etiquette_p->section == S_UNDEF)
+				val_operande = 0;
+			else {
+				if (def_instruction_p->reloc == R_MIPS_REL) {
+					val_operande = ((etiquette_p->decalage-instruction_p->decalage) >> def_instruction_p->codes[j].shift)-1;
+				} else {
+					val_operande = (etiquette_p->decalage) >> def_instruction_p->codes[j].shift;
+				}
+				if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
+					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
+
+				borne_sup = 1 << def_instruction_p->codes[j].nb_bits;
+				borne_inf = -(1 << def_instruction_p->codes[j].nb_bits);
+				if ((val_operande >= borne_sup) || (val_operande < borne_inf))
+					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
+				code_operande |= val_operande << def_instruction_p->codes[j].dest_bit;
+			}
+		}
+
+
+		if (instruction_p->operandes[j]->nature == L_REGISTRE){
+			def_registre_p = donnee_table (table_def_registres_p, instruction_p->operandes[j]->data);
+			val_operande = def_registre_p->valeur;
+			if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
+				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
+
+			borne_sup = 1 << def_instruction_p->codes[j].nb_bits;
+			borne_inf = -(1 << def_instruction_p->codes[j].nb_bits);
+			if ((val_operande >= borne_sup) || (val_operande < borne_inf))
+				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
+			code_operande |= val_operande << def_instruction_p->codes[j].dest_bit;
+		}
+	}
+	instruction_p->op_code = code_operande;
+	return SUCCESS;
+}
+
 char *clefEtiquette(void *donnee_p)
 {
 	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->lexeme_p->data : NULL);
@@ -776,6 +857,9 @@ int analyser_syntaxe(
 	struct Noeud_Liste_s *noeud_courant_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
 
+	struct Noeud_Liste_s *noeud_courant_instruction_p=NULL;
+	struct Instruction_s *instruction_p = NULL;
+
 	enum Section_e section=S_INIT;
 	struct Etiquette_s **mem_etiq_table = NULL;
 	size_t index_mem = 0;
@@ -974,6 +1058,14 @@ int analyser_syntaxe(
 			}
 		} while ((noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
 		free(mem_etiq_table);
+
+		noeud_courant_instruction_p = debut_liste (liste_text_p);
+		while (noeud_courant_instruction_p) {
+			instruction_p = noeud_courant_instruction_p->donnee_p;
+			encodage_instruction(instruction_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p);
+			noeud_courant_instruction_p = suivant_liste (liste_text_p);
+		}
+
 		return resultat;
 	} else {
 		return FAILURE;

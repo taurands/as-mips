@@ -106,7 +106,7 @@ struct DefinitionPseudoInstruction_s {
  */
 struct DefinitionRegistre_s {
 	char* nom;						/**< nom du registre */
-	uint8_t valeur;					/**< valeur du registren */
+	uint8_t valeur;					/**< valeur du registre */
 };
 
 char *clef_def_pseudo(void *donnee_p);

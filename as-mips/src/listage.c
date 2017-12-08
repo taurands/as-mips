@@ -292,9 +292,9 @@ void generer_listage (struct Liste_s *liste_lignes_source_p, struct Liste_s *lis
 			}
 
 			if (noeud_instruction_p && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
-				printf("%3d %08x ",listage_p->ligne, instruction_p->decalage);
+				printf("%3d %08X ",listage_p->ligne, instruction_p->decalage);
 				if (instruction_p->definition_p)
-					printf("%08x %s\n", instruction_p->op_code, listage_p->source ? listage_p->source : "");
+					printf("%08X %s\n", instruction_p->op_code, listage_p->source ? listage_p->source : "");
 				while ((noeud_instruction_p  = suivant_liste (liste_text_p)) && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
 					if (noeud_instruction_p && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
 									printf("%3d %08x ",listage_p->ligne, instruction_p->decalage);
