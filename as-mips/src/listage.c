@@ -42,15 +42,15 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
 {
 	int i;
 
-	printf("%3d %08x ",
+	fprintf(fichier, "%3d %08x ",
 			instruction_p->ligne,
 			instruction_p->decalage);
 	if (instruction_p->definition_p) {
-		printf("%08x %-40s",
+		fprintf(fichier, "%08x %-40s",
 			instruction_p->op_code,
 			instruction_p->source ? instruction_p->source : "");
 
-		printf("%s %s %s %s",
+		fprintf(fichier, "%s %s %s %s",
 		instruction_p->definition_p->nom,
 		instruction_p->operandes[0] ? instruction_p->operandes[0]->data : "",
 		instruction_p->operandes[1] ? instruction_p->operandes[1]->data : "",
@@ -59,12 +59,12 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
 		for (i=0 ; i<3 ; i++)
 			if (instruction_p->operandes[i] && (instruction_p->operandes[i]->nature==L_SYMBOLE)){
 				if (!donnee_table(table_p, instruction_p->operandes[i]->data)){
-					printf("    0xXXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm inconnu dans la table des étiquettes",
+					fprintf(fichier, "    0xXXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm inconnu dans la table des étiquettes",
 							0x1B, STYLE_BOLD, COLOR_RED,
 							instruction_p->operandes[i]->data,
 							0x1B, STYLE_BOLD, 0);
 				} else {
-					printf("    0x%08x : symbole %c[%d;%dm%s%c[%d;%dm",
+					fprintf(fichier, "    0x%08x : symbole %c[%d;%dm%s%c[%d;%dm",
 							((struct Etiquette_s *)donnee_table(table_p, instruction_p->operandes[i]->data))->decalage,
 							0x1B, STYLE_BOLD, COLOR_GREEN,
 							instruction_p->operandes[i]->data,
@@ -72,9 +72,9 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
 				}
 			}
 	} else
-		printf("%*s %s", 8, "", "");
+		fprintf(fichier, "%*s %s", 8, "", "");
 
-	printf("\n");
+	fprintf(fichier, "\n");
 }
 
 /**
@@ -183,17 +183,17 @@ void affiche_liste_instructions(FILE *fichier, struct Liste_s *liste_p, struct T
 {
 	struct Noeud_Liste_s* noeud_liste_p=NULL;
 	if (!liste_p) {
-		printf("La liste n'existe pas !\n");
+		fprintf(stderr, "La liste n'existe pas !\n");
 	} else {
 		if (!(liste_p->nb_elts)) {
-			printf("La liste est vide\n");
+			fprintf(fichier, "La liste est vide\n");
 		} else {
 			for (noeud_liste_p=liste_p->debut_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
 				str_instruction(fichier, (struct Instruction_s *)noeud_liste_p->donnee_p, table_p);
 			}
 		}
 	}
-	printf("\n\n");
+	fprintf(fichier, "\n");
 }
 
 /**

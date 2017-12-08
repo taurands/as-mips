@@ -204,7 +204,6 @@ int lire_nombre(
 	} else {
 		errno = 0; /* remet le code d'erreur à 0 */
 		nombre = strtol(lexeme_p->data, NULL, 0); /* Convertit la chaine en nombre, avec base automatique */
-		DEBUG_MSG ("%s %ld errno=%d", lexeme_p->data, nombre, errno);
 		if (errno) {
 			strcpy(msg_err, "n'a pas pu être évalué numériquement");
 			return FAILURE;
@@ -703,49 +702,16 @@ int analyser_instruction(
 				creer_lexeme(&(instruction_p->operandes[2]),"$zero", L_REGISTRE, instruction_p->ligne);
 				ajouter_fin_liste(lexemes_supl_p,instruction_p->operandes[2]);
 			}
-			if (instruction_p->operandes[1]->nature == L_SYMBOLE) {
-				/* Insertion d'une instruction LUI $at, symbole */
-				instr_supl_p = calloc (1, sizeof(*instr_supl_p));
-				instr_supl_p->definition_p=donnee_table(table_def_instructions_p, "LUI");
-				instr_supl_p->ligne = instruction_p->ligne;
-				instr_supl_p->decalage = *decalage_p;
-				instr_supl_p->source = lexeme_p->data;
-				creer_lexeme(&(instr_supl_p->operandes[0]), "$at", L_REGISTRE, instruction_p->ligne);
-				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[0]);
-
-				creer_lexeme(&(instr_supl_p->operandes[1]), instruction_p->operandes[1]->data, L_SYMBOLE, instruction_p->ligne);
-				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[1]);
-
-				ajouter_fin_liste(liste_p, instr_supl_p);
-				(*decalage_p)+=4;
-
-				/* Insertion d'une instruction LW/SW registre, symbole($at) */
-				instr_supl_p = calloc (1, sizeof(*instr_supl_p));
-				instr_supl_p->definition_p = donnee_table(table_def_instructions_p, instruction_p->definition_p->nom);
-				instr_supl_p->ligne = instruction_p->ligne;
-				instr_supl_p->decalage = *decalage_p;
-				creer_lexeme(&(instr_supl_p->operandes[0]), instruction_p->operandes[0]->data, L_REGISTRE, instruction_p->ligne);
-				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[0]);
-				creer_lexeme(&(instr_supl_p->operandes[1]), instruction_p->operandes[1]->data, L_SYMBOLE, instruction_p->ligne);
-				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[1]);
-				creer_lexeme(&(instr_supl_p->operandes[2]), "$at", L_REGISTRE, instruction_p->ligne);
-				ajouter_fin_liste(lexemes_supl_p, instr_supl_p->operandes[2]);
-				ajouter_fin_liste(liste_p, instr_supl_p);
-				(*decalage_p)+=4;
-
-				free(instruction_p);
-				return SUCCESS;
-			} else {
+			if (instruction_p->operandes[1]->nature != L_SYMBOLE) {
 				instruction_p->source = lexeme_p->data;
 				ajouter_fin_liste(liste_p, instruction_p);
 				instruction_p=NULL;
 				(*decalage_p)+=4;
 				return SUCCESS;
-
 			}
-
-
-		} else if ((etat == EOL) && (instruction_p->definition_p->reloc == R_MIPS_PSEUDO)) {
+		}
+		if ((etat == EOL) && (instruction_p) && ((instruction_p->definition_p->reloc == R_MIPS_PSEUDO) ||
+				((def_p->type_ops == I_OP_B) && (instruction_p->operandes[1]->nature == L_SYMBOLE)))) {
 			def_pseudo_p = donnee_table(table_def_pseudo_p, instruction_p->definition_p->nom);
 			for (i=0;i<def_pseudo_p->nb_instruction;i++) {
 				instr_supl_p = calloc (1, sizeof(*instr_supl_p));
@@ -772,8 +738,8 @@ int analyser_instruction(
 				ajouter_fin_liste(liste_p, instr_supl_p);
 				(*decalage_p)+=4;
 			}
-		free (instruction_p);
-		return SUCCESS;
+			free (instruction_p);
+			return SUCCESS;
 		} else if ((etat == EOL) && (SUCCESS == ajouter_fin_liste(liste_p, instruction_p))) {
 			instruction_p->source = lexeme_p->data;
 

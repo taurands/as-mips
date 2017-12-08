@@ -129,6 +129,12 @@ int main (int argc, char *argv[])
     	replace_or_add_extension(nom_fichier_l, ".l");
     	DEBUG_MSG("Nom fichier asm : '%s', Nom du fichier listage : '%s'", nom_fichier_asm, nom_fichier_l);
     	generer_listage (nom_fichier_l, liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
+
+    	strcpy(nom_fichier_obj, nom_fichier_asm);
+    	replace_or_add_extension(nom_fichier_obj, ".obj");
+    	DEBUG_MSG("Nom fichier asm : '%s', Nom du fichier objet : '%s'", nom_fichier_asm, nom_fichier_obj);
+
+    	affiche_liste_instructions(stdout, liste_text_p, table_def_instructions_p);
     } while (FALSE);
 
 
