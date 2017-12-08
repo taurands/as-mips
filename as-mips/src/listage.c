@@ -58,7 +58,7 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
 
 		for (i=0 ; i<3 ; i++)
 			if (instruction_p->operandes[i] && (instruction_p->operandes[i]->nature==L_SYMBOLE)){
-				if (!donnee_table(table_p, instruction_p->operandes[i]->data)){
+				if (!donnee_table(table_p, instruction_p->operandes[i]->data) || ((struct Etiquette_s *)(donnee_table(table_p, instruction_p->operandes[i]->data)))->section == S_UNDEF){
 					fprintf(fichier, "    0xXXXXXXXX : symbole %c[%d;%dm%s%c[%d;%dm inconnu dans la table des étiquettes",
 							0x1B, STYLE_BOLD, COLOR_RED,
 							instruction_p->operandes[i]->data,
