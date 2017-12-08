@@ -47,9 +47,12 @@ int main (int argc, char *argv[])
 
     unsigned int nb_lignes = 0;
     unsigned int nb_etiquettes = 0;
+    unsigned int nb_symboles = 0;
     unsigned int nb_instructions = 0;
 
     char *nom_fichier_asm = NULL;
+    char nom_fichier_l[FILENAME_MAX+1];
+    char nom_fichier_obj[FILENAME_MAX+1];
     
     struct Table_s *table_def_instructions_p=NULL;
     struct Table_s *table_def_pseudo_p=NULL;
@@ -96,7 +99,7 @@ int main (int argc, char *argv[])
     		break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/
-        lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_instructions);
+        lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_symboles, &nb_instructions);
 
         /* ---------------- print the lexical analysis -------------------*/
         /*
@@ -105,7 +108,7 @@ int main (int argc, char *argv[])
     	*/
 
     	/* Crée la table d'étiquettes pour pouvoir contenir toutes celles identifiées lors de l'analyse lexicale */
-    	if ((code_retour = creer_table(&table_etiquettes_p, nb_etiquettes, clefEtiquette, NULL)))
+    	if ((code_retour = creer_table(&table_etiquettes_p, nb_etiquettes + nb_symboles, clefEtiquette, NULL)))
     		break;
     	if ((code_retour = charge_def_instruction(&table_def_instructions_p, NOM_DICO_INSTRUCTIONS)))
     		break;
@@ -121,16 +124,11 @@ int main (int argc, char *argv[])
     	relocation_texte(liste_text_p, liste_reloc_text_p, liste_etiquette_p, table_etiquettes_p);
     	relocation_data(liste_data_p, liste_reloc_data_p, liste_etiquette_p, table_etiquettes_p);
 
-    	/* affiche les résultats de l'analyse syntaxique */
-    	/*
-    	printf("\t\t\t.text\n");
-    	affiche_liste_instructions(liste_text_p, table_etiquettes_p);
-    	printf("\t\t\t.data\n");
-    	affiche_liste_donnee(liste_data_p, table_etiquettes_p);
-    	printf("\t\t\t.bss\n");
-    	affiche_liste_donnee(liste_bss_p, table_etiquettes_p);
-    	*/
-    	generer_listage (liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
+
+    	strcpy(nom_fichier_l, nom_fichier_asm);
+    	replace_or_add_extension(nom_fichier_l, ".l");
+    	DEBUG_MSG("Nom fichier asm : '%s', Nom du fichier listage : '%s'", nom_fichier_asm, nom_fichier_l);
+    	generer_listage (nom_fichier_l, liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
     } while (FALSE);
 
 

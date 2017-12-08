@@ -25,7 +25,7 @@ int relocation_texte(struct Liste_s *liste_text_p, struct Liste_s *liste_reloc_t
 char *type_reloc_to_str(enum Reloc_e type_reloc);
 char *type_section_to_str(enum Section_e section);
 
-void affiche_relocateur(struct Relocateur_s *relocateur_p);
-void affiche_liste_relocation(struct Liste_s *liste_reloc_data_p);
+void affiche_relocateur(FILE *fichier, struct Relocateur_s *relocateur_p);
+void affiche_liste_relocation(FILE *fichier, struct Liste_s *liste_reloc_data_p);
 
 #endif /* _RELOC_H_ */

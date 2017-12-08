@@ -162,12 +162,13 @@ char *type_section_to_str(enum Section_e section)
  * @brief Affichage d'un relocateur
  */
 void affiche_relocateur(
+		FILE *fichier,
 		struct Relocateur_s * relocateur_p)						/**< Pointeur sur un relocateur */
 {
 	if (relocateur_p->etiquette_p->section != S_UNDEF) {
-		printf("%08x\t%s\t%-5s:%08x\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),type_section_to_str(relocateur_p->etiquette_p->section),relocateur_p->etiquette_p->decalage,relocateur_p->etiquette_p->lexeme_p->data);
+		fprintf(fichier, "%08x\t%s\t%-5s:%08x\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),type_section_to_str(relocateur_p->etiquette_p->section),relocateur_p->etiquette_p->decalage,relocateur_p->etiquette_p->lexeme_p->data);
 	} else {
-		printf("%08x\t%s\t[UNDEFINED]\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),relocateur_p->etiquette_p->lexeme_p->data);
+		fprintf(fichier, "%08x\t%s\t[UNDEFINED]\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),relocateur_p->etiquette_p->lexeme_p->data);
 	}
 
 }
@@ -178,18 +179,19 @@ void affiche_relocateur(
  * @brief Affichage de la liste des relocateurs de rel.data
  */
 void affiche_liste_relocation(
+		FILE *fichier,
 		struct Liste_s *liste_reloc_p)
 {
 	struct Noeud_Liste_s *noeud_liste_p = NULL;
 	struct Relocateur_s *relocateur_p = NULL;
 
 	if (!liste_reloc_p) {
-		printf("La liste rel.data n'existe pas !\n");
+		fprintf(stderr, "La liste rel.data n'existe pas !\n");
 	} else {
 		if (liste_reloc_p->nb_elts) {
 			for (noeud_liste_p = debut_liste (liste_reloc_p) ; (noeud_liste_p) ; noeud_liste_p = suivant_liste (liste_reloc_p)) {
 				relocateur_p = noeud_liste_p->donnee_p;
-				affiche_relocateur(relocateur_p);
+				affiche_relocateur(fichier, relocateur_p);
 			}
 		}
 	}

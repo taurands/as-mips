@@ -54,8 +54,8 @@ struct Lexeme_s {
 
 int creer_lexeme(struct Lexeme_s **lexeme_pp, char *data, enum Nature_lexeme_e nature, int ligne);
 
-void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p);
-void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_instructions_p);
+void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p);
+void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p);
 void lex_standardise(char* in, char* out);
 
 void visualisation_lexeme(struct Lexeme_s * lexeme_p);
