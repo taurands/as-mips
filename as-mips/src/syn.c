@@ -103,7 +103,7 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 			if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
 				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
 
-			if ((val_operande >= borne_sup) || (val_operande < borne_inf))
+			if ((val_operande > borne_sup) || (val_operande < borne_inf))
 				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
 			code_operande |= val_operande << def_instruction_p->codes[j].dest_bit;
 		}

@@ -40,5 +40,14 @@ syscall
 
 .data
 .byte 12,0xAA,0xBB,0xCC,0xdd
-.byte 0xFF
+.byte 1
+.byte 1,2
+.byte 1,2,3
+.byte 1,2,3,4
+.byte 1,2,3,4,5
+.byte 1,2,3,4,5,6
+.byte 1,2,3,4,5,6,7
+.byte 1,2,3,4,5,6,7,8
+.byte 1,2,3,4,5,6,7,8,9
+
 .word 0xAABBCCDD

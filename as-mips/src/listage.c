@@ -77,6 +77,12 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
 	fprintf(fichier, "\n");
 }
 
+/*
+affiche_element_databss (fichier, donnee_data_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "");
+while ((noeud_data_p = suivant_liste (liste_data_p)) && (donnee_data_p = noeud_data_p->donnee_p) && (donnee_data_p->ligne == listage_p->ligne))
+	affiche_element_databss (fichier, donnee_data_p, table_etiquettes_p, "");
+*/
+
 /**
  * @param donnee_p pointeur sur un element de .data ou .bss à lire
  * @param table_p pointeur sur une table d'etiuette
@@ -84,68 +90,111 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
  * @brief Cette fonction permet d'afficher un element des sections .data ou .bss
  *
  */
-void affiche_element_databss(FILE *fichier, struct Donnee_s *donnee_p, struct Table_s *table_p, char *source)
+void affiche_element_databss(FILE *fichier, struct Liste_s *liste_p, struct Table_s *table_p, char *source, unsigned int ligne)
 {
-	unsigned int i,j;
+	unsigned int i, j, k;
 	struct Etiquette_s *etiquette_p = NULL;
 
-	/* printf("nom directive %s  numero de ligne %d  decalage %d",donnee_p->lexeme_p->data, donnee_p->ligne, donnee_p->decalage); */
-	if (!(donnee_p->decalage & 3) || (donnee_p->type == D_ASCIIZ)|| (donnee_p->type == D_SPACE)) {
-		fprintf(fichier, "%3d %08X ", donnee_p->ligne, donnee_p->decalage);
-	} else
-		fprintf(fichier, "%3d %08X ", donnee_p->ligne, donnee_p->decalage);
-	switch(donnee_p->type) {
-	case D_BYTE:
-		fprintf(fichier, "%02X       ", donnee_p->valeur.octetNS);
-		break;
-	case D_HALF:
-		fprintf(fichier, "%04X     ", donnee_p->valeur.demiNS);
-		break;
-	case D_WORD:
-		if (donnee_p->lexeme_p->nature==L_SYMBOLE) {
-			if (table_p && (etiquette_p = donnee_table(table_p, donnee_p->lexeme_p->data))) {
-				fprintf(fichier, "%08X ", etiquette_p->decalage);
-			} else
-				fprintf(fichier, "00000000 ");
-		} else {
-			fprintf(fichier, "%08X ", donnee_p->valeur.motNS);
-		}
-		break;
-	case D_ASCIIZ:
-		for (i=0; i < str_unesc_len(donnee_p->lexeme_p->data)-1; ) {
-			j = (unsigned char)(donnee_p->valeur.chaine[i++]);
-			fprintf(fichier, "%02X",j);
-			if (!(i & 3)  && (i<str_unesc_len(donnee_p->lexeme_p->data)-1)) {
-				if (i == 4)
-					fprintf(fichier, " %s", (source) ? source : "");
-				else
-					fprintf(fichier, " ");
-				fprintf(fichier, "\n%3d %08X ", donnee_p->ligne, donnee_p->decalage+i);
-			}
-		}
-		for ( ; (i & 3); i++)
-			fprintf(fichier, "  ");
-		fprintf(fichier, " ");
-		if (str_unesc_len(donnee_p->lexeme_p->data)-2 < 4)
-			fprintf(fichier, "%s", (source) ? source : "");
-		break;
-	case D_SPACE:
-		if (donnee_p->valeur.nbOctets>4)
-			fprintf(fichier, "0000...  ");
-		else if (donnee_p->valeur.nbOctets == 4)
-			fprintf(fichier, "00000000 ");
-		else if (donnee_p->valeur.nbOctets == 3)
-			fprintf(fichier, "000000   ");
-		else if (donnee_p->valeur.nbOctets == 2)
-			fprintf(fichier, "0000     ");
-		else if (donnee_p->valeur.nbOctets == 1)
-			fprintf(fichier, "00       ");
-		break;
-	default:
-		printf("type non défini\n");
-	}
+	struct Noeud_Liste_s *noeud_p = NULL;
+	struct Donnee_s *donnee_p = NULL;
 
-	fprintf(fichier, "%s\n", (source) && (donnee_p->type != D_ASCIIZ)? source : "");
+	noeud_p = courant_liste (liste_p);
+	donnee_p = (noeud_p) ? noeud_p->donnee_p : NULL;
+
+	for (k=0; (noeud_p) && (donnee_p = noeud_p->donnee_p) && (donnee_p->ligne == ligne); k++) {
+		/* printf("nom directive %s  numero de ligne %d  decalage %d",donnee_p->lexeme_p->data, donnee_p->ligne, donnee_p->decalage); */
+		if (!(donnee_p->decalage & 3) || (donnee_p->type == D_ASCIIZ)|| (donnee_p->type == D_SPACE)) {
+			fprintf(fichier, "%3d %08X ", donnee_p->ligne, donnee_p->decalage);
+		} else
+			fprintf(fichier, "%3d %08X ", donnee_p->ligne, donnee_p->decalage);
+		switch(donnee_p->type) {
+		case D_BYTE:
+			for (i=0; (noeud_p) && (donnee_p) && (donnee_p->ligne == ligne);) {
+				fprintf(fichier, "%02X", donnee_p->valeur.octetNS);
+				i++;
+				noeud_p = suivant_liste (liste_p);
+				donnee_p = (noeud_p) ? noeud_p->donnee_p : NULL;
+
+				if (!(i & 3) && (donnee_p) && (donnee_p->ligne == ligne)) {
+					if (i == 4)
+						fprintf(fichier, " %s", (source) ? source : "");
+					else
+						fprintf(fichier, " ");
+					fprintf(fichier, "\n%3d %08X ", donnee_p->ligne, donnee_p->decalage);
+				}
+			}
+			if (i<=4) {
+				for ( ; (i & 3); i++)
+					fprintf(fichier, "  ");
+				fprintf(fichier, " ");
+				fprintf(fichier, "%s\n", (source) && (i=4) ? source : "");
+			} else {
+			for ( ; (i & 3); i++)
+				fprintf(fichier, "  ");
+			fprintf(fichier, " \n");
+			}
+			break;
+
+		case D_HALF:
+			fprintf(fichier, "%04X     ", donnee_p->valeur.demiNS);
+			fprintf(fichier, "%s\n", (source) && (k=1) ? source : "");
+			noeud_p = suivant_liste (liste_p);
+			break;
+		case D_WORD:
+
+			if (donnee_p->lexeme_p->nature==L_SYMBOLE) {
+				if (table_p && (etiquette_p = donnee_table(table_p, donnee_p->lexeme_p->data))) {
+					fprintf(fichier, "%08X ", etiquette_p->decalage);
+				} else
+					fprintf(fichier, "00000000 ");
+			} else {
+				fprintf(fichier, "%08X ", donnee_p->valeur.motNS);
+			}
+			fprintf(fichier, "%s\n", (source) && (!k) ? source : "");
+			noeud_p = suivant_liste (liste_p);
+			break;
+		case D_ASCIIZ:
+
+			for (i=0; i < str_unesc_len(donnee_p->lexeme_p->data)-1; ) {
+				j = (unsigned char)(donnee_p->valeur.chaine[i++]);
+				fprintf(fichier, "%02X",j);
+				if (!(i & 3)  && (i<str_unesc_len(donnee_p->lexeme_p->data)-1)) {
+					if (i == 4)
+						fprintf(fichier, " %s", (source) && !(k) ? source : "");
+					else
+						fprintf(fichier, " ");
+					fprintf(fichier, "\n%3d %08X ", donnee_p->ligne, donnee_p->decalage+i);
+				}
+			}
+			for ( ; (i & 3); i++)
+				fprintf(fichier, "  ");
+			fprintf(fichier, " ");
+			if (str_unesc_len(donnee_p->lexeme_p->data)-2 < 4)
+				fprintf(fichier, "%s\n", (source) && !(k) ? source : "");
+			else
+				fprintf(fichier, "\n");
+			noeud_p = suivant_liste (liste_p);
+			break;
+
+		case D_SPACE:
+			if (donnee_p->valeur.nbOctets>4)
+				fprintf(fichier, "0000...  ");
+			else if (donnee_p->valeur.nbOctets == 4)
+				fprintf(fichier, "00000000 ");
+			else if (donnee_p->valeur.nbOctets == 3)
+				fprintf(fichier, "000000   ");
+			else if (donnee_p->valeur.nbOctets == 2)
+				fprintf(fichier, "0000     ");
+			else if (donnee_p->valeur.nbOctets == 1)
+				fprintf(fichier, "00       ");
+			fprintf(fichier, "%s\n", (source) && (!k) ? source : "");
+			noeud_p = suivant_liste (liste_p);
+			break;
+
+		default:
+			fprintf(stderr, "type non défini\n");
+		}
+	}
 }
 
 /**
@@ -165,7 +214,9 @@ void affiche_liste_donnee(FILE *fichier, struct Liste_s *liste_p, struct Table_s
 			printf("La liste est vide\n");
 		} else {
 			for (noeud_liste_p=liste_p->debut_p ; (noeud_liste_p) ; noeud_liste_p=noeud_liste_p->suivant_p) {
+				/*
 				affiche_element_databss(fichier, (struct Donnee_s *)noeud_liste_p->donnee_p, table_p, NULL);
+				*/
 			}
 		}
 	}
@@ -262,6 +313,8 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
 		noeud_bss_p = debut_liste (liste_bss_p);
 		while (noeud_listage_p) {
 			listage_p = noeud_listage_p->donnee_p;
+			noeud_data_p = courant_liste (liste_data_p);
+			noeud_bss_p = courant_liste (liste_bss_p);
 			while (noeud_instruction_p && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne < listage_p->ligne)) {
 				noeud_instruction_p = suivant_liste (liste_text_p);
 			}
@@ -286,17 +339,13 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
 				}
 
 			} else if (noeud_data_p && (donnee_data_p = noeud_data_p->donnee_p) && (donnee_data_p->ligne == listage_p->ligne)) {
-				affiche_element_databss (fichier, donnee_data_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "");
-				while ((noeud_data_p = suivant_liste (liste_data_p)) && (donnee_data_p = noeud_data_p->donnee_p) && (donnee_data_p->ligne == listage_p->ligne))
-					affiche_element_databss (fichier, donnee_data_p, table_etiquettes_p, "");
+				affiche_element_databss (fichier, liste_data_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "", listage_p->ligne);
 			} else if (noeud_bss_p && (donnee_bss_p = noeud_bss_p->donnee_p) && (donnee_bss_p->ligne == listage_p->ligne)) {
-				affiche_element_databss (fichier, donnee_bss_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "");
-				while ((noeud_bss_p = suivant_liste (liste_bss_p)) && (donnee_bss_p = noeud_bss_p->donnee_p) && (donnee_bss_p->ligne == listage_p->ligne))
-					affiche_element_databss (fichier, donnee_bss_p, table_etiquettes_p, "");
-			} else
+				affiche_element_databss (fichier, liste_bss_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "", listage_p->ligne);
+			} else {
 				fprintf(fichier, "%3d                   %s\n",listage_p->ligne, listage_p->chaine ? listage_p->chaine : "");
+			}
 			noeud_listage_p = suivant_liste (liste_lignes_source_p);
-
 		}
     	fprintf(fichier, "\n.symtab\n");
     	affiche_table_etiquette(fichier, liste_etiquette_p, table_etiquettes_p);

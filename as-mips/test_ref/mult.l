@@ -39,10 +39,7 @@
  39                   ## The End
  40                   
  41                   .data 
- 42 00000000 0C       .byte 12,0xAA,0xBB,0xCC,0xdd
- 42 00000001 AA       
- 42 00000002 BB       
- 42 00000003 CC       
+ 42 00000000 0CAABBCC .byte 12,0xAA,0xBB,0xCC,0xdd
  42 00000004 DD       
  43 00000005 FF       .byte 0xFF
  44 00000008 AABBCCDD .word 0xAABBCCDD
