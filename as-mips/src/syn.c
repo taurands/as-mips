@@ -46,26 +46,28 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 	struct Etiquette_s *etiquette_p = NULL;
 
 	int j=0;
-	int borne_sup,borne_inf;
-	long val_operande;
+	long borne_sup,borne_inf;
+	long val_operande,val_op1,val_op2;
 	uint32_t code_operande = 0x00000000;
+	uint32_t masque;
 
 	def_instruction_p = donnee_table (table_def_instructions_p,instruction_p->definition_p->nom);
 	code_operande = def_instruction_p->opcode;
 
 	for (j=0;j<instruction_p->definition_p->nb_ops;j++){
 
+		masque = (1 << def_instruction_p->codes[j].nb_bits) - 1;
+		borne_sup = (1L << (def_instruction_p->codes[j].nb_bits - ((def_instruction_p->codes[j].signe == 1) ? 0 : 1)))-1;
+		borne_inf = -(1L << (def_instruction_p->codes[j].nb_bits  - ((def_instruction_p->codes[j].signe == 1) ? 0 : 1)));
 
 		if (instruction_p->operandes[j]->nature == L_NOMBRE){
-			val_operande = strtol(instruction_p->operandes[j]->data,NULL,0);
-			if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
+			val_operande = strtol(instruction_p->operandes[j]->data, NULL, 0);
+			if ((def_instruction_p->codes[j].signe == 1) && (val_operande < 0))
 				ERROR_MSG("L'opérande %d de l'instruction %s  à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
 
-			borne_sup = 1 << def_instruction_p->codes[j].nb_bits;
-			borne_inf = -(1 << def_instruction_p->codes[j].nb_bits);
-			if ((val_operande >= borne_sup) || (val_operande < borne_inf))
+			if ((val_operande > masque) || (val_operande < borne_inf))
 				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
-			code_operande |= val_operande << def_instruction_p->codes[j].dest_bit;
+			code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
 		}
 
 		if (instruction_p->operandes[j]->nature == L_SYMBOLE){
@@ -74,18 +76,23 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 				val_operande = 0;
 			else {
 				if (def_instruction_p->reloc == R_MIPS_REL) {
-					val_operande = ((etiquette_p->decalage-instruction_p->decalage) >> def_instruction_p->codes[j].shift)-1;
+					val_op1 = etiquette_p->decalage;
+					val_op2 = instruction_p->decalage;
+					val_operande = val_op1-val_op2;
+					val_operande = (val_operande >> def_instruction_p->codes[j].shift)-1;
 				} else {
-					val_operande = (etiquette_p->decalage) >> def_instruction_p->codes[j].shift;
+					val_operande = etiquette_p->decalage;
+					if (def_instruction_p->reloc == R_MIPS_HI16) {
+						val_operande = val_operande >> 16;
+					}
+					val_operande = val_operande >> def_instruction_p->codes[j].shift;
 				}
 				if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
 					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
 
-				borne_sup = 1 << def_instruction_p->codes[j].nb_bits;
-				borne_inf = -(1 << def_instruction_p->codes[j].nb_bits);
-				if ((val_operande >= borne_sup) || (val_operande < borne_inf))
+				if ((val_operande > borne_sup) || (val_operande < borne_inf))
 					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
-				code_operande |= val_operande << def_instruction_p->codes[j].dest_bit;
+				code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
 			}
 		}
 
@@ -96,8 +103,6 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 			if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
 				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
 
-			borne_sup = 1 << def_instruction_p->codes[j].nb_bits;
-			borne_inf = -(1 << def_instruction_p->codes[j].nb_bits);
 			if ((val_operande >= borne_sup) || (val_operande < borne_inf))
 				ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
 			code_operande |= val_operande << def_instruction_p->codes[j].dest_bit;

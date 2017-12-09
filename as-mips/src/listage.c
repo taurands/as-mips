@@ -279,9 +279,9 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
 					fprintf(fichier, "%08X %s\n", instruction_p->op_code, listage_p->chaine ? listage_p->chaine : "");
 				while ((noeud_instruction_p  = suivant_liste (liste_text_p)) && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
 					if (noeud_instruction_p && (instruction_p = noeud_instruction_p->donnee_p) && (instruction_p->ligne == listage_p->ligne)) {
-						fprintf(fichier, "%3d %08x ",listage_p->ligne, instruction_p->decalage);
+						fprintf(fichier, "%3d %08X ",listage_p->ligne, instruction_p->decalage);
 									if (instruction_p->definition_p)
-										fprintf(fichier, "%08x\n", instruction_p->op_code);
+										fprintf(fichier, "%08X \n", instruction_p->op_code);
 					}
 				}
 

@@ -6,7 +6,7 @@
   6                   ##----------------------------------------------------------------------------
   7                   # initialise les variables
   8 00000000 20190054   ADDI  $t9,$zero,EXIT
-  9 00000004 FFFFFFD5   addi  $t2,$zero,-	43     	# $t2 <- -43
+  9 00000004 200AFFD5   addi  $t2,$zero,-	43     	# $t2 <- -43
  10 00000008 200BFFFF   addi  $t3,	$0,0xffff      	# $t3 <- 0xff
  11                   
  12                   #fait la division

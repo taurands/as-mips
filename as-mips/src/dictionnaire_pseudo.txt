@@ -1,4 +1,4 @@
-7
+8
 NOP	1	SLL	"$zero"	"$zero"	"0"
 MOVE	1	ADD	1	2	"$zero"
 NEG	1	SUB	1	"$zero"	2
@@ -6,3 +6,4 @@ LI	1	ADDI	1	"$zero"	2
 BLT	2	SLT	"$1"	2	1	BNE	"$1"	"$zero"	3
 LW	2	LUI	"$at"	2	0	LW	1	2	"$at"
 SW	2	LUI	"$at"	2	0	SW	1	2	"$at"
+B	1	BEQ	"$zero"	"$zero"	1
