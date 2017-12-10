@@ -15,6 +15,34 @@
 #include <reloc.h>
 
 /**
+ * @param valeur entier 32 bits codé en little indian
+ * @return entier 32 bits
+ * @brief Cette fonction permet de passer d'un entier 32 bits codé en little indian à un entier codé en big indian
+ *
+ * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
+ * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
+ */
+uint32_t big_indian_32 (uint32_t valeur)
+{
+	uint32_t val_big_indian = (valeur & 0xFF)<<24 | (valeur & 0xFF00)<<8 | (valeur & 0xFF0000)>>8 | (valeur & 0xFF000000)>>24;
+	return val_big_indian;
+}
+
+/**
+ * @param valeur entier 16 bits codé en little indian
+ * @return entier 16 bits
+ * @brief Cette fonction permet de passer d'un entier 16 bits codé en little indian à un entier codé en big indian
+ *
+ * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
+ * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
+ */
+uint16_t big_indian_16 (uint16_t valeur)
+{
+	uint16_t val_big_indian = (valeur & 0x00FF)<<8 | (valeur & 0xFF00)>>8;
+	return val_big_indian;
+}
+
+/**
  * @param donnee_p pointeur sur un listage à détruire
  * @return Rien
  * @brief Cette fonction permet de détuire et libérer le contenu d'un listage
@@ -358,3 +386,96 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
 	}
 	fclose(fichier);
 }
+
+/**
+ * @param donnee_p pointeur sur un listage à détruire
+ * @return Rien
+ * @brief Cette fonction permet de détuire et libérer le contenu d'un listage
+ *
+ * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
+ * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
+ */
+void generer_objet (char *nom_fichier, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, uint32_t decalage_text, uint32_t decalage_data, uint32_t decalage_bss)
+{
+    FILE *fichier = NULL;
+    uint32_t bi32;
+    unsigned int i;
+    char *buffer_data = NULL;
+    struct Noeud_Liste_s *noeud_p = NULL;
+    struct Instruction_s *instruction_p = NULL;
+    struct Donnee_s *donnee_p = NULL;
+
+
+    fichier = fopen(nom_fichier, "w");
+    if ( NULL == fichier ) {
+        /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
+        ERROR_MSG("Impossible d'écrire le fichier \"%s\". Abandon du traitement",nom_fichier);
+    }
+
+    bi32 = big_indian_32 (decalage_text);
+    fwrite (&bi32, sizeof(bi32), 1, fichier);
+
+    noeud_p = debut_liste (liste_text_p);
+    while (noeud_p) {
+    	instruction_p = noeud_p->donnee_p;
+    	bi32 = big_indian_32 (instruction_p->op_code);
+    	fwrite (&bi32, sizeof(bi32), 1, fichier);
+    	noeud_p = suivant_liste (liste_text_p);
+    }
+
+    bi32 = big_indian_32 (decalage_data);
+    fwrite (&bi32, sizeof(bi32), 1, fichier);
+
+    if (decalage_data > 0) {
+
+    	buffer_data = calloc (decalage_data, sizeof(*buffer_data));
+    	noeud_p = debut_liste (liste_data_p);
+    	while (noeud_p) {
+    		donnee_p = noeud_p->donnee_p;
+    		switch (donnee_p->type) {
+    		case D_BYTE:
+    			buffer_data[donnee_p->decalage] = donnee_p->valeur.octet;
+    			break;
+
+    		case D_HALF:
+    			buffer_data[donnee_p->decalage]   = (char)((donnee_p->valeur.motNS & 0xFF00) >> 8);
+    			buffer_data[donnee_p->decalage+1] = (char)((donnee_p->valeur.motNS & 0x00FF));
+    			break;
+
+    		case D_WORD:
+    			buffer_data[donnee_p->decalage]   = (char)((donnee_p->valeur.motNS & 0xFF000000) >> 24);
+    			buffer_data[donnee_p->decalage+1] = (char)((donnee_p->valeur.motNS & 0x00FF0000) >> 16);
+    			buffer_data[donnee_p->decalage+2] = (char)((donnee_p->valeur.motNS & 0x0000FF00) >> 8);
+    			buffer_data[donnee_p->decalage+3] = (char)((donnee_p->valeur.motNS & 0x000000FF));
+    			break;
+
+    		case D_ASCIIZ:
+    			for (i=0; i < (str_unesc_len (donnee_p->lexeme_p->data) - 2 + 1); i++) {
+    				buffer_data[donnee_p->decalage + i] = donnee_p->valeur.chaine[i];
+    			}
+    			break;
+
+    		case D_SPACE:
+    			/* déjà mis à 0 dans le buffer par calloc */
+    			break;
+
+    		default:
+    			ERROR_MSG ("Il n'y a pas d'autre type de donnée prévu");
+    		}
+
+    		noeud_p = suivant_liste (liste_data_p);
+    	}
+
+    	for (i=0; i < decalage_data; i++) {
+    		fwrite (buffer_data+i, sizeof(*buffer_data), 1, fichier);
+    	}
+    	free (buffer_data);
+    }
+
+    bi32 = big_indian_32 (decalage_bss);
+    fwrite (&bi32, sizeof(bi32), 1, fichier);
+
+
+    fclose (fichier);
+}
+

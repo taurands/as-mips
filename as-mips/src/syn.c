@@ -112,6 +112,27 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 	return SUCCESS;
 }
 
+/**
+ * @param liste_text_p pointeur sur la liste des instructions
+ * @param table_etiquettes_p pointeur sur la table des étiquettes
+ * @param table_def_registres_p pointeur sur la table de définition de registres
+ * @param table_def_instructions_p pointeur sur la table de définition d'instructions
+ * @return Rien
+ * @brief Cette fonction permet d'encoder l'ensemble de la liste d'instruction
+ */
+void encodage_liste_instruction(struct Liste_s *liste_text_p,struct Table_s *table_etiquettes_p, struct Table_s *table_def_registres_p, struct Table_s *table_def_instructions_p)
+{
+	struct Noeud_Liste_s *noeud_courant_instruction_p = NULL;
+	struct Instruction_s *instruction_p = NULL;
+	noeud_courant_instruction_p = debut_liste (liste_text_p);
+	while (noeud_courant_instruction_p) {
+		instruction_p = noeud_courant_instruction_p->donnee_p;
+		encodage_instruction(instruction_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p);
+		noeud_courant_instruction_p = suivant_liste (liste_text_p);
+	}
+}
+
+
 char *clefEtiquette(void *donnee_p)
 {
 	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->lexeme_p->data : NULL);
@@ -865,19 +886,16 @@ int analyser_syntaxe(
 		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
 		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
 		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
-		struct Liste_s *liste_bss_p)				/**< Pointeur sur la liste des réservations des .space de la section .bss */
+		struct Liste_s *liste_bss_p,				/**< Pointeur sur la liste des réservations des .space de la section .bss */
+		uint32_t *decalage_text_p,
+		uint32_t *decalage_data_p,
+		uint32_t *decalage_bss_p)
 {
-	uint32_t decalage_text=0;
-	uint32_t decalage_data=0;
-	uint32_t decalage_bss=0;
 
 	char msg_err[2*STRLEN+1];
 
 	struct Noeud_Liste_s *noeud_courant_p=NULL;
 	struct Lexeme_s *lexeme_p=NULL;
-
-	struct Noeud_Liste_s *noeud_courant_instruction_p=NULL;
-	struct Instruction_s *instruction_p = NULL;
 
 	enum Section_e section=S_INIT;
 	struct Etiquette_s **mem_etiq_table = NULL;
@@ -907,14 +925,14 @@ int analyser_syntaxe(
 					etat=INIT;
 				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) {
 					if (section == S_TEXT)
-						code_erreur = enregistrer_etiquette(lexeme_p, section, decalage_text, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_text_p, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 					else if (section == S_DATA) {
-						code_erreur = enregistrer_etiquette(lexeme_p, section, decalage_data, liste_etiquette_p, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_data_p, liste_etiquette_p, table_etiquettes_p, mem_etiq_table+index_mem, msg_err);
 						if ((code_erreur == SUCCESS) && (mem_etiq_table[index_mem]))
 							index_mem++;
 					}
 					else if (section == S_BSS)
-						code_erreur = enregistrer_etiquette(lexeme_p, section, decalage_bss, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
+						code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_bss_p, liste_etiquette_p, table_etiquettes_p, NULL, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -925,7 +943,7 @@ int analyser_syntaxe(
 						etat = ERREUR;
 				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
 					code_erreur = analyser_instruction(lignes_lexemes_p, lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p,
-							liste_text_p, liste_etiquette_p, table_etiquettes_p, &decalage_text, msg_err);
+							liste_text_p, liste_etiquette_p, table_etiquettes_p, decalage_text_p, msg_err);
 					if (code_erreur == FAIL_ALLOC)
 						return FAIL_ALLOC;
 					else if (code_erreur == SUCCESS)
@@ -936,7 +954,7 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -945,13 +963,13 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_HALF]))) {
-					aligner_decalage(&decalage_data, 1);
+					aligner_decalage(decalage_data_p, 1);
 					for (index_mem = 0; mem_etiq_table[index_mem]; ) {
-						mem_etiq_table[index_mem]->decalage = decalage_data;
+						mem_etiq_table[index_mem]->decalage = *decalage_data_p;
 						mem_etiq_table[index_mem++] = NULL;
 					}
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -960,13 +978,13 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_WORD]))) {
-					aligner_decalage(&decalage_data, 2);
+					aligner_decalage(decalage_data_p, 2);
 					for (index_mem = 0; mem_etiq_table[index_mem]; ) {
-						mem_etiq_table[index_mem]->decalage = decalage_data;
+						mem_etiq_table[index_mem]->decalage = *decalage_data_p;
 						mem_etiq_table[index_mem++] = NULL;
 					}
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -975,13 +993,13 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_DATA) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_FLOAT]))) {
-					aligner_decalage(&decalage_data, 2);
+					aligner_decalage(decalage_data_p, 2);
 					for (index_mem = 0; mem_etiq_table[index_mem]; ) {
-						mem_etiq_table[index_mem]->decalage = decalage_data;
+						mem_etiq_table[index_mem]->decalage = *decalage_data_p;
 						mem_etiq_table[index_mem++] = NULL;
 					}
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -993,7 +1011,7 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -1005,7 +1023,7 @@ int analyser_syntaxe(
 					for (index_mem = 0; mem_etiq_table[index_mem]; )
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, &decalage_data, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -1014,7 +1032,7 @@ int analyser_syntaxe(
 					else
 						etat = ERREUR;
 				} else if ((section==S_BSS) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) {
-					code_erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, &decalage_bss, msg_err);
+					code_erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, decalage_bss_p, msg_err);
 					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return FAIL_ALLOC;
@@ -1078,13 +1096,6 @@ int analyser_syntaxe(
 			}
 		} while ((noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
 		free(mem_etiq_table);
-
-		noeud_courant_instruction_p = debut_liste (liste_text_p);
-		while (noeud_courant_instruction_p) {
-			instruction_p = noeud_courant_instruction_p->donnee_p;
-			encodage_instruction(instruction_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p);
-			noeud_courant_instruction_p = suivant_liste (liste_text_p);
-		}
 
 		return resultat;
 	} else {

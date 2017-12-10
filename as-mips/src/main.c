@@ -50,6 +50,10 @@ int main (int argc, char *argv[])
     unsigned int nb_symboles = 0;
     unsigned int nb_instructions = 0;
 
+	uint32_t decalage_text=0;
+	uint32_t decalage_data=0;
+	uint32_t decalage_bss=0;
+
     char *nom_fichier_asm = NULL;
     char nom_fichier_l[FILENAME_MAX+1];
     char nom_fichier_obj[FILENAME_MAX+1];
@@ -118,7 +122,11 @@ int main (int argc, char *argv[])
     		break;
 
     	/* effectue l'analyse syntaxique */
-    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, liste_etiquette_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p);
+    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, liste_etiquette_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p,
+    			&decalage_text, &decalage_data, &decalage_bss);
+
+    	/* Effectue l'encodage des instructions */
+    	encodage_liste_instruction(liste_text_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p);
 
     	/* Effectue l'analyse des relocations */
     	relocation_texte(liste_text_p, liste_reloc_text_p, liste_etiquette_p, table_etiquettes_p);
@@ -131,8 +139,9 @@ int main (int argc, char *argv[])
     	generer_listage (nom_fichier_l, liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
 
     	strcpy(nom_fichier_obj, nom_fichier_asm);
-    	replace_or_add_extension(nom_fichier_obj, ".obj");
+    	replace_or_add_extension(nom_fichier_obj, ".o");
     	DEBUG_MSG("Nom fichier asm : '%s', Nom du fichier objet : '%s'", nom_fichier_asm, nom_fichier_obj);
+    	generer_objet (nom_fichier_obj, liste_text_p, liste_data_p, decalage_text, decalage_data, decalage_bss);
 
     	affiche_liste_instructions(stdout, liste_text_p, table_etiquettes_p);
     } while (FALSE);
