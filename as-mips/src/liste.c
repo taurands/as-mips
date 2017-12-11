@@ -69,7 +69,7 @@ int ajouter_debut_liste(struct Liste_s *liste_p, void *donnee_p)
 	struct Noeud_Liste_s *noeud_p = NULL;
 
 	if (liste_p) {
-		noeud_p=malloc(sizeof(*noeud_p));
+		noeud_p=calloc (1, sizeof(*noeud_p));
 		if (!noeud_p)
 			return FAIL_ALLOC;
 
@@ -101,7 +101,7 @@ int ajouter_courant_liste (struct Liste_s *liste_p, void *donnee_p)
 		if (!liste_p->courant_p)
 			return ajouter_fin_liste (liste_p, donnee_p);
 		else {
-			noeud_p=malloc(sizeof(*noeud_p));
+			noeud_p=calloc (1, sizeof(*noeud_p));
 			if (!noeud_p)
 				return FAIL_ALLOC;
 
@@ -133,7 +133,7 @@ int ajouter_fin_liste(struct Liste_s *liste_p, void *donnee_p)
 	struct Noeud_Liste_s *noeud_p = NULL;
 
 	if (liste_p) {
-		noeud_p=malloc(sizeof(*noeud_p));
+		noeud_p=calloc (1, sizeof(*noeud_p));
 		if (!noeud_p)
 			return FAIL_ALLOC;
 

@@ -22,7 +22,7 @@ char UNESCAPED_CHAR[] = {'\'', '"', '\n', '\r', '\t', '\f', '\v', '\a', '\b', '\
 char *strdup (char* sourceStr) {
 	char* destStr=NULL;
 	if (sourceStr) {
-		destStr = malloc (sizeof(*destStr)*(1+strlen (sourceStr)));
+		destStr = calloc (1+strlen (sourceStr), sizeof(*destStr));
 		if (destStr) strcpy (destStr,sourceStr);
 	}
 	return destStr;

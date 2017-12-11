@@ -533,7 +533,7 @@ int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 		if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_reg)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nom du registre en cours");
 		if (1 != fscanf(f_p,"%d", &valeur)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas la valeur du registre en cours");
 
-		def_registre_p=malloc(sizeof(*def_registre_p));
+		def_registre_p = calloc (1, sizeof(*def_registre_p));
 		def_registre_p->nom=strdup(nom_reg);
 		def_registre_p->valeur=valeur;
 		ajouter_table(*table_definition_pp, def_registre_p);

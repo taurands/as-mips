@@ -1,4 +1,4 @@
-.directe_non_valide_dans_init
+.directive_non_valide_dans_init
 .text
 ODD
 ADD

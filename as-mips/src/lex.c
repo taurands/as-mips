@@ -407,8 +407,10 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
  * @return Rien, si ce n'est la liste de lexème mise à jour ainsi les nombres d'étiquettes et d'instructions
  * @brief Cette fonction fait l'analyse lexicale d'un ligne ayant subi une "standardisation" (pre-processing)
  */
-void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
+int lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
 {
+	int code_retour = SUCCESS;
+	int code_sortie = SUCCESS;
 	struct Lexeme_s *lexeme_p;
 
 	enum Etat_lex_e etat;
@@ -473,6 +475,11 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
 			default :
 				;
 			}
+			if (etat == ERREUR) {
+				fprintf (stderr, "Erreur lexicale ligne %d : %s\n", num_ligne, token);
+				fprintf (stderr, "%s\n\n", ligne);
+				code_sortie = FAILURE;
+			}
 			if (etat==ETIQUETTE) {
 				token[strlen(token)-1]='\0'; /* enlève des deux points à la fin de l'étiquette */
 				(*nb_etiquettes_p)++;
@@ -493,23 +500,33 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
 				}
 				debutLigne=0;
 			}
-			lexeme_p = malloc(sizeof(*lexeme_p));
+			if (!(lexeme_p = calloc (1, sizeof(*lexeme_p))))
+				return FAIL_ALLOC;
 
 			lexeme_p->data = token;
 			lexeme_p->nature=etat;
 			lexeme_p->ligne=num_ligne;
-			ajouter_fin_liste(liste_lexemes_p, lexeme_p);
 
+			if ((code_retour = ajouter_fin_liste(liste_lexemes_p, lexeme_p)) == FAIL_ALLOC) {
+				free (lexeme_p);
+				return FAIL_ALLOC;
+			}
 		}
 	}
 
 	/* rajoute un lexeme marqueur de fin de ligne */
-	lexeme_p = malloc(sizeof(*lexeme_p));
+	if (!(lexeme_p = calloc (1, sizeof(*lexeme_p))))
+		return FAIL_ALLOC;
 
     lexeme_p->data = strdup(ligne);
     lexeme_p->nature=L_FIN_LIGNE;
     lexeme_p->ligne=num_ligne;
-    ajouter_fin_liste(liste_lexemes_p, lexeme_p);
+	if ((code_retour = ajouter_fin_liste(liste_lexemes_p, lexeme_p)) == FAIL_ALLOC) {
+		free (lexeme_p);
+		return FAIL_ALLOC;
+	}
+
+    return code_sortie;
 }
 
 /**
@@ -522,8 +539,10 @@ void lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int nu
  * @brief Cette fonction charge le fichier assembleur et effectue sont analyse lexicale
  *
  */
-void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
+int lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
 {
+	int code_retour = SUCCESS;
+	int code_sortie = SUCCESS;
 
     FILE        *fp   = NULL;
     char         line[STRLEN+1]; /* original source line */
@@ -542,21 +561,36 @@ void lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Li
         if ( NULL != fgets (line, STRLEN, fp) ) {
             if (strlen(line)) if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';  /* remove final '\n' */
             (*nb_lignes_p)++;
-            listage_p = calloc(1, sizeof(*listage_p));
+            if (!(listage_p = calloc(1, sizeof(*listage_p)))) {
+            	fclose (fp);
+            	return FAIL_ALLOC;
+            }
+
             listage_p->ligne = *nb_lignes_p;
             listage_p->chaine = strdup(line);
-            ajouter_fin_liste (liste_lignes_source_p, listage_p);
+            if ((code_retour = ajouter_fin_liste (liste_lignes_source_p, listage_p)) == FAIL_ALLOC) {
+            	fclose (fp);
+            	free (listage_p);
+            	return FAIL_ALLOC;
+            }
+
             listage_p = NULL;
 
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
-                lex_read_line( res, liste_lexemes_p, *nb_lignes_p, nb_etiquettes_p, nb_symboles_p, nb_instructions_p );
+                code_retour = lex_read_line( res, liste_lexemes_p, *nb_lignes_p, nb_etiquettes_p, nb_symboles_p, nb_instructions_p );
+                if (code_retour == FAIL_ALLOC) {
+                	fclose (fp);
+                	return FAIL_ALLOC;
+                } else if (!code_retour)
+                	code_sortie = FAILURE;
             }
         }       
     }
 
     fclose(fp);
     if (!*nb_lignes_p) WARNING_MSG("Attention, le fichier \"%s\" est vide", nom_fichier);
+    return code_sortie;
 }
 
 /**

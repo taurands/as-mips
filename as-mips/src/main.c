@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
         exit (EXIT_FAILURE);
     }
 
-    do { /* Do While pour permettre de sortir proprement en cas de problème d'allocation mémoire */
+    do { /* Do While pour permettre de sortir proprement en cas de problème d'allocation mémoire ou d'erreur de traitement (évite une gestion des erreurs en "goto") */
     	if ((code_retour = creer_liste (&liste_lexemes_p, (fonctionDestructeur *)detruit_lexeme)))
     		break;
     	if ((code_retour = creer_liste (&liste_lexemes_supl_p, (fonctionDestructeur *)detruit_lexeme)))
@@ -103,7 +103,8 @@ int main (int argc, char *argv[])
     		break;
 
         /* ---------------- effectue l'analyse lexicale  -------------------*/
-        lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_symboles, &nb_instructions);
+        if ((code_retour = lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_symboles, &nb_instructions)))
+        	break;
 
         /* ---------------- print the lexical analysis -------------------*/
         /*
@@ -165,6 +166,10 @@ int main (int argc, char *argv[])
     detruire_liste (&liste_lexemes_supl_p);
 	detruire_liste (&liste_lexemes_p);
 
+	if (code_retour == FAIL_ALLOC)
+		fprintf (stderr, "Mémoire insuffisante\n");
+	else if (code_retour != SUCCESS)
+		fprintf (stderr, "Erreur : Arrêt du traitement\n");
 	exit (code_retour);
 }
 
