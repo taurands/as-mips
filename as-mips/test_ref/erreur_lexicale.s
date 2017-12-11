@@ -1,0 +1,3 @@
+# TEST_RETURN_CODE=FAIL
+.text
+XOR -

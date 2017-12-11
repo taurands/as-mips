@@ -105,6 +105,8 @@ int main (int argc, char *argv[])
         /* ---------------- effectue l'analyse lexicale  -------------------*/
         if ((code_retour = lex_load_file(nom_fichier_asm, liste_lexemes_p, liste_lignes_source_p, &nb_lignes, &nb_etiquettes, &nb_symboles, &nb_instructions)))
         	break;
+        else
+        	DEBUG_MSG ("Pas d'erreur lexicale");
 
         /* ---------------- print the lexical analysis -------------------*/
         /*
@@ -123,8 +125,11 @@ int main (int argc, char *argv[])
     		break;
 
     	/* effectue l'analyse syntaxique */
-    	analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, liste_etiquette_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p,
-    			&decalage_text, &decalage_data, &decalage_bss);
+    	if ((code_retour = analyser_syntaxe(liste_lexemes_p, liste_lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p, liste_etiquette_p, table_etiquettes_p, liste_text_p, liste_data_p, liste_bss_p,
+    			&decalage_text, &decalage_data, &decalage_bss)))
+    		break;
+    	else
+    		DEBUG_MSG ("Pas d'erreur de syntaxe");
 
     	/* Effectue l'encodage des instructions */
     	encodage_liste_instruction(liste_text_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p);

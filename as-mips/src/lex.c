@@ -582,7 +582,7 @@ int lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Lis
                 if (code_retour == FAIL_ALLOC) {
                 	fclose (fp);
                 	return FAIL_ALLOC;
-                } else if (!code_retour)
+                } else if (code_retour)
                 	code_sortie = FAILURE;
             }
         }       
