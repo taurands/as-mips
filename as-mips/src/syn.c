@@ -70,7 +70,7 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 			code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
 		}
 
-		if (instruction_p->operandes[j]->nature == L_SYMBOLE){
+		if (instruction_p->operandes[j]->nature == L_SYMBOLE) {
 			etiquette_p = donnee_table (table_etiquettes_p, instruction_p->operandes[j]->data);
 			if (etiquette_p->section == S_UNDEF)
 				val_operande = 0;
@@ -84,14 +84,18 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 					val_operande = etiquette_p->decalage;
 					if (def_instruction_p->reloc == R_MIPS_HI16) {
 						val_operande = val_operande >> 16;
+					} else  if (def_instruction_p->reloc == R_MIPS_LO16) {
+						val_operande = val_operande & masque;
 					}
 					val_operande = val_operande >> def_instruction_p->codes[j].shift;
 				}
+				/* XXX A voir ce qu'on en fait
 				if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
 					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
 
 				if ((val_operande > borne_sup) || (val_operande < borne_inf))
 					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
+				*/
 				code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
 			}
 		}
