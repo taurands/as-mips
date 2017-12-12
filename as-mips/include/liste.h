@@ -34,8 +34,6 @@ struct Liste_s {
 int creer_liste (struct Liste_s **liste_pp, fonctionDestructeur *freeFn);
 int detruire_liste (struct Liste_s **liste_pp);
 
-int ajouter_debut_liste (struct Liste_s *liste_p, void *donnee_p);
-int ajouter_courant_liste (struct Liste_s *liste_p, void *donnee_p);
 int ajouter_fin_liste (struct Liste_s *liste_p, void *donnee_p);
 
 struct Noeud_Liste_s *courant_liste (struct Liste_s *liste_p);
