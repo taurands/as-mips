@@ -132,7 +132,10 @@ int main (int argc, char *argv[])
     		DEBUG_MSG ("Pas d'erreur de syntaxe");
 
     	/* Effectue l'encodage des instructions */
-    	encodage_liste_instruction(liste_text_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p);
+    	if ((code_retour = encoder_liste_instruction(liste_text_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p)))
+    		break;
+    	else
+    		DEBUG_MSG ("L'encodage des instructions s'est bien passée");
 
     	/* Effectue l'analyse des relocations */
     	if ((code_retour = relocater_texte(liste_text_p, liste_reloc_text_p, table_etiquettes_p)))

@@ -98,6 +98,6 @@ int analyser_syntaxe (struct Liste_s *lignes_lexemes_p, struct Liste_s *lexemes_
 		struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p,
 		uint32_t *decalage_text_p, uint32_t *decalage_data_p, uint32_t *decalage_bss_p);
 
-void encodage_liste_instruction(struct Liste_s *liste_text_p,struct Table_s *table_etiquettes_p, struct Table_s *table_def_registres_p, struct Table_s *table_def_instructions_p);
+int encoder_liste_instruction(struct Liste_s *liste_text_p,struct Table_s *table_etiquettes_p, struct Table_s *table_def_registres_p, struct Table_s *table_def_instructions_p);
 
 #endif /* _SYN_H_ */
