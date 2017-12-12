@@ -1,5 +1,5 @@
 /**
- * @file syn.h
+ * @file reloc.h
  * @author BERTRAND Antoine TAURAND Sébastien
  * @brief Definition de type et de prototypes de fonctions liées au traitement des relocations
  */
@@ -19,8 +19,8 @@ struct Relocateur_s {
 	struct Etiquette_s *etiquette_p;				/**< Pointeur sur la définition de l'étiquette associée */
 };
 
-int relocation_data(struct Liste_s *liste_data_p, struct Liste_s *liste_reloc_data_p, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p);
-int relocation_texte(struct Liste_s *liste_text_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p);
+int relocater_data(struct Liste_s *liste_data_p, struct Liste_s *liste_reloc_data_p, struct Table_s *table_etiquettes_p);
+int relocater_texte(struct Liste_s *liste_text_p, struct Liste_s *liste_reloc_text_p, struct Table_s *table_etiquettes_p);
 
 char *type_reloc_to_str(enum Reloc_e type_reloc);
 char *type_section_to_str(enum Section_e section);

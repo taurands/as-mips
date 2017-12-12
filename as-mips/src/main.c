@@ -135,21 +135,27 @@ int main (int argc, char *argv[])
     	encodage_liste_instruction(liste_text_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p);
 
     	/* Effectue l'analyse des relocations */
-    	relocation_texte(liste_text_p, liste_reloc_text_p, liste_etiquette_p, table_etiquettes_p);
-    	relocation_data(liste_data_p, liste_reloc_data_p, liste_etiquette_p, table_etiquettes_p);
+    	if ((code_retour = relocater_texte(liste_text_p, liste_reloc_text_p, table_etiquettes_p)))
+    		break;
+    	else
+    		DEBUG_MSG ("Relocation de la section texte effectuée correctement");
 
+    	if ((code_retour = relocater_data(liste_data_p, liste_reloc_data_p, table_etiquettes_p)))
+    		break;
+    	else
+    		DEBUG_MSG ("Relocation de la section data effectuée correctement");
 
     	strcpy(nom_fichier_l, nom_fichier_asm);
     	replace_or_add_extension(nom_fichier_l, ".l");
-    	DEBUG_MSG("Nom fichier asm : '%s', Nom du fichier listage : '%s'", nom_fichier_asm, nom_fichier_l);
     	generer_listage (nom_fichier_l, liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
 
     	strcpy(nom_fichier_obj, nom_fichier_asm);
     	replace_or_add_extension(nom_fichier_obj, ".o");
-    	DEBUG_MSG("Nom fichier asm : '%s', Nom du fichier objet : '%s'", nom_fichier_asm, nom_fichier_obj);
     	generer_objet (nom_fichier_obj, liste_text_p, liste_data_p, decalage_text, decalage_data, decalage_bss);
 
+    	/* Pour afficher eventuellment les instructions de remplacement pour les pseudo instructions et instructions spéciales type LW/SW symbole
     	affiche_liste_instructions(stdout, liste_text_p, table_etiquettes_p);
+    	*/
     } while (FALSE);
 
 

@@ -1,7 +1,7 @@
 /**
  * @file reloc.c
  * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
- * @brief Definition des fonctions liées au traitement syntaxique des relocations
+ * @brief Definition des fonctions liées au traitement des relocations
  */
 
 #include <stdlib.h>
@@ -20,20 +20,19 @@
  * @param liste_data_p Pointeur sur la liste des données de la section .data
  * @param liste_reloc_data_p Pointeur sur la liste des différentes relocations dans la section rel.data
  * @param table_etiquettes_p Pointeur sur la table des etiquettes
- * @return entier montrant l'échec ou non de la procédure
+ * @return SUCCESS si la relocation des data s'est bien passée, FAIL_ALLOC s'il n'y a pas assez de mémoire, FAILURE s'il manque la liste des données, des reloc_data ou la table d'étiquettes
  * @brief Remplissage de la liste rel.data
  */
-int relocation_data(
-		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
-		struct Liste_s *liste_reloc_data_p,			/**< Pointeur sur la liste des différentes relocations dans la section rel.data */
-		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes rangées dans l'ordre des numéros de ligne */
-		struct Table_s *table_etiquettes_p)			/**< Pointeur sur la table des etiquettes */
+int relocater_data(
+		struct Liste_s *liste_data_p,
+		struct Liste_s *liste_reloc_data_p,
+		struct Table_s *table_etiquettes_p)
 {
 	struct Noeud_Liste_s *noeud_courant_p = NULL;
 	struct Donnee_s *donnee_p = NULL;
 	struct Relocateur_s *relocateur_p=NULL;
 
-	if (!liste_data_p || !liste_reloc_data_p)
+	if (!liste_data_p || !liste_reloc_data_p || !table_etiquettes_p)
 			return FAILURE;
 	else if ((noeud_courant_p = debut_liste(liste_data_p)) && (donnee_p = noeud_courant_p->donnee_p)) {
 		do {
@@ -46,7 +45,10 @@ int relocation_data(
 				relocateur_p->decalage = donnee_p->decalage;
 				relocateur_p->type_reloc = R_MIPS_32;
 				relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, donnee_p->lexeme_p->data);
-				ajouter_fin_liste(liste_reloc_data_p, relocateur_p);
+				if (ajouter_fin_liste(liste_reloc_data_p, relocateur_p)) {
+					free (relocateur_p);
+					return FAIL_ALLOC;
+				}
 			}
 		} while ((noeud_courant_p = suivant_liste(liste_data_p)) && (donnee_p = noeud_courant_p->donnee_p));
 	}
@@ -57,13 +59,12 @@ int relocation_data(
  * @param liste_text_p Pointeur sur la liste des données de la section .text
  * @param liste_reloc_text_p Pointeur sur la liste des différentes relocations dans la section rel.text
  * @param table_def_instructions_p Pointeur sur la table des définitions
- * @return entier montrant l'échec ou non de la procédure
+ * @return SUCCESS si la relocation texte s'est bien passée, FAIL_ALLOC s'il n'y a pas assez de mémoire, FAILURE s'il manque la liste des text, des reloc_text ou la table d'étiquettes
  * @brief Remplissage de la liste rel.text
  */
-int relocation_texte(
+int relocater_texte(
 		struct Liste_s *liste_text_p,
 		struct Liste_s *liste_reloc_text_p,
-		struct Liste_s *liste_etiquette_p,
 		struct Table_s *table_etiquettes_p)
 {
 	struct Noeud_Liste_s *noeud_courant_p = NULL;
@@ -84,7 +85,10 @@ int relocation_texte(
 				relocateur_p->decalage = instruction_p->decalage;
 				relocateur_p->type_reloc = instruction_p->definition_p->reloc;
 				relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->data);
-				ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
+				if (ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) {
+					free (relocateur_p);
+					return FAIL_ALLOC;
+				}
 			}
 
 			if (instruction_p->definition_p->reloc == R_MIPS_LO16) {
@@ -97,7 +101,10 @@ int relocation_texte(
 					relocateur_p->decalage = instruction_p->decalage;
 					relocateur_p->type_reloc = instruction_p->definition_p->reloc;
 					relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->data);
-					ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
+					if (ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) {
+						free (relocateur_p);
+						return FAIL_ALLOC;
+					}
 				}
 				if ((instruction_p->operandes[instruction_p->definition_p->nb_ops-1]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)){
 					relocateur_p = calloc(1,sizeof(*relocateur_p));
@@ -108,7 +115,10 @@ int relocation_texte(
 					relocateur_p->decalage = instruction_p->decalage;
 					relocateur_p->type_reloc = instruction_p->definition_p->reloc;
 					relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->data);
-					ajouter_fin_liste(liste_reloc_text_p, relocateur_p);
+					if (ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) {
+						free (relocateur_p);
+						return FAIL_ALLOC;
+					}
 				}
 			}
 		} while ((noeud_courant_p = suivant_liste(liste_text_p)) && (instruction_p = noeud_courant_p->donnee_p));
@@ -157,13 +167,14 @@ char *type_section_to_str(enum Section_e section)
 
 
 /**
+ * @param fichier stream d'écriture pour le relocateur
  * @param relocateur_p Pointeur sur un relocateur
  * @return Rien
  * @brief Affichage d'un relocateur
  */
 void affiche_relocateur(
 		FILE *fichier,
-		struct Relocateur_s * relocateur_p)						/**< Pointeur sur un relocateur */
+		struct Relocateur_s * relocateur_p)
 {
 	if (relocateur_p->etiquette_p->section != S_UNDEF) {
 		fprintf(fichier, "%08x\t%s\t%-5s:%08x\t%s\n",relocateur_p->decalage,type_reloc_to_str(relocateur_p->type_reloc),type_section_to_str(relocateur_p->etiquette_p->section),relocateur_p->etiquette_p->decalage,relocateur_p->etiquette_p->lexeme_p->data);
@@ -174,6 +185,7 @@ void affiche_relocateur(
 }
 
 /**
+ * @param fichier stream d'écriture pour le relocateur
  * @param liste_reloc_data_p Pointeur sur la liste des données de la section rel.data
  * @return Rien
  * @brief Affichage de la liste des relocateurs de rel.data
