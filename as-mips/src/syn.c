@@ -919,7 +919,7 @@ int analyser_syntaxe(
 		return FAILURE;
 	else if ((noeud_courant_p = debut_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p)) {
 		msg_err[0]='\0';
-		mem_etiq_table = calloc (table_etiquettes_p->nbEltsMax, sizeof(*mem_etiq_table));
+		mem_etiq_table = calloc (table_etiquettes_p->nb_elts_max, sizeof(*mem_etiq_table));
 		do {
 			switch(etat) {
 			case INIT:

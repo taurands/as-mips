@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include <global.h>
-#include <notify.h>
 #include <table.h>
 
 /**
@@ -23,7 +22,7 @@
  * Algorithme basique mais utilisant quand même un crible d'Ératosthène sur les multiples de 2 ainsi que
  * l'arrêt de la recherche des diviseurs au delà de la racine carrée du nombre (sans calculer la racine bien sûr).
  */
-size_t nombrePremierGET(size_t nombre) {
+size_t nombre_premier_GET(size_t nombre) {
 	size_t diviseur;
 	if (!(nombre%2)) nombre++; /* si pair, +1 le rend impair (les multiples de 2 ne sont pas premiers) */
 
@@ -45,18 +44,18 @@ size_t nombrePremierGET(size_t nombre) {
  * Le choix effectué ici le place à 2/3. La taille de la table est un nombre premier
  * afin d'avoir un groupe cyclique pour la deuxième clef de hachage
  */
-size_t tailleTableHachageRecommandee(size_t nbElementsPrevus) {
-	return nombrePremierGET(nbElementsPrevus + (nbElementsPrevus >> 1) + 1);
+size_t taille_table_hachage_recommandee(size_t nbElementsPrevus) {
+	return nombre_premier_GET(nbElementsPrevus + (nbElementsPrevus >> 1) + 1);
 }
 
 /**
  * @param chaine chaine de caractères contenant la clef à hacher
  * @return valeur du hachage
- * @brief Renvoie une valeur de hachage suivant la définition de la deuxième version du livre de K & R.
+ * @brief Renvoie une valeur de hachage suivant la définition de la deuxième version du livre de Kernighan & Ritchie.
  *
  * Cette fonction est très similaire à la fonction de hachage de chaine de JAVA
  */
-size_t hashKR2(char *chaine) {
+size_t hash_KR2(char *chaine) {
 	size_t hachage = 0;
 	size_t caractere;
 
@@ -72,7 +71,7 @@ size_t hashKR2(char *chaine) {
  * @return valeur du hachage
  * @brief Renvoie une valeur de hachage suivant la définition de Bernstein.
  */
-size_t hashBernstein(char *chaine) {
+size_t hash_Bernstein(char *chaine) {
 	size_t hachage = 5381;
 	size_t caractere;
 
@@ -84,10 +83,11 @@ size_t hashBernstein(char *chaine) {
 }
 
 /**
+ * @param table_pp Pointeur de pointeur sur une table de hachage
  * @param nb_elts nombre d'élements minimal que la table devra pouvoir acceuillir
  * @param fn_clef_p pointeur sur une fonction permettant de renvoyer la clef d'identification à partir du pointeur sur l'élément
  * @param fn_destruction_p p pointeur sur une fonction permettant de détruire les données liées aux éléments eux-mêmes
- * @return pointeur sur la table de hachage générique créée
+ * @return SUCCESS si la table a été correctement créée et initialisée, FAIL_ALLOC en cas d'insuffissance mémoire, FAILURE si la table existe déjà ou si le pointeur de pointeur est nul.
  * @brief Crée une table de hachage générique
  */
 int creer_table(struct Table_s **table_pp, size_t nb_elts, fonctionClef *fn_clef_p, fonctionDestruction *fn_destruction_p)
@@ -97,11 +97,11 @@ int creer_table(struct Table_s **table_pp, size_t nb_elts, fonctionClef *fn_clef
 		if (!*table_pp)
 			return FAIL_ALLOC;
 
-	    (*table_pp)->nbEltsMax = tailleTableHachageRecommandee(nb_elts);
-	    (*table_pp)->nbElts=0;
+	    (*table_pp)->nb_elts_max = taille_table_hachage_recommandee(nb_elts);
+	    (*table_pp)->nb_elts=0;
 	    (*table_pp)->fnClef_p=fn_clef_p;
 	    (*table_pp)->fnDestruction_p=fn_destruction_p;
-	    (*table_pp)->table = calloc ((*table_pp)->nbEltsMax, sizeof(*(*table_pp)->table));
+	    (*table_pp)->table = calloc ((*table_pp)->nb_elts_max, sizeof(*(*table_pp)->table));
 	    if (!(*table_pp)->table) {
 	    	free (*table_pp);
 	    	*table_pp = NULL;
@@ -114,8 +114,8 @@ int creer_table(struct Table_s **table_pp, size_t nb_elts, fonctionClef *fn_clef
 }
 
 /**
- * @param table_p pointeur sur une table de hachage générique
- * @return SUCCESS si la table existe, NULL sinon
+ * @param table_pp Pointeur de pointeur sur une table de hachage générique
+ * @return SUCCESS si la table existe et a bien été supprimée, FAILURE sinon
  * @brief Supprime et libère la table de hachage et tout son contenu lié
  *
  * Si une fonction de destuction a été passée à la création de la table, elle sera utilisée pour libérer
@@ -126,7 +126,7 @@ int detruire_table(struct Table_s **table_pp) {
 	size_t i;
 
 	if (table_pp && *table_pp) {
-		for (i=0; i<(*table_pp)->nbEltsMax; i++)
+		for (i=0; i<(*table_pp)->nb_elts_max; i++)
 			if ((*table_pp)->table[i]) {
 				if ((*table_pp)->fnDestruction_p)
 					(*table_pp)->fnDestruction_p((*table_pp)->table[i]);
@@ -144,44 +144,20 @@ int detruire_table(struct Table_s **table_pp) {
 
 /**
  * @param table_p pointeur sur une table de hachage générique
- * @return Rien
- * @brief Affiche l'ensemble des clefs contenues dans la table
- *
- * Le premier nombre indique simplement la nième clef
- * Le nombre en [ ] indique l'index dans la table
- */
-void afficher_clefs_table(struct Table_s *table_p)
-{
-	size_t i, j;
-	char *clef_p;
-
-	if (table_p) {
-		j=0;
-		for (i=0; i<table_p->nbEltsMax; i++)
-			if (table_p->table[i]) {
-				j++;
-				clef_p = table_p->fnClef_p ? table_p->fnClef_p(table_p->table[i]) : (char *)table_p->table[i];
-				printf("%3zu->[%3zu] = %s\n", j, i, clef_p);
-			}
-	}
-}
-
-/**
- * @param table_p pointeur sur une table de hachage générique
  * @param clef chaine de caractère représentant l'identifiant de l'élément dont on veut obtenir l'index
  * @return l'index de la table dans lequel on a trouvé l'élément assoicé à la clé ou dans lequel il serait mis s'il n'y existe pas
  * @brief Renvoie l'index de la table de hachage correspondant à la clef
  *
- * Attention, l'index peut correspondre à une case de la table qui pointe sur NULL s'il n'y a pas d'élément correspand dans la table
+ * Attention, l'index peut correspondre à une case de la table qui pointe sur NULL s'il n'y a pas d'élément correspondant dans la table
  */
 size_t index_table(struct Table_s *table_p, char *clef)
 {
-	size_t hachage = hashKR2(clef) % table_p->nbEltsMax;
-	size_t pasCyclique = (hashBernstein(clef) % (table_p->nbEltsMax - 1)) + 1;
+	size_t hachage = hash_KR2(clef) % table_p->nb_elts_max;
+	size_t pasCyclique = (hash_Bernstein(clef) % (table_p->nb_elts_max - 1)) + 1;
     /* la clef existe dans la table si le pointeur n'est pas null et que la clef pointée est identique (pour pour gérer les collisions) */
     while ((table_p->table[hachage]) &&
     		(strcmp(clef, (table_p->fnClef_p ? table_p->fnClef_p(table_p->table[hachage]) : (char *)table_p->table[hachage])))) {
-        hachage = (hachage + pasCyclique) % table_p->nbEltsMax;
+        hachage = (hachage + pasCyclique) % table_p->nb_elts_max;
     }
     return hachage;
 }
@@ -219,7 +195,7 @@ int ajouter_table(struct Table_s *table_p, void *donnee_p)
 
 		if (!table_p->table[position]) {
 			table_p->table[position] = donnee_p;
-			table_p->nbElts++;
+			table_p->nb_elts++;
 			return SUCCESS;
 		}
 	}
@@ -246,7 +222,7 @@ int supprimer_table(struct Table_s *table_p, char *clef)
     if (table_p && table_p->table[position] && table_p->fnDestruction_p) {
     	table_p->fnDestruction_p(table_p->table[position]);
     	table_p->table[position] = NULL;
-    	table_p->nbElts--;
+    	table_p->nb_elts--;
     	return SUCCESS;
     }
     else
