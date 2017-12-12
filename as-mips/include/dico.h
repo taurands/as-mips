@@ -1,7 +1,7 @@
 /**
  * @file dico.h
  * @author BERTRAND Antoine, TAURAND Sébastien
- * @brief Definition des types et des prototypes de fonctions liées aux dictionnaires d'instructions et de registres
+ * @brief Definition des types et des prototypes de fonctions liées aux dictionnaires d'instructions, de pseudo-instructions et de registres
  */
 
 #ifndef _DICO_H_
@@ -37,25 +37,6 @@ enum Reloc_e {
 };
 
 /**
- * @struct RemplacementPseudo_s
- * @brief Structure permettant de stocker la définition du remplacement d'une pseudo instruction
- */
-struct RemplacementPseudo_s {
-	char *syntaxe_remplacement;	/**< chaine de remplacement de pseudo instruction */
-	unsigned int num_param[2];	/**< indice du paramètre de la pseudo instruction à appeler (0 = chaine vide) */
-};
-
-/**
- * @struct DefinitionPseudo_s
- * @brief Structure permettant de stocker la définition d'une pseudo instruction
- */
-struct DefinitionPseudo_s {
-	char* nom;									/**< nom de la pseudo instruction */
-	unsigned int nb_instr;						/**< nombre de lignes de remplacement pour la pseudo-instruction */
-	struct RemplacementPseudo_s **remplacement;	/**< Table pointant sur les lignes de remplacement */
-};
-
-/**
  * @struct CodeOperande_s
  * @brief Structure permettant de stocker la méthode d'encodage d'un opérande
  */
@@ -76,7 +57,7 @@ struct DefinitionInstruction_s {
 	unsigned int nb_ops;			/**< nombre d'opérandes de l'instruction */
 	enum Reloc_e reloc;				/**< Type de relocation */
 	uint32_t opcode;				/**< Code opération vierge */
-	struct CodeOperande_s codes[3];	/**< Information pour l'encodage des opérandes */
+	struct CodeOperande_s codes[NB_OPERANDE_MAX];	/**< Information pour l'encodage des opérandes */
 };
 
 
@@ -86,7 +67,7 @@ struct DefinitionInstruction_s {
  */
 struct RemplacementInstruction_s {
 	char* instruction;						/**< instruction à remplacer */
-	char* arg[3];							/**< indique le contenu différenciation double cote ou non */
+	char* arg[NB_OPERANDE_MAX];							/**< indique le contenu différenciation double cote ou non */
 };
 
 

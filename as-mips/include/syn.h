@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include <global.h>
 #include <liste.h>
 #include <table.h>
 
@@ -47,7 +48,7 @@ struct Instruction_s {
 	unsigned int ligne;								/**< Numéro de ligne source associé à la ligne de lexème traitée */
 	uint32_t decalage;								/**< Décalage de l'instruction */
 	uint32_t op_code;								/**< Code opération de l'instruction */
-	struct Lexeme_s *operandes[3];					/**< Lexème de l'opérande 1 */
+	struct Lexeme_s *operandes[NB_OPERANDE_MAX];	/**< Lexème de l'opérande 1 */
 	char *source;									/**< Pointeur sur le texte source de cette instruction */
 };
 

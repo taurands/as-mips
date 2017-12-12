@@ -832,7 +832,7 @@ int analyser_instruction(
 				if (i == 0)
 					instr_supl_p->source = lexeme_p->data;
 
-				for (j=0; j<3; j++) {
+				for (j=0; j<NB_OPERANDE_MAX; j++) {
 					if (def_pseudo_p->rempl[i].arg[j][0] != DQ_CHAR) {
 						nb=strtol(def_pseudo_p->rempl[i].arg[j],NULL,0);
 						if (nb>0) {

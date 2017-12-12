@@ -45,9 +45,11 @@
 #define STRLEN          256
 
 #define NB_INSTR_PSEUDO_MAX 2
+#define NB_OPERANDE_MAX	3
 /*!
   \brief INTERNALS: Value for boolean FALSE.
  */
+
 #define FALSE            0
 
 /*!
