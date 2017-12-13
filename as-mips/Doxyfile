@@ -743,11 +743,15 @@ WARN_LOGFILE           = doc/doxygen_warning.txt
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ./include/lex.h \
+INPUT                  = ./include/listage.h \
+						 ./include/reloc.h \
                          ./include/syn.h \
+						 ./include/lex.h \
                          ./include/dico.h \
                          ./include/liste.h \
                          ./include/table.h \
+                         ./include/str_utils.h \
+                         ./include/global.h \
                          ./src
 
 # This tag can be used to specify the character encoding of the source files

@@ -31,6 +31,7 @@ const char *NOMS_DATA[] = {".space", ".byte", ".half", ".word", ".float", ".asci
  * @param instruction_p  Pointeur sur l'instruction dont on va remplir le code opérande défini le type de donnée d'une donnée
  * @param table_etiquettes_p Pointeur sur la table d'étiquette
  * @param table_def_registres_p Pointeur sur la table des définitions de registres
+ * @param table_def_instructions_p table de définition des instructions
  * @return entier indiquant le bon déroulement ou non de la procédure
  * @brief Cette fonction permet de d'encoder le code opérande de l'instruction
  *
@@ -223,6 +224,7 @@ void aligner_decalage(uint32_t *decalage_p, unsigned int nb_bits)
  * @param lexeme_p pointeur sur le lexeme correspondant
  * @param section section où est définie l'étiquette
  * @param decalage Entier 32 bits correspondant au decalage mémoire par rapport au début de section où est définie l'étiquette
+ * @param liste_etiquette_p pointeur sur la liste des etiquetes dans l'ordre d'apparition
  * @param tableEtiquettes_p pointeur sur la table où sera ajouter l'étiquette
  * @param mem_etiq_pp pointeur de pointeur permettant de garder en mémoire l'étiquette intacte
  * @param msg_err message d'erreur le cas échant
@@ -949,6 +951,7 @@ int analyser_instruction(
  * @param table_def_instructions_p pointeur sur la table "dico" des instructions
  * @param table_def_pseudo_p pointeur sur la table "dico" des pseudos instructions
  * @param table_def_registres_p pointeur sur la table "dico" des registres
+ * @param liste_etiquette_p pointeur sur la liste des étiquettes dans leur ordre d'apparition
  * @param table_etiquettes_p pointeur sur la table des étiquettes
  * @param liste_text_p pointeur sur la liste des instructions de la section .text
  * @param liste_data_p pointeur sur la liste des données de la section .data

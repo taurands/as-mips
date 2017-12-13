@@ -59,7 +59,7 @@ int relocater_data(
 /**
  * @param liste_text_p Pointeur sur la liste des données de la section .text
  * @param liste_reloc_text_p Pointeur sur la liste des différentes relocations dans la section rel.text
- * @param table_def_instructions_p Pointeur sur la table des définitions
+ * @param table_etiquettes_p Pointeur sur la table des étiquettes
  * @return SUCCESS si la relocation texte s'est bien passée, FAIL_ALLOC s'il n'y a pas assez de mémoire, FAILURE s'il manque la liste des text, des reloc_text ou la table d'étiquettes
  * @brief Remplissage de la liste rel.text
  */
@@ -188,7 +188,7 @@ void affiche_relocateur(
 
 /**
  * @param fichier stream d'écriture pour le relocateur
- * @param liste_reloc_data_p Pointeur sur la liste des données de la section rel.data
+ * @param liste_reloc_p Pointeur sur la liste des données de la section rel.data
  * @return Rien
  * @brief Affichage de la liste des relocateurs de rel.data
  */

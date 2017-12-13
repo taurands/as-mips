@@ -103,8 +103,10 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
 
 /**
  * @param fichier Pointeur sur le fichier texte où l'on va écrire la liste d'assemblage (ici une donnee)
- * @param donnee_p pointeur sur un element de .data ou .bss à lire
- * @param table_p pointeur sur une table d'etiuette
+ * @param liste_p pointeur sur une liste d'element de .data ou .bss à lire
+ * @param table_p pointeur sur une table d'etiquette
+ * @param source pointeur sur chaine de caractère contenant la ligne source
+ * @param ligne numéro de la ligne source associée à cet élement
  * @return Rien
  * @brief Cette fonction permet d'afficher un element des sections .data ou .bss
  *

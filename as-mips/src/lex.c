@@ -88,9 +88,9 @@ int creer_lexeme(struct Lexeme_s **lexeme_pp, char *data, enum Nature_lexeme_e n
 }
 
 /**
- * @param etat etat de la machine à états finis lexicale
- * @return chaine de caractères contenant le nom de l'état
- * @brief Cette fonction permet de donner le nom correspondant à un état
+ * @param nature Nature du lexeme considéré
+ * @return chaine de caractères contenant le nom de la nature
+ * @brief Cette fonction permet de donner le nom correspondant une nature de lexème
  */	
 char *nature_lex_to_str(enum Nature_lexeme_e nature)
 {
@@ -364,6 +364,7 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
  * @param liste_lexemes_p pointeur sur la liste de lexèmes servant à stocker les lexèmes qui seront extraits lors de l'analyse lexicale
  * @param num_ligne le numéro de la ligne dans le fichier source
  * @param nb_etiquettes_p un pointeur sur le nombre d'étiquette que l'on trouvera dans l'analyse
+ * @param nb_symboles_p un pointeur sur le nombre de symboles que l'on trouvera dans l'analyse
  * @param nb_instructions_p un pointeur sur le nombre d'instructions que l'on trouvera à priori dans l'analyse
  * @return SUCCESS si la procédure c'est bien passée, FAIL_ALLOC en cas d'insuffissance mémoire, FAILURE sinon
  * @brief Cette fonction fait l'analyse lexicale d'un ligne ayant subi une "standardisation" (pre-processing)
@@ -493,8 +494,10 @@ int lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num
 /**
  * @param nom_fichier Le nom du fichier source asssembleur
  * @param liste_lexemes_p Un pointeur sur une liste générique de lexèmes
+ * @param liste_lignes_source_p Le pointeur sur la liste des lignes du code source
  * @param nb_lignes_p Le pointeur vers le compteur de nombre de lignes
  * @param nb_etiquettes_p Le pointeur vers le compteur de nombre d'étiquettes
+ * @param nb_symboles_p Le pointeur sur le nombre de symboles rencontrés
  * @param nb_instructions_p Le pointeur vers le compteur de nombre d'instructions
  * @return SUCCESS si la procédure c'est bien passée, FAIL_ALLOC en cas d'insuffissance mémoire, FAILURE sinon
  * @brief Cette fonction charge le fichier assembleur et effectue son analyse lexicale
