@@ -1010,13 +1010,13 @@ int analyser_syntaxe(
 					etat=INIT;
 				else if ((section!=S_INIT) && (lexeme_p->nature==L_ETIQUETTE)) {
 					if (section == S_TEXT) {
-						if ((code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_text_p, liste_etiquette_p, table_etiquettes_p, NULL, msg_err)) != SUCCESS) {
+						if ((code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_text_p, liste_etiquette_p, table_etiquettes_p, NULL, msg_err)) == FAIL_ALLOC) {
 							free (mem_etiq_table);
 							return code_erreur;
 						}
 					}
 					else if (section == S_DATA) {
-						if ((code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_data_p, liste_etiquette_p, table_etiquettes_p, mem_etiq_table+index_mem, msg_err)) != SUCCESS) {
+						if ((code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_data_p, liste_etiquette_p, table_etiquettes_p, mem_etiq_table+index_mem, msg_err)) == FAIL_ALLOC) {
 							free (mem_etiq_table);
 							return code_erreur;
 						}
@@ -1024,7 +1024,7 @@ int analyser_syntaxe(
 							index_mem++;
 					}
 					else if (section == S_BSS) {
-						if ((code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_bss_p, liste_etiquette_p, table_etiquettes_p, NULL, msg_err)) != SUCCESS) {
+						if ((code_erreur = enregistrer_etiquette(lexeme_p, section, *decalage_bss_p, liste_etiquette_p, table_etiquettes_p, NULL, msg_err)) == FAIL_ALLOC) {
 							free (mem_etiq_table);
 							return code_erreur;
 						}
@@ -1036,8 +1036,10 @@ int analyser_syntaxe(
 				} else if ((section==S_TEXT) && (lexeme_p->nature==L_INSTRUCTION)) {
 					code_erreur = analyser_instruction(lignes_lexemes_p, lexemes_supl_p, table_def_instructions_p, table_def_pseudo_p, table_def_registres_p,
 							liste_text_p, liste_etiquette_p, table_etiquettes_p, decalage_text_p, msg_err);
-					if (code_erreur != SUCCESS)
+					if (code_erreur == FAIL_ALLOC) {
+						free(mem_etiq_table);
 						return code_erreur;
+					}
 					else if (code_erreur == SUCCESS)
 						etat = INIT;
 					else
@@ -1047,7 +1049,7 @@ int analyser_syntaxe(
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
 					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
-					if (code_erreur != SUCCESS) {
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return code_erreur;
 					} else if (code_erreur == SUCCESS)
@@ -1062,7 +1064,7 @@ int analyser_syntaxe(
 					}
 					index_mem = 0;
 					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
-					if (code_erreur != SUCCESS) {
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return code_erreur;
 					} else if (code_erreur == SUCCESS)
@@ -1077,7 +1079,7 @@ int analyser_syntaxe(
 					}
 					index_mem = 0;
 					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
-					if (code_erreur != SUCCESS) {
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return code_erreur;
 					} else if (code_erreur == SUCCESS)
@@ -1092,7 +1094,7 @@ int analyser_syntaxe(
 					}
 					index_mem = 0;
 					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
-					if (code_erreur != SUCCESS) {
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return code_erreur;
 					} else if (code_erreur == SUCCESS)
@@ -1104,7 +1106,7 @@ int analyser_syntaxe(
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
 					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
-					if (code_erreur != SUCCESS) {
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return code_erreur;
 					} else if (code_erreur == SUCCESS)
@@ -1116,7 +1118,7 @@ int analyser_syntaxe(
 						mem_etiq_table[index_mem++] = NULL;
 					index_mem = 0;
 					code_erreur = analyser_donnee(lignes_lexemes_p, liste_data_p, liste_etiquette_p, table_etiquettes_p, decalage_data_p, msg_err);
-					if (code_erreur != SUCCESS) {
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return code_erreur;
 					} else if (code_erreur == SUCCESS)
@@ -1125,7 +1127,7 @@ int analyser_syntaxe(
 						etat = ERREUR;
 				} else if ((section==S_BSS) && (lexeme_p->nature == L_DIRECTIVE) && (!strcmp(lexeme_p->data, NOMS_DATA[D_SPACE]))) {
 					code_erreur = analyser_donnee(lignes_lexemes_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, decalage_bss_p, msg_err);
-					if (code_erreur != SUCCESS) {
+					if (code_erreur == FAIL_ALLOC) {
 						free(mem_etiq_table);
 						return code_erreur;
 					} else if (code_erreur == SUCCESS)
