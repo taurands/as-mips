@@ -1,7 +1,7 @@
 /**
  * @file syn.c
  * @author BERTRAND Antoine TAURAND Sébastien sur base de François Portet <francois.portet@imag.fr>
- * @brief Definition des fonctions liées au traitement syntaxique du fichier
+ * @brief Definition des fonctions liées au traitement syntaxique (et grammatical) du fichier
  */
 
 #define _POSIX_C_SOURCE 200112L
@@ -154,7 +154,12 @@ int encoder_liste_instruction(struct Liste_s *liste_text_p,struct Table_s *table
 	return code_retour;
 }
 
-
+/**
+ * @param donnee_p pointeur sur une donnée
+ * @return chaine de caractère
+ * @brief Cette fonction permet de renvoyer le nom d'une étiquette ou NULL si cette dernière n'existe pas
+ *
+ */
 char *clefEtiquette(void *donnee_p)
 {
 	return (donnee_p ? ((struct Etiquette_s *)donnee_p)->lexeme_p->data : NULL);
@@ -165,8 +170,6 @@ char *clefEtiquette(void *donnee_p)
  * @return Rien
  * @brief Cette fonction permet de détuire et libérer le contenu d'une donnée
  *
- * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
- * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
 void detruit_donnee(void *donnee_p)
 {
@@ -205,7 +208,7 @@ char *type_donnee_to_str(enum Donnee_e donnee)
  * @param decalage_p pointeur sur la valeur à décaler
  * @param nb_bits nombre de bits de décalage
  * @return Rien
- * @brief Cette fonction permet d'efectuer un décalage de nb_bits sur une adresse
+ * @brief Cette fonction permet d'effectuer un décalage de nb_bits sur une adresse
  *
  */
 void aligner_decalage(uint32_t *decalage_p, unsigned int nb_bits)
@@ -219,11 +222,11 @@ void aligner_decalage(uint32_t *decalage_p, unsigned int nb_bits)
 /**
  * @param lexeme_p pointeur sur le lexeme correspondant
  * @param section section où est définie l'étiquette
- * @param decalage_p decalage mémoire par rapport au début de section où est définie l'étiquette
+ * @param decalage Entier 32 bits correspondant au decalage mémoire par rapport au début de section où est définie l'étiquette
  * @param tableEtiquettes_p pointeur sur la table où sera ajouter l'étiquette
  * @param mem_etiq_pp pointeur de pointeur permettant de garder en mémoire l'étiquette intacte
  * @param msg_err message d'erreur le cas échant
- * @return SUCCESS si l'étiquette à bien été ajoutée à la table d'étiquette
+ * @return SUCCESS si l'étiquette à bien été ajoutée à la table d'étiquette, FAIL_ALLOC en cas d'insuffisance mémoire, FAILURE sinon
  * @brief Cette fonction permet de remplir tous les champs d'une étiquette et d'ajouter l'étiquette à la table d'étiquettes
  *
  */
@@ -298,17 +301,19 @@ int enregistrer_etiquette(
 /**
  * @param lexeme_p pointeur sur le lexeme (nombre) à lire
  * @param donnee_p pointeur sur la donnée qui sera crée
+ * @param liste_etiquette_p Pointeur sur la liste des étiquettes
+ * @param table_etiquettes_p Pointeur sur la table des étiquettes
  * @param decalage_p pointeur sur la valeur du decalage mémoire par rapport au début de section
  * @param msg_err message d'erreur le cas échant
- * @return SUCCESS si le nombre a pu être évalué
+ * @return SUCCESS si le nombre a pu être évalué, FAIL_ALLOC en cas d'inssuffisance mémoire, FAILURE sinon
  * @brief Cette fonction permet de créer une donnée à partir d'un nombre
  *
  */
 int lire_nombre(
 		struct Lexeme_s *lexeme_p,
 		struct Donnee_s *donnee_p,
-		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
-		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
+		struct Liste_s *liste_etiquette_p,
+		struct Table_s *table_etiquettes_p,
 		uint32_t *decalage_p,
 		char *msg_err)
 {
@@ -391,19 +396,21 @@ int lire_nombre(
 }
 
 /**
- * @param lignes_lexemes_p pointeur sur la liste de lxèmes obtenu après analyse lexicale
+ * @param lignes_lexemes_p pointeur sur la liste de lexèmes obtenu après analyse lexicale
  * @param liste_p pointeur sur une liste de données qui sera rempli
+ * @param liste_etiquette_p Pointeur sur la liste des étiquettes
+ * @param table_etiquettes_p Pointeur sur la table des étiquettes
  * @param decalage_p pointeur sur la valeur du decalage mémoire par rapport au début de section
  * @param msg_err message d'erreur le cas échant
- * @return SUCCESS si le remplissage de la liste liste_p s'est bien déroulé
+ * @return SUCCESS si le remplissage de la liste liste_p s'est bien déroulé, FAIL_ALLOC en cas d'inssuffisance mémoire, FAILURE sinon
  * @brief Cette fonction permet de remplir la liste de données par analyse sur la liste de lexèmes
  *
  */
 int analyser_donnee(
-		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
-		struct Liste_s *liste_p,					/**< Pointeur sur la liste des donnees de la section .data ou .bss */
-		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
-		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
+		struct Liste_s *lignes_lexemes_p,
+		struct Liste_s *liste_p,
+		struct Liste_s *liste_etiquette_p,
+		struct Table_s *table_etiquettes_p,
 		uint32_t *decalage_p,
 		char *msg_err)
 {
@@ -600,21 +607,23 @@ int analyser_donnee(
  * @param table_def_pseudo_p pointeur sur la table "dico" des pseudo instructions
  * @param table_def_registres_p pointeur sur la table "dico" des registres
  * @param liste_p pointeur sur une liste de données qui sera rempli
+ * @param liste_etiquette_p Pointeur sur la liste des étiquettes
+ * @param table_etiquettes_p Pointeur sur la table des étiquettes
  * @param decalage_p pointeur sur la valeur du decalage mémoire par rapport au début de section
  * @param msg_err message d'erreur le cas échant
- * @return SUCCESS si le remplissage de la liste liste_p s'est bien déroulé
+ * @return SUCCESS si le remplissage de la liste liste_p s'est bien déroulé, FAIL_ALLOC en cas d'inssuffisance mémoire, FAILURE sinon
  * @brief Cette fonction permet de remplir la liste des instructions par analyse sur la liste de lexèmes
  *
  */
 int analyser_instruction(
-		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
-		struct Liste_s *lexemes_supl_p,				/**< Pointeur sur la liste des lexemes à rajouter si nécessaire */
-		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
-		struct Table_s *table_def_pseudo_p,			/**< Pointeur sur la table "dico" des pseudo instructions */
-		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
-		struct Liste_s *liste_p,					/**< Pointeur sur la liste des instructions de la section .text */
-		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
-		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
+		struct Liste_s *lignes_lexemes_p,
+		struct Liste_s *lexemes_supl_p,
+		struct Table_s *table_def_instructions_p,
+		struct Table_s *table_def_pseudo_p,
+		struct Table_s *table_def_registres_p,
+		struct Liste_s *liste_p,
+		struct Liste_s *liste_etiquette_p,
+		struct Table_s *table_etiquettes_p,
 		uint32_t *decalage_p,
 		char *msg_err)
 {
@@ -944,21 +953,24 @@ int analyser_instruction(
  * @param liste_text_p pointeur sur la liste des instructions de la section .text
  * @param liste_data_p pointeur sur la liste des données de la section .data
  * @param liste_bss_p pointeur sur la liste des réservations des .space de la section .bss
- * @return SUCCESS si l'analyse syntaxique s'est bien déroulée
+ * @param decalage_text_p Pointeur sur un entier 32 bits correspondant au décalage sur la section .text
+ * @param decalage_data_p Pointeur sur un entier 32 bits correspondant au décalage sur la section .data
+ * @param decalage_bss_p Pointeur sur un entier 32 bits correspondant au décalage sur la section .bss
+ * @return SUCCESS si l'analyse syntaxique s'est bien déroulée, FAIL_ALLOC en cas d'inssuffisance mémoire, FAILURE sinon
  * @brief effectue l'analyse syntaxique de premier niveau d'une liste de lexemes
  *
  */
 int analyser_syntaxe(
-		struct Liste_s *lignes_lexemes_p,			/**< Pointeur sur la liste des lexèmes */
-		struct Liste_s *lexemes_supl_p,				/**< Pointeur sur la liste de lexèmes supplémentaires */
-		struct Table_s *table_def_instructions_p,	/**< Pointeur sur la table "dico" des instructions */
-		struct Table_s *table_def_pseudo_p,			/**< Pointeur sur la table "dico" des pseudos instructions */
-		struct Table_s *table_def_registres_p,		/**< Pointeur sur la table "dico" des registres */
-		struct Liste_s *liste_etiquette_p,			/**< Pointeur sur la liste des étiquettes qui sera ordonnée par numéro de ligne */
-		struct Table_s *table_etiquettes_p,			/**< Pointeur sur la table des étiquettes */
-		struct Liste_s *liste_text_p,				/**< Pointeur sur la liste des instructions de la section .text */
-		struct Liste_s *liste_data_p,				/**< Pointeur sur la liste des données de la section .data */
-		struct Liste_s *liste_bss_p,				/**< Pointeur sur la liste des réservations des .space de la section .bss */
+		struct Liste_s *lignes_lexemes_p,
+		struct Liste_s *lexemes_supl_p,
+		struct Table_s *table_def_instructions_p,
+		struct Table_s *table_def_pseudo_p,
+		struct Table_s *table_def_registres_p,
+		struct Liste_s *liste_etiquette_p,
+		struct Table_s *table_etiquettes_p,
+		struct Liste_s *liste_text_p,
+		struct Liste_s *liste_data_p,
+		struct Liste_s *liste_bss_p,
 		uint32_t *decalage_text_p,
 		uint32_t *decalage_data_p,
 		uint32_t *decalage_bss_p)
