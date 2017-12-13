@@ -26,12 +26,10 @@ SRL $26, $27, titi
 SRL $26, $27, 30
 SLT $28,$29,$30
 LW $31, 0x60($10)
-LW $31, lunchtime($10)
 LW $1, 100
 LW $1, lunchtime
 LW $1, ($2)
 LW $31, 0x60($10) #commentaire
-LW $31, lunchtime($10) #commentaire
 LW $1, 100 #commentaire
 LW $1, lunchtime #commentaire
 LW $1, ($2) #commentaire

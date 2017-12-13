@@ -55,6 +55,8 @@ SLT $28, 14
 LW $31, 0x60,$10
 LW $31, $1, $2
 LW $4, $5(32) #Inversion registre nombre non detectée
+LW $31, lunchtime($10) #commentaire
+LW $31, lunchtime($10)
 SW $zero, 45($a0)($a1)
 MFHI $s2, $3
 MFHI $2, 90

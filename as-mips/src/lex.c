@@ -468,7 +468,7 @@ int lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num
 			lexeme_p->nature=etat;
 			lexeme_p->ligne=num_ligne;
 
-			if ((code_retour = ajouter_fin_liste(liste_lexemes_p, lexeme_p)) != SUCCESS) {
+			if ((code_retour = ajouter_fin_liste(liste_lexemes_p, lexeme_p)) == FAIL_ALLOC) {
 				free (lexeme_p);
 				return code_retour;
 			}
@@ -482,7 +482,7 @@ int lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num
     lexeme_p->data = strdup(ligne);
     lexeme_p->nature=L_FIN_LIGNE;
     lexeme_p->ligne=num_ligne;
-	if ((code_retour = ajouter_fin_liste(liste_lexemes_p, lexeme_p)) != SUCCESS) {
+	if ((code_retour = ajouter_fin_liste(liste_lexemes_p, lexeme_p)) == FAIL_ALLOC) {
 		free (lexeme_p);
 		return code_retour;
 	}
@@ -529,7 +529,7 @@ int lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Lis
 
             listage_p->ligne = *nb_lignes_p;
             listage_p->chaine = strdup(line);
-            if ((code_retour = ajouter_fin_liste (liste_lignes_source_p, listage_p)) != SUCCESS) {
+            if ((code_retour = ajouter_fin_liste (liste_lignes_source_p, listage_p)) == FAIL_ALLOC) {
             	fclose (fp);
             	free (listage_p);
             	return code_retour;
@@ -540,7 +540,7 @@ int lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Lis
             if ( 0 != strlen(line) ) {
                 lex_standardise( line, res );
                 code_retour = lex_read_line( res, liste_lexemes_p, *nb_lignes_p, nb_etiquettes_p, nb_symboles_p, nb_instructions_p );
-                if (code_retour != SUCCESS) {
+                if (code_retour == FAIL_ALLOC) {
                 	fclose (fp);
                 	return code_retour;
                 } else if (code_retour)
