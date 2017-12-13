@@ -90,8 +90,7 @@ int creer_lexeme(struct Lexeme_s **lexeme_pp, char *data, enum Nature_lexeme_e n
 /**
  * @param etat etat de la machine à états finis lexicale
  * @return chaine de caractères contenant le nom de l'état
- * @brief Cette fonction permet de donne le mon correspondant à un état
- *
+ * @brief Cette fonction permet de donner le nom correspondant à un état
  */	
 char *nature_lex_to_str(enum Nature_lexeme_e nature)
 {
@@ -115,44 +114,6 @@ char *nature_lex_to_str(enum Nature_lexeme_e nature)
 	}
 	return NULL;
 }
-
-/**
- * @param etat etat de la machine à états finis lexicale
- * @return chaine de caractères contenant le nom de l'état
- * @brief Cette fonction permet de donne le mon correspondant à un état
- *
- */
-/*
-char *etat_lex_to_str(enum Etat_lex_e etat)
-{
-	switch(etat) {
-		case INIT:					return "INIT";
-		case POINT:					return "POINT";
-		case VIRGULE:				return "VIRGULE";
-		case NOMBRE:				return "NOMBRE";
-		case DECIMAL:				return "DECIMAL";
-		case HEXADECIMAL:			return "HEXADECIMAL";
-		case OCTAL:					return "OCTAL";
-		case CHAINE:				return "CHAINE";
-		case MOINS:					return "MOINS";
-		case PLUS:					return "PLUS";
-		case REGISTRE:				return "REGISTRE";
-		case SYMBOLE:				return "SYMBOLE";
-		case INSTRUCTION:			return "INSTRUCTION";
-		case DIRECTIVE:				return "DIRECTIVE";
-		case ETIQUETTE:				return "ETIQUETTE";
-		case COMMENTAIRE:			return "COMMENTAIRE";
-		case DEBUT_HEXADECIMAL:		return "DEBUT_HEXADECIMAL";
-		case DECIMAL_ZERO:			return "DECIMAL_ZERO";
-		case PARENTHESE_OUVRANTE:	return "PARENTHESE_OUVRANTE";
-		case PARENTHESE_FERMANTE:	return "PARENTHESE_FERMANTE";
-		case ERREUR:				return "ERREUR";
-		case FIN_LIGNE:				return "FIN_LIGNE";
-		default : 	ERROR_MSG("Erreur de résolution du nom de l'état %d de la machine à états finis lexicale... Il manque donc au moins un nom d'état à rajouter", etat);
-	}
-	return NULL;
-}
-*/
 
 /**
  * @param etat Etat antérieur de la machine à états finis d'analyse lexicale
@@ -400,11 +361,11 @@ enum Etat_lex_e machine_etats_finis_lexicale(enum Etat_lex_e etat, char c)
 
 /**
  * @param ligne chaine contenant la ligne du fichier source assembleur à analyser
- * @param liste_lexemes_p pointeur sur la liste de lexèmes servant à stoquer les lexèmes qui seront extraits dans l'analyses
+ * @param liste_lexemes_p pointeur sur la liste de lexèmes servant à stocker les lexèmes qui seront extraits lors de l'analyse lexicale
  * @param num_ligne le numéro de la ligne dans le fichier source
  * @param nb_etiquettes_p un pointeur sur le nombre d'étiquette que l'on trouvera dans l'analyse
  * @param nb_instructions_p un pointeur sur le nombre d'instructions que l'on trouvera à priori dans l'analyse
- * @return Rien, si ce n'est la liste de lexème mise à jour ainsi les nombres d'étiquettes et d'instructions
+ * @return SUCCESS si la procédure c'est bien passée, FAIL_ALLOC en cas d'insuffissance mémoire, FAILURE sinon
  * @brief Cette fonction fait l'analyse lexicale d'un ligne ayant subi une "standardisation" (pre-processing)
  */
 int lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num_ligne, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
@@ -531,12 +492,12 @@ int lex_read_line(char *ligne, struct Liste_s *liste_lexemes_p, unsigned int num
 
 /**
  * @param nom_fichier Le nom du fichier source asssembleur
- * @param liste_lexemes_p Un pointeur sur une liste (générique) de lexèmes
+ * @param liste_lexemes_p Un pointeur sur une liste générique de lexèmes
  * @param nb_lignes_p Le pointeur vers le compteur de nombre de lignes
  * @param nb_etiquettes_p Le pointeur vers le compteur de nombre d'étiquettes
  * @param nb_instructions_p Le pointeur vers le compteur de nombre d'instructions
- * @return Rien. Si ce n'est la liste générique de lexèmes ainsi que les nombres de lignes, d'instructions et d'étiquettes
- * @brief Cette fonction charge le fichier assembleur et effectue sont analyse lexicale
+ * @return SUCCESS si la procédure c'est bien passée, FAIL_ALLOC en cas d'insuffissance mémoire, FAILURE sinon
+ * @brief Cette fonction charge le fichier assembleur et effectue son analyse lexicale
  *
  */
 int lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Liste_s *liste_lignes_source_p, unsigned int *nb_lignes_p, unsigned int *nb_etiquettes_p, unsigned int *nb_symboles_p, unsigned int *nb_instructions_p)
@@ -594,10 +555,10 @@ int lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Lis
 }
 
 /**
- * @param in Input line of source code (possibly very badly written).
- * @param out Line of source code in a suitable form for further analysis.
- * @return nothing
- * @brief This function will prepare a line of source code for further analysis.
+ * @param in chaine de caractères initiales (possiblement très mal écrite)
+ * @param out chaine de caractères de sortie remise en forme
+ * @return rien
+ * @brief Cette fonction transforme une chaine de caractère afin de pouvoir réaliser diverses analyses au préalable
  *
  * Aucun changement de casse n'est effectué à ce niveau
  */
@@ -697,7 +658,7 @@ void visualisation_lexeme(struct Lexeme_s * lexeme_p)
 }
 
 /**
- * @param liste_p pointeur sur une liste de (générique) de lexèmes
+ * @param liste_p pointeur sur une liste de générique de lexèmes
  * @return rien
  * @brief Cette fonction permet de visualiser le contenu d'une liste de lexeme
  *

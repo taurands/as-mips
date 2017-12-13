@@ -17,7 +17,7 @@ char UNESCAPED_CHAR[] = {'\'', '"', '\n', '\r', '\t', '\f', '\v', '\a', '\b', '\
 /**
  * @param sourceStr pointeur sur la chaine à dupliquer
  * @return pointeur sur la chaine dupliquée
- * @brief Cette fonction permet de faire ne copie de chaine de caractères
+ * @brief Cette fonction permet de faire une copie de chaine de caractères
  */
 char *strdup (char* sourceStr) {
 	char* destStr=NULL;
@@ -63,6 +63,12 @@ char *strupr (char* sourceStr)
     return sourceStr;
 }
 
+/**
+ * @param debut pointeur sur le debut de la chaine à extraire
+ * @param fin pointeur sur la fin de la chaine à extraire
+ * @return pointeur sur la chaine extraite
+ * @brief Cette fonction permet d'extraire une chaine de caractères
+ */
 char *strextract (char *debut, char *fin) {
 	char *extract = NULL;
 
