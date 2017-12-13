@@ -23,7 +23,10 @@ char *strdup (char* sourceStr) {
 	char* destStr=NULL;
 	if (sourceStr) {
 		destStr = calloc (1+strlen (sourceStr), sizeof(*destStr));
-		if (destStr) strcpy (destStr,sourceStr);
+		if (!destStr)
+			return NULL;
+		else
+			strcpy (destStr,sourceStr);
 	}
 	return destStr;
 }
@@ -67,7 +70,9 @@ char *strextract (char *debut, char *fin) {
 		return NULL;
 	else {
 		extract = calloc (1+fin-debut, sizeof(*extract));
-		if (extract)
+		if (!extract)
+			return NULL;
+		else
 			memcpy (extract, debut, fin-debut);
 		return extract;
 	}

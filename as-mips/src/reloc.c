@@ -28,6 +28,7 @@ int relocater_data(
 		struct Liste_s *liste_reloc_data_p,
 		struct Table_s *table_etiquettes_p)
 {
+	int code_retour = SUCCESS;
 	struct Noeud_Liste_s *noeud_courant_p = NULL;
 	struct Donnee_s *donnee_p = NULL;
 	struct Relocateur_s *relocateur_p=NULL;
@@ -45,9 +46,9 @@ int relocater_data(
 				relocateur_p->decalage = donnee_p->decalage;
 				relocateur_p->type_reloc = R_MIPS_32;
 				relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, donnee_p->lexeme_p->data);
-				if (ajouter_fin_liste(liste_reloc_data_p, relocateur_p)) {
+				if ((code_retour = ajouter_fin_liste(liste_reloc_data_p, relocateur_p)) != SUCCESS) {
 					free (relocateur_p);
-					return FAIL_ALLOC;
+					return code_retour;
 				}
 			}
 		} while ((noeud_courant_p = suivant_liste(liste_data_p)) && (donnee_p = noeud_courant_p->donnee_p));
@@ -67,6 +68,7 @@ int relocater_texte(
 		struct Liste_s *liste_reloc_text_p,
 		struct Table_s *table_etiquettes_p)
 {
+	int code_retour = SUCCESS;
 	struct Noeud_Liste_s *noeud_courant_p = NULL;
 	struct Instruction_s *instruction_p = NULL;
 	struct Relocateur_s *relocateur_p=NULL;
@@ -85,9 +87,9 @@ int relocater_texte(
 				relocateur_p->decalage = instruction_p->decalage;
 				relocateur_p->type_reloc = instruction_p->definition_p->reloc;
 				relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->data);
-				if (ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) {
+				if ((code_retour = ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) != SUCCESS) {
 					free (relocateur_p);
-					return FAIL_ALLOC;
+					return code_retour;
 				}
 			}
 
@@ -101,9 +103,9 @@ int relocater_texte(
 					relocateur_p->decalage = instruction_p->decalage;
 					relocateur_p->type_reloc = instruction_p->definition_p->reloc;
 					relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-2]->data);
-					if (ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) {
+					if ((code_retour = ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) != SUCCESS) {
 						free (relocateur_p);
-						return FAIL_ALLOC;
+						return code_retour;
 					}
 				}
 				if ((instruction_p->operandes[instruction_p->definition_p->nb_ops-1]) && (instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->nature == L_SYMBOLE)){
@@ -115,9 +117,9 @@ int relocater_texte(
 					relocateur_p->decalage = instruction_p->decalage;
 					relocateur_p->type_reloc = instruction_p->definition_p->reloc;
 					relocateur_p->etiquette_p = donnee_table(table_etiquettes_p, instruction_p->operandes[instruction_p->definition_p->nb_ops-1]->data);
-					if (ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) {
+					if ((code_retour = ajouter_fin_liste(liste_reloc_text_p, relocateur_p)) != SUCCESS) {
 						free (relocateur_p);
-						return FAIL_ALLOC;
+						return code_retour;
 					}
 				}
 			}

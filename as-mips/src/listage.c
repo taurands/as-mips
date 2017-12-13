@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <notify.h>
+#include <global.h>
 #include <listage.h>
 #include <str_utils.h>
 #include <lex.h>
@@ -395,8 +396,9 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
  * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
  * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
-void generer_objet (char *nom_fichier, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, uint32_t decalage_text, uint32_t decalage_data, uint32_t decalage_bss)
+int generer_objet (char *nom_fichier, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, uint32_t decalage_text, uint32_t decalage_data, uint32_t decalage_bss)
 {
+	int code_retour = SUCCESS;
     FILE *fichier = NULL;
     uint32_t bi32;
     unsigned int i;
@@ -428,7 +430,8 @@ void generer_objet (char *nom_fichier, struct Liste_s *liste_text_p, struct List
 
     if (decalage_data > 0) {
 
-    	buffer_data = calloc (decalage_data, sizeof(*buffer_data));
+    	if (!(buffer_data = calloc (decalage_data, sizeof(*buffer_data))))
+    		return FAIL_ALLOC;
     	noeud_p = debut_liste (liste_data_p);
     	while (noeud_p) {
     		donnee_p = noeud_p->donnee_p;
@@ -477,5 +480,6 @@ void generer_objet (char *nom_fichier, struct Liste_s *liste_text_p, struct List
 
 
     fclose (fichier);
+    return code_retour;
 }
 

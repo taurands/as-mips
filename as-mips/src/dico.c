@@ -201,7 +201,8 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 			break;
 		}
 
-		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_pseudo_instruction, destruction_def_pseudo_instruction))) {
+		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_pseudo_instruction, destruction_def_pseudo_instruction)) != SUCCESS) {
+			return resultat;
 			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions de pseudo instructions");
 			break;
 		}
@@ -364,7 +365,8 @@ int charge_def_instruction(struct Table_s **table_definition_pp, char *nom_fichi
 			break;
 		}
 
-		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_instruction, destruction_def_instruction))) {
+		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_instruction, destruction_def_instruction)) != SUCCESS) {
+			return resultat;
 			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions d'instructions");
 			break;
 		}
@@ -514,7 +516,8 @@ int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 {
 	int erreur = SUCCESS;
 
-	char *nom_reg=calloc(STRLEN+1, sizeof(char));
+	char *nom_reg= NULL;
+
 	int valeur=0;
 	int i=0;
 	int nb_mots;
@@ -525,15 +528,24 @@ int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
 
 	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
-	if ((erreur = creer_table(table_definition_pp, nb_mots, clef_def_registre, destruction_def_registre)))
-			return FAIL_ALLOC;
+	if ((erreur = creer_table(table_definition_pp, nb_mots, clef_def_registre, destruction_def_registre)) != SUCCESS)
+			return erreur;
+
+	if (!(nom_reg = calloc(STRLEN+1, sizeof(char)))) {
+		return FAIL_ALLOC;
+		WARNING_MSG ("Plus assez de mémoire pour créer cette chaine de caractères");
+	}
+
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
 		if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_reg)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nom du registre en cours");
 		if (1 != fscanf(f_p,"%d", &valeur)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas la valeur du registre en cours");
 
-		def_registre_p = calloc (1, sizeof(*def_registre_p));
+		if (!(def_registre_p = calloc (1, sizeof(*def_registre_p)))) {
+			return FAIL_ALLOC;
+			WARNING_MSG ("Plus assez de mémoire pour créer ce pointeur de définition de registre");
+		}
 		def_registre_p->nom=strdup(nom_reg);
 		def_registre_p->valeur=valeur;
 		ajouter_table(*table_definition_pp, def_registre_p);
