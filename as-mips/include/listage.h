@@ -1,7 +1,7 @@
 /**
  * @file listage.h
  * @author TAURAND Sébastien
- * @brief Définitions de types et structures ainsi que des prototypes des fonctions de travail avec les listes génériques simplement chaînées.
+ * @brief Définitions de types et structures ainsi que des prototypes des fonctions de travail avec les listages et autres fonctions d'affichage
  */
 
 #ifndef _LISTAGE_H_

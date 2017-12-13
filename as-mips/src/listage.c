@@ -20,8 +20,6 @@
  * @return entier 32 bits
  * @brief Cette fonction permet de passer d'un entier 32 bits codé en little indian à un entier codé en big indian
  *
- * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
- * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
 uint32_t big_indian_32 (uint32_t valeur)
 {
@@ -34,8 +32,6 @@ uint32_t big_indian_32 (uint32_t valeur)
  * @return entier 16 bits
  * @brief Cette fonction permet de passer d'un entier 16 bits codé en little indian à un entier codé en big indian
  *
- * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
- * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
 uint16_t big_indian_16 (uint16_t valeur)
 {
@@ -48,8 +44,6 @@ uint16_t big_indian_16 (uint16_t valeur)
  * @return Rien
  * @brief Cette fonction permet de détuire et libérer le contenu d'un listage
  *
- * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
- * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
 void detruit_listage (void *donnee_p)
 {
@@ -61,6 +55,7 @@ void detruit_listage (void *donnee_p)
 }
 
 /**
+ * @param fichier Pointeur sur le fichier texte où l'on va écrire la liste d'assemblage (ici une instruction)
  * @param instruction_p pointeur sur une instruction à lire
  * @param table_p pointeur sur une table d'instructions
  * @return Rien
@@ -106,13 +101,8 @@ void str_instruction(FILE *fichier, struct Instruction_s * instruction_p, struct
 	fprintf(fichier, "\n");
 }
 
-/*
-affiche_element_databss (fichier, donnee_data_p, table_etiquettes_p, listage_p->chaine ? listage_p->chaine : "");
-while ((noeud_data_p = suivant_liste (liste_data_p)) && (donnee_data_p = noeud_data_p->donnee_p) && (donnee_data_p->ligne == listage_p->ligne))
-	affiche_element_databss (fichier, donnee_data_p, table_etiquettes_p, "");
-*/
-
 /**
+ * @param fichier Pointeur sur le fichier texte où l'on va écrire la liste d'assemblage (ici une donnee)
  * @param donnee_p pointeur sur un element de .data ou .bss à lire
  * @param table_p pointeur sur une table d'etiuette
  * @return Rien
@@ -227,6 +217,7 @@ void affiche_element_databss(FILE *fichier, struct Liste_s *liste_p, struct Tabl
 }
 
 /**
+ * @param fichier Pointeur sur le fichier texte où l'on va écrire la liste d'assemblage (ici l'ensemble des donnees)
  * @param liste_p pointeur sur une liste générique des éléments de .data ou .bss à lire
  * @param table_p pointeur sur une table de donnees
  * @return Rien
@@ -253,6 +244,7 @@ void affiche_liste_donnee(FILE *fichier, struct Liste_s *liste_p, struct Table_s
 }
 
 /**
+ * @param fichier Pointeur sur le fichier texte où l'on va écrire la liste d'assemblage (ici l'ensemble des instructions)
  * @param liste_p pointeur sur une liste générique d'instructions
  * @param table_p pointeur sur une table d'instructions
  * @return Rien
@@ -277,9 +269,11 @@ void affiche_liste_instructions(FILE *fichier, struct Liste_s *liste_p, struct T
 }
 
 /**
- * @param table_p pointeur sur la table d'étiquette à remplir
+ * @param fichier Pointeur sur le fichier texte où l'on va écrire la liste d'assemblage (ici la table des étiquettes)
+ * @param liste_etiquette_p Pointeur sur une liste d'étiquettes
+ * @param table_etiquettes_p pointeur sur une table d'étiquettes
  * @return Rien
- * @brief Cette fonction permet d'ajouter une étiquette à une table d'étiquette
+ * @brief Cette fonction permet d'afficher la table des étiquettes
  *
  */
 void affiche_table_etiquette(FILE *fichier, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p)
@@ -309,14 +303,21 @@ void affiche_table_etiquette(FILE *fichier, struct Liste_s *liste_etiquette_p, s
 }
 
 /**
- * @param donnee_p pointeur sur un listage à détruire
+ * @param nom_fichier chaine de caractères désignant le nom du fichier assembleur à traiter
+ * @param liste_lignes_source_p Pointeur sur la liste des lignes (chaine de caractères) non modifiée
+ * @param liste_text_p Pointeur sur la liste des instructions
+ * @param liste_data_p Pointeur sur la liste des données de la section .data
+ * @param liste_bss_p Pointeur sur la liste des données de la section .bss
+ * @param liste_etiquette_p Pointeur sur la liste des étiquettes
+ * @param table_etiquettes_p Pointeur sur la table des étiquettes
+ * @param liste_reloc_text_p Pointeur sur la liste des relocateurs texte
+ * @param liste_reloc_data_p Pointeur sur la liste des relocateurs data
  * @return Rien
- * @brief Cette fonction permet de détuire et libérer le contenu d'un listage
+ * @brief Cette fonction permet de générer la liste d'assemblage
  *
- * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
- * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
-void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, struct Liste_s *liste_bss_p, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_reloc_data_p)
+void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p,
+					struct Liste_s *liste_bss_p, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_reloc_data_p)
 {
 	struct Noeud_Liste_s *noeud_listage_p = NULL;
 	struct Noeud_Liste_s *noeud_instruction_p = NULL;
@@ -389,12 +390,15 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
 }
 
 /**
- * @param donnee_p pointeur sur un listage à détruire
- * @return Rien
- * @brief Cette fonction permet de détuire et libérer le contenu d'un listage
+ * @param nom_fichier chaine de caractères désignant le nom du fichier assembleur à traiter
+ * @param liste_text_p Pointeur sur la liste des instructions
+ * @param liste_data_p Pointeur sur la liste des données de la section .data
+ * @param decalage_text entier 32 bits correspondant à la taille en octet de la section .text du fichier assembleur
+ * @param decalage_data entier 32 bits correspondant à la taille en octet de la section .data du fichier assembleur
+ * @param decalage_bss entier 32 bits correspondant à la taille en octet de la section .bss du fichier assembleur
+ * @return SUCCESS si la génération du fichier objet s'est bien passée, FAIL_ALLOC si insuffissance mémoire
+ * @brief Cette fonction permet de générer le fichier objet
  *
- * Cela inclut en particulier la chaine représentation le contenu d'un ASCIIZ.
- * Ceci est nécessaire pour le mécanisque de gestion propre des liste génériques.
  */
 int generer_objet (char *nom_fichier, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p, uint32_t decalage_text, uint32_t decalage_data, uint32_t decalage_bss)
 {
