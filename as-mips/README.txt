@@ -2,16 +2,38 @@ Squelette de code de l'assembleur MIPS du projet info PHELMA.
 
 Le répertoire est organisé ainsi : 
 .
+├── testing
+│   ├── README.txt
+│   └── simpleUnitTest.sh
+├── test_ref
+│   ├── copie_chaines.s
+│   ├── donnees_simple.s
+│   ├── miam.s
+│   ├── mult.s
+│   ├── erreur_lexicale.s
+│   ├── erreur_syntaxique.s
+│   ├── miam_bss_long.s
+│   ├── tt_instr_err_limite.s
+│   ├── tt_instr_valides_limites.s
+│   ├── copie_chaines.res
+│   ├── donnees_simple.res
+│   ├── miam.res
+│   ├── mult.res
+│   ├── erreur_lexicale.res
+│   ├── erreur_syntaxique.res
+│   ├── miam_bss_long.res
+│   ├── tt_instr_err_limite.res
+│   ├── tt_instr_valides_limites.res
+│   ├── copie_chaines.obj
+│   ├── donnees_simple.obj
+│   ├── miam.obj
+│   └── mult.obj
 ├── tests
 │   ├── vide.s
-│   ├── espaces.s
-│   ├── toutes_instructions_valides.s
-│   ├── toutes_instructions_erreurs.s
-│   ├── miam2.s
-│   ├── miam1.s
-│   └── miam.s 
+│   └── espaces.s 
 ├── src
 │   ├── main.c
+│   ├── listage.c
 │   ├── reloc.c
 │   ├── syn.c
 │   ├── lex.c
@@ -24,6 +46,7 @@ Le répertoire est organisé ainsi :
 │   └── dictionnaire_pseudo.txt
 ├── include
 │   ├── reloc.h
+│   ├── listage.h
 │   ├── syn.h
 │   ├── lex.h
 │   ├── dico.h
@@ -35,6 +58,7 @@ Le répertoire est organisé ainsi :
 │   └── global.h
 ├── doc
 │   └── livrables
+│       ├── Livrable 4 - 2A SICOM - BERTRAND - TAURAND.pdf
 │       ├── Livrable 3 - 2A SICOM - BERTRAND - TAURAND.pdf
 │       ├── Livrable 2 - 2A SICOM - BERTRAND - TAURAND.pdf
 │       └── Livrable 1 - 2A SICOM - BERTRAND - TAURAND.pdf
@@ -42,9 +66,10 @@ Le répertoire est organisé ainsi :
 ├── Makefile
 └── Doxyfile
 
-- tests : contient les fichiers pour tester le programme 
-- src : qui contient le code C de votre interpréteur.      
-- include : qui contient toutes les définitions de types et prototypes de votre programme. Lisez attentivement les headers avant de commencer à coder et de les modifier.
+- tests et test_ref : contiennent les fichiers pour tester le programme 
+- testing : contient un script de vérification du bon fonctionnement du programme par rapport aux fichiers de référence contenus dans test_ref
+- src : qui contient le code C de l'assembleur ainsi que les trois dictionnaires de registres, d'instructions et de pseudo-instructions
+- include : qui contient toutes les définitions de types et prototypes de votre programme. Lisez attentivement les headers avant de commencer à coder et de les modifier
 - doc : contient la documentation et le répertoire ou stocker les rapports de livrable.
 - README.txt : ce document
 - Makefile pour compiler soit en mode debug (afficher les traces du programme) soit en mode release (produit final)
