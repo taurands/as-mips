@@ -515,8 +515,8 @@ int lex_load_file(char *nom_fichier, struct Liste_s *liste_lexemes_p, struct Lis
     
     fp = fopen( nom_fichier, "r" );
     if ( NULL == fp ) {
-        /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
-        ERROR_MSG("Impossible d'ouvrir le fichier \"%s\". Abandon du traitement",nom_fichier);
+        fprintf (stderr, "Impossible d'ouvrir le fichier \"%s\"\n",nom_fichier);
+        return FAILURE;
     }
     *nb_lignes_p = 0;
 

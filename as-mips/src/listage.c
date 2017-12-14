@@ -318,7 +318,7 @@ void affiche_table_etiquette(FILE *fichier, struct Liste_s *liste_etiquette_p, s
  * @brief Cette fonction permet de générer la liste d'assemblage
  *
  */
-void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p,
+int generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, struct Liste_s *liste_text_p, struct Liste_s *liste_data_p,
 					struct Liste_s *liste_bss_p, struct Liste_s *liste_etiquette_p, struct Table_s *table_etiquettes_p, struct Liste_s *liste_reloc_text_p, struct Liste_s *liste_reloc_data_p)
 {
 	struct Noeud_Liste_s *noeud_listage_p = NULL;
@@ -331,11 +331,12 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
 	struct Donnee_s *donnee_bss_p = NULL;
 
     FILE *fichier = NULL;
+    int code_retour = SUCCESS;
 
     fichier = fopen(nom_fichier, "w");
     if ( NULL == fichier ) {
-        /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
-        ERROR_MSG("Impossible d'écrire le fichier \"%s\". Abandon du traitement",nom_fichier);
+        fprintf (stderr, "Impossible d'écrire le fichier \"%s\"",nom_fichier);
+        return FAILURE;
     }
 
 	if (liste_lignes_source_p && liste_text_p && liste_data_p && liste_bss_p) {
@@ -389,6 +390,7 @@ void generer_listage (char *nom_fichier, struct Liste_s *liste_lignes_source_p, 
 
 	}
 	fclose(fichier);
+	return code_retour;
 }
 
 /**
@@ -416,8 +418,8 @@ int generer_objet (char *nom_fichier, struct Liste_s *liste_text_p, struct Liste
 
     fichier = fopen(nom_fichier, "w");
     if ( NULL == fichier ) {
-        /*macro ERROR_MSG : message d'erreur puis fin de programme ! */
-        ERROR_MSG("Impossible d'écrire le fichier \"%s\". Abandon du traitement",nom_fichier);
+        fprintf (stderr, "Impossible d'écrire le fichier \"%s\"\n", nom_fichier);
+        return FAILURE;
     }
 
     bi32 = big_indian_32 (decalage_text);

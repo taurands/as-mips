@@ -864,7 +864,6 @@ int analyser_instruction(
 			}
 		} while ((etat != ERREUR) && (etat != EOL) && (noeud_courant_p = suivant_liste(lignes_lexemes_p)) && (lexeme_p = noeud_courant_p->donnee_p));
 
-		/* XXX tester le null, fin ligne, ... */
 		if ((etat == EOL) && (instruction_p) && (def_p->type_ops == I_OP_B)) {
 			if (!instruction_p->operandes[1]) {
 				if ((code_retour = creer_lexeme(&(instruction_p->operandes[1]),"0", L_NOMBRE, instruction_p->ligne)) != SUCCESS) {

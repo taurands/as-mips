@@ -149,11 +149,15 @@ int main (int argc, char *argv[])
     		DEBUG_MSG ("Relocation de la section data effectuée correctement");
 
     	strcpy(nom_fichier_l, nom_fichier_asm);
-    	replace_or_add_extension(nom_fichier_l, ".l");
-    	generer_listage (nom_fichier_l, liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p);
+    	change_extension(nom_fichier_l, ".l");
+    	if ((code_retour = generer_listage (nom_fichier_l, liste_lignes_source_p, liste_text_p, liste_data_p, liste_bss_p, liste_etiquette_p, table_etiquettes_p, liste_reloc_text_p, liste_reloc_data_p)))
+    		break;
+    	else
+       		DEBUG_MSG ("Génération de la liste d'assemblage réussie");
+
 
     	strcpy(nom_fichier_obj, nom_fichier_asm);
-    	replace_or_add_extension(nom_fichier_obj, ".o");
+    	change_extension(nom_fichier_obj, ".o");
 
     	if ((code_retour = generer_objet (nom_fichier_obj, liste_text_p, liste_data_p, decalage_text, decalage_data, decalage_bss)))
     		break;

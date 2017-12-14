@@ -22,7 +22,6 @@ const char TYPE_OPS[]= {'R', 'N', 'B'}; /* lettres associés à enum Operandes_e
  */
 char *clef_def_pseudo(void *donnee_p)
 {
-	/* XXX à modifier */
 	return (donnee_p && (struct DefinitionInstruction_s *)donnee_p) ? ((struct DefinitionInstruction_s *)donnee_p)->nom : NULL;
 }
 
@@ -34,7 +33,6 @@ char *clef_def_pseudo(void *donnee_p)
  */
 void destruction_def_pseudo(void *donnee_p)
 {
-	/* XXX à modifier */
 	if (donnee_p) {
 		free(((struct DefinitionInstruction_s *)donnee_p)->nom);
 		free(donnee_p);
@@ -136,7 +134,6 @@ void destruction_def_registre(void *donnee_p)
  */
 int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 {
-	/* XXX à compléter en prenant exemple sur gestion des erreurs de charge_def_instruction */
 	int resultat = SUCCESS;
 
 	FILE *f_p = NULL;
@@ -156,54 +153,45 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 	do {
 		if (!(nom_pseudo_instruction = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
-			WARNING_MSG ("Plus assez de mémoire pour créer un nom de pseudo instruction");
 			break;
 		}
 
 		if (!(instruction_spl = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
-			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'instruction supplémentaire");
 			break;
 		}
 
 		if (!(arg1 = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
-			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 1 d'instruction");
 			break;
 		}
 
 		if (!(arg2 = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
-			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 2 d'instruction");
 			break;
 		}
 
 		if (!(arg3 = calloc(STRLEN+1, sizeof(char)))) {
 			resultat = FAIL_ALLOC;
-			WARNING_MSG ("Plus assez de mémoire pour créer un nom d'argument 3 d'instruction");
 			break;
 		}
 
 		f_p = fopen(nom_fichier,"r"); /* Ouverture du dictionnaire de pseudo instruction */
 		if (!f_p) {
 			resultat = FAILURE;
-			WARNING_MSG ("Impossible d'ouvrir le fichier %s de définition de pseudo instruction", nom_fichier);
 			break;
 		}
 
 		if (1 != fscanf(f_p,"%u",&nb_mots)) { /* Lecture de la première ligne du dictionnaire */
 			resultat = FAILURE;
-			WARNING_MSG ("Nombre de pseudo instructions du dictionnaire introuvable dans %s", nom_fichier);
 			break;
 		} else if (nb_mots < 1) {
 			resultat = FAILURE;
-			WARNING_MSG ("Le dictionnaire %s doit contenir au moins une pseudo instruction", nom_fichier);
 			break;
 		}
 
 		if ((resultat = creer_table(table_definition_pp, nb_mots, clef_def_pseudo_instruction, destruction_def_pseudo_instruction)) != SUCCESS) {
 			return resultat;
-			WARNING_MSG ("Plus assez de mémoire pour créer la table de définitions de pseudo instructions");
 			break;
 		}
 
@@ -211,27 +199,22 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 
 			if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_pseudo_instruction)) {
 				resultat = FAILURE;
-				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de la pseudo instruction en cours");
 				break;
 			}
 			if (1 != fscanf(f_p,"%d", &nb_instructions)) {
 				resultat = FAILURE;
-				WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nombre d'instructions de la pseudo instruction en cours");
 				break;
 			}
 			if ((nb_instructions<1) || (nb_instructions>NB_INSTR_PSEUDO_MAX)) {
 				resultat = FAILURE;
-				WARNING_MSG ("Le nombre d'instruction de remplacement de la pseudo instruction est au delà des limites acceptables");
 				break;
 			}
 			if (!(definition_pseudo_instruction_p = calloc (1, sizeof(*definition_pseudo_instruction_p)))) {
 				resultat = FAIL_ALLOC;
-				WARNING_MSG ("Plus assez de mémoire pour créer une nouvelle définition de pseudo instruction");
 				break;
 			}
 			if (!(definition_pseudo_instruction_p->nom = strdup(nom_pseudo_instruction)) && nom_pseudo_instruction) {
 				resultat = FAIL_ALLOC;
-				WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de la pseudo instruction");
 				break;
 			}
 
@@ -240,43 +223,35 @@ int charge_def_pseudo(struct Table_s **table_definition_pp, char *nom_fichier)
 			for (j=0; ((resultat == SUCCESS) && (j<nb_instructions));j++) {
 				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", instruction_spl)) {
 					resultat = FAILURE;
-					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'instruction en cours");
 					break;
 				}
 				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", arg1)) {
 					resultat = FAILURE;
-					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 1 en cours");
 					break;
 				}
 				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", arg2)) {
 					resultat = FAILURE;
-					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 2 en cours");
 					break;
 				}
 				if (1 != fscanf(f_p,"%"STR(STRLEN)"s", arg3)) {
 					resultat = FAILURE;
-					WARNING_MSG ("La ligne du dictionnaire ne comprenait pas le nom de l'argument 3 en cours");
 					break;
 				}
 
 				if (!(definition_pseudo_instruction_p->rempl[j].instruction = strdup(instruction_spl)) && instruction_spl) {
 					resultat = FAIL_ALLOC;
-					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'instruction de remplacement");
 					break;
 				}
 				if (!(definition_pseudo_instruction_p->rempl[j].arg[0] = strdup(arg1)) && arg1) {
 					resultat = FAIL_ALLOC;
-					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 1");
 					break;
 				}
 				if (!(definition_pseudo_instruction_p->rempl[j].arg[1] = strdup(arg2)) && arg2) {
 					resultat = FAIL_ALLOC;
-					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 2");
 					break;
 				}
 				if (!(definition_pseudo_instruction_p->rempl[j].arg[2] = strdup(arg3)) && arg3) {
 					resultat = FAIL_ALLOC;
-					WARNING_MSG ("Plus assez de mémoire pour dupliquer le nom de l'argument 3");
 					break;
 				}
 			}
@@ -524,23 +499,42 @@ int charge_def_registre(struct Table_s **table_definition_pp, char *nom_fichier)
 
 	struct DefinitionRegistre_s *def_registre_p=NULL;
 
-	FILE* f_p=fopen(nom_fichier,"r"); /* Ouverture du dictionnaire d'instruction */
-	if (!f_p) ERROR_MSG("Impossible d'ouvrir le fichier");
+	FILE* f_p=fopen(nom_fichier,"r"); /* Ouverture du dictionnaire de registre */
+	if (!f_p) {
+		fprintf (stderr, "Impossible d'ouvrir le fichier dictionnaire de registres %s\n", nom_fichier);
+		return FAILURE;
+	}
 
-	if (1!=fscanf(f_p,"%d",&nb_mots)) ERROR_MSG("Nombre d'instructions du dictionnaire introuvable"); /* Lecture de la première ligne du dictionnaire */
+	if (1!=fscanf(f_p,"%d",&nb_mots)) { /* Lecture de la première ligne du dictionnaire */
+		fprintf (stderr, "Nombre d'instructions du dictionnaire introuvable\n");
+		if (f_p)
+			fclose (f_p);
+		return FAILURE;
+	}
 	if ((erreur = creer_table(table_definition_pp, nb_mots, clef_def_registre, destruction_def_registre)) != SUCCESS)
 			return erreur;
 
 	if (!(nom_reg = calloc(STRLEN+1, sizeof(char)))) {
 		return FAIL_ALLOC;
-		WARNING_MSG ("Plus assez de mémoire pour créer cette chaine de caractères");
 	}
 
 
 	while (f_p && (i < nb_mots)) { /* Tant que l'on a pas lu l'enemble du dictionnaire */
 
-		if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_reg)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas le nom du registre en cours");
-		if (1 != fscanf(f_p,"%d", &valeur)) ERROR_MSG("La ligne du dictionnaire ne comprenait pas la valeur du registre en cours");
+		if (1 != fscanf(f_p,"%"STR(STRLEN)"s", nom_reg)) {
+			fprintf (stderr, "La ligne du dictionnaire ne comprenait pas le nom du registre en cours\n");
+			if (f_p)
+				fclose (f_p);
+			free (nom_reg);
+			return FAILURE;
+		}
+		if (1 != fscanf(f_p,"%d", &valeur)) {
+			fprintf (stderr, "La ligne du dictionnaire ne comprenait pas la valeur du registre en cours\n");
+			if (f_p)
+				fclose (f_p);
+			free (nom_reg);
+			return FAILURE;
+		}
 
 		if (!(def_registre_p = calloc (1, sizeof(*def_registre_p)))) {
 			return FAIL_ALLOC;

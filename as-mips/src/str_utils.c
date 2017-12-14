@@ -84,6 +84,13 @@ char *strextract (char *debut, char *fin) {
 	}
 }
 
+/**
+ * @param str chaine de caractères
+ * @return la longueur de la chaine
+ * @brief Cette fonction permet de renvoyer la longueur d'une chaine de caractères en prenant en compte les caractères spéciaux
+ *
+ * Exemple : "\n" donnera 1
+ */
 size_t str_unesc_len (char *str) {
 	size_t len = 0;
 	int escape = FALSE;
@@ -100,6 +107,13 @@ size_t str_unesc_len (char *str) {
 	return len;
 }
 
+/**
+ * @param esc caractère
+ * @return caractère encodé
+ * @brief Cette fonction permet de renvoyer le caractère encodé d'un caractère spécial
+ *
+ * Exemple : 'n' donnera '\n'
+ */
 char unesc_char (char esc)
 {
 	char *esc_trouve = strchr(ESCAPED_CHAR, esc);
@@ -109,6 +123,13 @@ char unesc_char (char esc)
 		return esc;
 }
 
+/**
+ * @param sqstr chaine de caractères dont le premier et le dernier caractère sont des simples quotes
+ * @return caractère extrait
+ * @brief Cette fonction permet de renvoyer le caractère correspondant à la chaine entre simples quotes
+ *
+ * Exemple : "'n'" donnera 'n', "'\t'" donnera '\t'
+ */
 char sqstr_unesc_char (char *sqstr)
 {
 	char car = '\0';
@@ -124,6 +145,13 @@ char sqstr_unesc_char (char *sqstr)
 	return car;
 }
 
+/**
+ * @param dqstr chaine de caractères dont le premier et le dernier caractère sont des doubles quotes
+ * @return pointeur sur la chaine extraite
+ * @brief Cette fonction permet de renvoyer la chaine correspondant à la chaine entre doubles quotes
+ *
+ * Exemple : "\"ab\"" donnera "ab"
+ */
 char *dqstr_unesc_str (char *dqstr)
 {
 	char *unesc_str = NULL;
@@ -144,7 +172,13 @@ char *dqstr_unesc_str (char *dqstr)
 	return unesc_str;
 }
 
-void replace_or_add_extension(char *nom_fichier, char *nouvelle_extension)
+/**
+ * @param nom_fichier chaine de caractères correspondant à un nom de fichier valide
+ * @param nouvelle_extension chaine de caractère contenant la nouvelle extension pour le nouveau fichier
+ * @return rien
+ * @brief Cette fonction remplace ou ajoute la nouvelle extension à la chaine du nom_fichier
+ */
+void change_extension(char *nom_fichier, char *nouvelle_extension)
 {
 	char *ext = strrchr (nom_fichier, '.');
 	if (!(ext) || (strchr(ext, '/'))) { /* pas de point trouvé dans le nom ou caractère '/' apparait après le dernier point du nom : il n'y a pas d'extension*/
