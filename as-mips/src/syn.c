@@ -46,6 +46,7 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 	struct DefinitionRegistre_s *def_registre_p = NULL;
 	struct Etiquette_s *etiquette_p = NULL;
 
+	int code_retour = SUCCESS;
 	int j=0;
 	long borne_inf;
 	long val_operande,val_op1,val_op2;
@@ -58,26 +59,33 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 	for (j=0;j<instruction_p->definition_p->nb_ops;j++){
 
 		masque = (1 << def_instruction_p->codes[j].nb_bits) - 1;
-		borne_inf = -(1L << (def_instruction_p->codes[j].nb_bits  - ((def_instruction_p->codes[j].signe == 1) ? 0 : 1)));
+		borne_inf = -(1L << (def_instruction_p->codes[j].nb_bits));
 
 		if (instruction_p->operandes[j]->nature == L_NOMBRE){
 			errno = 0;
 			val_operande = strtol(instruction_p->operandes[j]->data, NULL, 0);
 			if (errno) {
-				fprintf (stderr, "L'opérande %d de l'instruction %s  à la ligne %d n'a pas pu être converti en nombre", j, def_instruction_p->nom, instruction_p->ligne);
-				return FAILURE;
+				fprintf (stderr, "L'opérande %s de l'instruction %s à la ligne %d n'a pas pu être converti en nombre\n", instruction_p->operandes[j]->data, def_instruction_p->nom, instruction_p->ligne);
+				code_retour = FAILURE;
 			}
 
+			if (val_operande & ((1 << def_instruction_p->codes[j].shift)-1)) {
+				fprintf (stderr, "L'opérande %s de l'instruction %s  à la ligne %d n'est pas aligné\n", instruction_p->operandes[j]->data, def_instruction_p->nom, instruction_p->ligne);
+				code_retour = FAILURE;
+			}
+			val_operande = (val_operande >> def_instruction_p->codes[j].shift);
+			code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
+
 			if ((def_instruction_p->codes[j].signe == 1) && (val_operande < 0)) {
-				fprintf(stderr, "L'opérande %d de l'instruction %s  à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
-				return FAILURE;
+				fprintf(stderr, "L'opérande %s de l'instruction %s  à la ligne %d est négatif alors qu'il devrait être positif\n", instruction_p->operandes[j]->data, def_instruction_p->nom, instruction_p->ligne);
+				code_retour = FAILURE;
 			}
 
 			if ((val_operande > masque) || (val_operande < borne_inf)) {
-				fprintf(stderr, "L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
-				return FAILURE;
+				fprintf(stderr, "L'opérande %s de l'instruction %s à la ligne %d est hors limites\n", instruction_p->operandes[j]->data, def_instruction_p->nom, instruction_p->ligne);
+				code_retour = FAILURE;
 			}
-			code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
+
 		}
 
 		if (instruction_p->operandes[j]->nature == L_SYMBOLE) {
@@ -86,6 +94,10 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 				val_operande = 0;
 			else {
 				if (def_instruction_p->reloc == R_MIPS_REL) {
+					if (etiquette_p->section != S_TEXT) {
+						fprintf (stderr, "Le symbole %s de l'instruction %s à la ligne %d n'appartient pas à la section text\n", etiquette_p->lexeme_p->data, def_instruction_p->nom, instruction_p->ligne);
+						code_retour = FAILURE;
+					}
 					val_op1 = etiquette_p->decalage;
 					val_op2 = instruction_p->decalage;
 					val_operande = val_op1-val_op2;
@@ -100,12 +112,18 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 					val_operande = val_operande >> def_instruction_p->codes[j].shift;
 				}
 				/* XXX A voir ce qu'on en fait
-				if ((def_instruction_p->codes[j].signe == 1) && val_operande<0)
-					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
+				if ((def_instruction_p->codes[j].signe == 1) && val_operande<0) {
+					fprintf (stderr, "L'opérande %s de l'instruction %s à la ligne %d est signé alors qu'il ne devrait pas", instruction_p->operandes[j]->data, def_instruction_p->nom, instruction_p->ligne);
+					code_retour = FAILURE;
+				}
 
-				if ((val_operande > borne_sup) || (val_operande < borne_inf))
-					ERROR_MSG("L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
+				if ((val_operande > masque) || (val_operande < borne_inf)) {
+					fprintf (stderr, "L'opérande %s de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", instruction_p->operandes[j]->data, def_instruction_p->nom, instruction_p->ligne);
+					code_retour = FAILURE;
+				}
 				*/
+
+
 				code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
 			}
 		}
@@ -114,21 +132,11 @@ int encodage_instruction(struct Instruction_s *instruction_p,
 		if (instruction_p->operandes[j]->nature == L_REGISTRE){
 			def_registre_p = donnee_table (table_def_registres_p, instruction_p->operandes[j]->data);
 			val_operande = def_registre_p->valeur;
-			if ((def_instruction_p->codes[j].signe == 1) && (val_operande < 0)) {
-				fprintf(stderr, "L'opérande %d de l'instruction %s  à la ligne %d est signé alors qu'il ne devrait pas", j, def_instruction_p->nom, instruction_p->ligne);
-				return FAILURE;
-			}
-
-			if ((val_operande > masque) || (val_operande < borne_inf)) {
-				fprintf(stderr, "L'opérande %d de l'instruction %s à la ligne %d a une valeur trop élevée en valeur absolue", j, def_instruction_p->nom, instruction_p->ligne);
-				return FAILURE;
-			}
-
 			code_operande |= (val_operande & masque) << def_instruction_p->codes[j].dest_bit;
 		}
 	}
 	instruction_p->op_code = code_operande;
-	return SUCCESS;
+	return code_retour;
 }
 
 /**
@@ -148,8 +156,8 @@ int encoder_liste_instruction(struct Liste_s *liste_text_p,struct Table_s *table
 	noeud_courant_instruction_p = debut_liste (liste_text_p);
 	while (noeud_courant_instruction_p) {
 		instruction_p = noeud_courant_instruction_p->donnee_p;
-		if ((code_retour = encodage_instruction(instruction_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p)))
-			return FAILURE;
+		if (encodage_instruction(instruction_p, table_etiquettes_p, table_def_registres_p, table_def_instructions_p))
+			code_retour = FAILURE;
 		noeud_courant_instruction_p = suivant_liste (liste_text_p);
 	}
 	return code_retour;
