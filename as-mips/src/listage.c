@@ -157,10 +157,37 @@ void affiche_element_databss(FILE *fichier, struct Liste_s *liste_p, struct Tabl
 			break;
 
 		case D_HALF:
+			/*
 			fprintf(fichier, "%04X     ", donnee_p->valeur.demiNS);
 			fprintf(fichier, "%s\n", (source) && (k=1) ? source : "");
 			noeud_p = suivant_liste (liste_p);
-			break;
+			*/
+
+			for (i=0; (noeud_p) && (donnee_p) && (donnee_p->ligne == ligne);) {
+				fprintf(fichier, "%04X", donnee_p->valeur.demiNS);
+				i++;
+				noeud_p = suivant_liste (liste_p);
+				donnee_p = (noeud_p) ? noeud_p->donnee_p : NULL;
+
+				if (!(i & 1) && (donnee_p) && (donnee_p->ligne == ligne)) {
+					if (i == 2)
+						fprintf(fichier, " %s", (source) ? source : "");
+					else
+						fprintf(fichier, " ");
+					fprintf(fichier, "\n%3d %08X ", donnee_p->ligne, donnee_p->decalage);
+				}
+			}
+			if (i<=2) {
+				for ( ; (i & 1); i++)
+					fprintf(fichier, "    ");
+				fprintf(fichier, " ");
+				fprintf(fichier, "%s\n", (source) && (i=2) ? source : "");
+			} else {
+			for ( ; (i & 1); i++)
+				fprintf(fichier, "    ");
+			fprintf(fichier, " \n");
+			}
+break;
 		case D_WORD:
 
 			if (donnee_p->lexeme_p->nature==L_SYMBOLE) {
